@@ -1,9 +1,9 @@
-site_name: cmake-example
-site_url: https://cmake-example.readthedocs.io
-site_description: Example pybind11 module built with a CMake-based build system.
+site_name: nano-fmm
+site_url: https://nano-fmm.readthedocs.io
+site_description: nano-fmm
 site_author: district10
 
-repo_url: https://github.com/cubao/cmake_example
+repo_url: https://github.com/cubao/nano-fmm
 edit_uri: blob/master/docs/
 
 theme: readthedocs

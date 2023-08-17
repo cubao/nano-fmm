@@ -56,10 +56,9 @@ python_sdist:
 	$(PYTHON) setup.py sdist
 python_test:
 	$(PYTHON) -c 'from pybind11_rdp import rdp; print(rdp([[1, 1], [2, 2], [3, 3], [4, 4]]))'
-	$(PYTHON) -c 'import cubao_cmake_example; print(cubao_cmake_example.add(1, 2))'
-	$(PYTHON) -m cubao_cmake_example add 1 2
-	$(PYTHON) -m cubao_cmake_example subtract 9 4
-	$(PYTHON) -m cubao_cmake_example pure_python_func --arg1=43234
+	$(PYTHON) -c 'import nano_fmm; print(nano_fmm.add(1, 2))'
+	$(PYTHON) -m nano_fmm add 1 2
+	$(PYTHON) -m nano_fmm pure_python_func --arg1=43234
 	python3 -m pip install pytest
 	pytest tests
 
