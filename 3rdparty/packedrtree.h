@@ -40,6 +40,7 @@
 #include <ostream>
 #include <memory>
 #include <algorithm>
+#include <functional>
 
 namespace FlatGeobuf
 {
