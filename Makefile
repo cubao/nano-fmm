@@ -10,6 +10,11 @@ force_clean:
 	docker run --rm -v `pwd`:`pwd` -w `pwd` -it alpine/make make clean
 .PHONY: clean force_clean
 
+data_clean:
+	make -C data clean
+data_pull:
+	make -C data pull
+
 lint:
 	pre-commit run -a
 lint_install:
