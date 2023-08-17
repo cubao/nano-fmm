@@ -35,6 +35,11 @@
 #include <cmath>
 #include <deque>
 #include <numeric>
+#include <cstdint>
+#include <vector>
+#include <ostream>
+#include <memory>
+#include <algorithm>
 
 namespace FlatGeobuf
 {
