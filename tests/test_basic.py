@@ -34,5 +34,9 @@ def test_segment():
     assert 13.0 == seg.distance([5.0, 12.0, 0.0])
 
 
-test_segment()
+def test_utils():
+    print()
+
+
+test_utils()
 print()

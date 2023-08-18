@@ -30,5 +30,5 @@ PYBIND11_MODULE(_nano_fmm, m)
     auto utils = m.def_submodule("utils");
 
     nano_fmm::bind_polyline(m);
-    nano_fmm::bind_polyline(utils);
+    nano_fmm::bind_utils(utils);
 }
