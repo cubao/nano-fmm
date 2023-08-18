@@ -50,10 +50,12 @@ inline RowVectors enu2lla(const Eigen::Ref<const RowVectors> &enus,
     if (!enus.rows()) {
         return RowVectors(0, 3);
     }
-    auto k = cheap_ruler_k(anchor_lla[1]);
+    if (!k) {
+        k = cheap_ruler_k(anchor_lla[1]);
+    }
     RowVectors llas = enus;
     for (int i = 0; i < 3; ++i) {
-        llas.col(i).array() /= k[i];
+        llas.col(i).array() /= (*k)[i];
         llas.col(i).array() += anchor_lla[i];
     }
     return llas;
@@ -62,7 +64,7 @@ inline RowVectors enu2lla(const Eigen::Ref<const RowVectors> &enus,
 // https://github.com/cubao/headers/blob/main/include/cubao/eigen_helpers.hpp
 
 inline Eigen::VectorXi
-indexes2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
+index2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
 {
     Eigen::VectorXi mask(N);
     mask.setZero();
@@ -72,8 +74,7 @@ indexes2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
     return mask;
 }
 
-inline Eigen::VectorXi
-mask2indexes(const Eigen::Ref<const Eigen::VectorXi> &mask)
+inline Eigen::VectorXi mask2index(const Eigen::Ref<const Eigen::VectorXi> &mask)
 {
     Eigen::VectorXi indexes(mask.sum());
     for (int i = 0, j = 0, N = mask.size(); i < N; ++i) {
