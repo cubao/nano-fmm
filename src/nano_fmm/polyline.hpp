@@ -41,9 +41,9 @@ struct PolylineRuler
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     PolylineRuler(const Eigen::Ref<const RowVectors> &polyline,
-    const std::optional<Eigen::Vector3d> k = {})
-    : polyline_(polyline),                        //
-          N_(polyline.rows()),                        //
+                  const std::optional<Eigen::Vector3d> k = {})
+        : polyline_(polyline), //
+          N_(polyline.rows()), //
           k_(k)
     {
     }
@@ -62,21 +62,20 @@ struct PolylineRuler
     mutable std::optional<Eigen::VectorXd> ranges_;
     mutable std::optional<std::vector<LineSegment>> segments_;
 
-    const std::vector<LineSegment> &ranges() const {
+    const std::vector<LineSegment> &ranges() const
+    {
         if (ranges_) {
             return *ranges_;
         }
         Eigen::VectorXd ranges(N_);
         int idx = 0;
-        for (auto &seg: segments()) {
+        for (auto &seg : segments()) {
             ranges[idx++] = std::sqrt(seg.len2);
         }
         ranges_ = std::move(ranges);
         return *ranges_;
     }
-    const std::vector<LineSegment> &segments() const {
-        return *segments_;
-    }
+    const std::vector<LineSegment> &segments() const { return *segments_; }
 };
 
 } // namespace nano_fmm
