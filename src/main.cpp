@@ -7,8 +7,9 @@ int add(int i, int j) { return i + j; }
 
 namespace py = pybind11;
 
-namespace nano_fmm {
-    void bind_polyline(py::module &m);
+namespace nano_fmm
+{
+void bind_polyline(py::module &m);
 }
 
 PYBIND11_MODULE(_nano_fmm, m)

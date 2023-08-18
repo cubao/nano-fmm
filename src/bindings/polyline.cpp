@@ -6,7 +6,6 @@
 
 #include "nano_fmm/polyline.hpp"
 
-
 namespace nano_fmm
 {
 namespace py = pybind11;
@@ -47,7 +46,8 @@ void bind_polyline(py::module &m)
         ;
 
     py::class_<Polyline>(m, "Polyline", py::module_local()) //
-        .def(py::init<const Eigen::Ref<const RowVectors> &,const std::optional<Eigen::Vector3d>>(),  //
+        .def(py::init<const Eigen::Ref<const RowVectors> &,
+                      const std::optional<Eigen::Vector3d>>(), //
              "coords"_a, py::kw_only(), "k"_a = std::nullopt)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)

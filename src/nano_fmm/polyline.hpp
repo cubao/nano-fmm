@@ -41,7 +41,7 @@ struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
-                  const std::optional<Eigen::Vector3d> k = {})
+             const std::optional<Eigen::Vector3d> k = {})
         : polyline_(polyline), //
           N_(polyline.rows()), //
           k_(k)
@@ -61,9 +61,11 @@ struct Polyline
     mutable std::optional<std::vector<LineSegment>> segments_;
     mutable std::optional<Eigen::VectorXd> ranges_;
 
-    const std::vector<LineSegment> &segments() const {
+    const std::vector<LineSegment> &segments() const
+    {
         //
-        return *segments_; }
+        return *segments_;
+    }
     const Eigen::VectorXd &ranges() const
     {
         if (ranges_) {
