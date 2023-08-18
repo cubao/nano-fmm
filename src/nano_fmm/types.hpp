@@ -8,11 +8,11 @@
 
 #include <Eigen/Core>
 
-namespace nano_fmm {
+namespace nano_fmm
+{
 // Nx3 vectors (row major, just like numpy ndarray)
 using RowVectors = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
 using RowVectorsNx3 = RowVectors;
 // without-z
 using RowVectorsNx2 = Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>;
-}
-
+} // namespace nano_fmm

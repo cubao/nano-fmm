@@ -1,8 +1,10 @@
 #pragma once
 
 #include "nano_fmm/types.hpp"
+#include <optional>
 
-namespace nano_fmm {
+namespace nano_fmm
+{
 // https://github.com/cubao/pybind11-rdp/blob/master/src/main.cpp
 struct LineSegment
 {
@@ -30,6 +32,51 @@ struct LineSegment
     {
         return std::sqrt(distance2(P));
     }
+
+    // dist, t, dot
 };
-    
-}
+
+// https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
+struct PolylineRuler
+{
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    PolylineRuler(const Eigen::Ref<const RowVectors> &polyline,
+    const std::optional<Eigen::Vector3d> k = {})
+    : polyline_(polyline),                        //
+          N_(polyline.rows()),                        //
+          k_(k)
+    {
+    }
+
+    const RowVectors &polyline() const { return polyline_; }
+    int N() const { return N_; }
+    std::optional<Eigen::Vector3d> k() const { return k_; }
+    bool is_wgs84() const { return k_; }
+
+  private:
+    const RowVectors polyline_;
+    const int N_;
+    const std::optional<Eigen::Vector3d> k_;
+
+    // cache
+    mutable std::optional<Eigen::VectorXd> ranges_;
+    mutable std::optional<std::vector<LineSegment>> segments_;
+
+    const std::vector<LineSegment> &ranges() const {
+        if (ranges_) {
+            return *ranges_;
+        }
+        Eigen::VectorXd ranges(N_);
+        int idx = 0;
+        for (auto &seg: segments()) {
+            ranges[idx++] = std::sqrt(seg.len2);
+        }
+        ranges_ = std::move(ranges);
+        return *ranges_;
+    }
+    const std::vector<LineSegment> &segments() const {
+        return *segments_;
+    }
+};
+
+} // namespace nano_fmm

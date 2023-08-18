@@ -5,7 +5,8 @@
 
 namespace nano_fmm
 {
-namespace utils {
+namespace utils
+{
 
 // https://github.com/cubao/headers/blob/main/include/cubao/crs_transform.hpp
 inline Eigen::Vector3d cheap_ruler_k(double latitude)
@@ -90,6 +91,5 @@ inline RowVectors to_Nx3(const Eigen::Ref<const RowVectorsNx2> &coords)
     _coords.col(2).setZero();
     return _coords;
 }
-
-}
-} // namespace name
+} // namespace utils
+} // namespace nano_fmm
