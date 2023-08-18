@@ -23,7 +23,7 @@ struct Network
 {
     Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
 
-    std::shared_ptr<Config> config() const;
+    std::shared_ptr<Config> config();
 
     void add(const Eigen::Ref<RowVectors> &polyline, int64_t id = -1);
     void add(const std::vector<RowVectors> &polylines,

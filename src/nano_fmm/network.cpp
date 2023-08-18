@@ -3,7 +3,7 @@
 namespace nano_fmm
 {
 
-std::shared_ptr<Config> Network::config() const
+std::shared_ptr<Config> Network::config()
 {
     if (!config_) {
         config_ = std::make_shared<Config>();
@@ -25,7 +25,7 @@ int Network::load(const std::string &path)
 {
     //
 }
-bool dump(const std::string &path) const
+bool Network::dump(const std::string &path) const
 {
     //
 }
