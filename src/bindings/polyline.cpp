@@ -19,11 +19,17 @@ void bind_polyline(py::module &m)
              "A"_a, "B"_a)
         .def("distance", &LineSegment::distance, "P"_a)
         .def("distance2", &LineSegment::distance2, "P"_a)
+        .def("nearest", &LineSegment::nearest, "P"_a)
+        .def("t", &LineSegment::t, "P"_a)
+        .def("interpolate", &LineSegment::interpolate, "t"_a)
         .def_property_readonly(
-            "length",
-            [](const LineSegment &self) { return std::sqrt(self.len2); })
+            "length", [](const LineSegment &self) { return self.length(); })
         .def_property_readonly(
             "length2", [](const LineSegment &self) { return self.len2; })
+        .def_property_readonly("dir",
+                               [](const LineSegment &self) -> Eigen::Vector3d {
+                                   return self.dir();
+                               })
         .def_property_readonly(
             "A",
             [](const LineSegment &self) -> const Eigen::Vector3d & {

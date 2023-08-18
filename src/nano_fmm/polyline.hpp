@@ -32,13 +32,31 @@ struct LineSegment
     {
         return std::sqrt(distance2(P));
     }
-    Eigen::Vector3d interpolate(double t) const
+    // return P', distance, t
+    std::tuple<Eigen::Vector3d, double, double>
+    nearest(const Eigen::Vector3d &P) const
     {
-        // 0 -> A, 1 -> B
-        return A;
+        double dot = (P - A).dot(AB);
+        if (dot <= 0) {
+            return std::make_tuple(A, (P - A).squaredNorm(), 0.0);
+        } else if (dot >= len2) {
+            return std::make_tuple(B, (P - B).squaredNorm(), 1.0);
+        }
+        Eigen::Vector3d PP = A + (dot * inv_len2 * AB);
+        return std::make_tuple(PP, (PP - P).squaredNorm(), dot * inv_len2);
+    }
+    double t(const Eigen::Vector3d &P) const
+    {
+        return (P - A).dot(AB) * inv_len2;
     }
 
-    // dist, t, dot
+    Eigen::Vector3d interpolate(double t) const
+    {
+        return A * (1.0 - t) + B * t;
+    }
+
+    double length() const { return std::sqrt(len2); }
+    Eigen::Vector3d dir() const { return AB / length(); }
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp

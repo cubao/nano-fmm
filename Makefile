@@ -54,7 +54,7 @@ test_in_dev_container:
 
 PYTHON ?= python3
 python_install:
-	$(PYTHON) setup.py install
+	$(PYTHON) setup.py install --force
 python_build:
 	$(PYTHON) setup.py bdist_wheel
 python_sdist:
