@@ -18,7 +18,7 @@ inline Eigen::Vector3d cheap_ruler_k(double latitude)
     static constexpr double RAD = M_PI / 180.0;
     static constexpr double MUL = RAD * RE * 1000.;
     double coslat = std::cos(latitude * RAD);
-    double w2 = 1 / (1 - E2 * (1 - coslat * coslat));
+    double w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
     double w = std::sqrt(w2);
     return Eigen::Vector3d(MUL * w * coslat, MUL * w * w2 * (1 - E2), 1.0);
 }

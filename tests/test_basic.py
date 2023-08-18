@@ -35,6 +35,9 @@ def test_segment():
 
 
 def test_utils():
+    k0 = fmm.utils.cheap_ruler_k(0.0)
+    k1 = fmm.utils.cheap_ruler_k(30.0)
+    assert k0[0] > k1[0]
     print()
 
 
