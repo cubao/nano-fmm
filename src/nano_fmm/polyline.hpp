@@ -13,7 +13,7 @@ struct LineSegment
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
         : A(a), B(b), AB(b - a), //
-          len2((b - a).squaredNorm()), inv_len2(1.0 / len2)
+          len2(AB.squaredNorm()), inv_len2(1.0 / len2)
     {
     }
     double distance2(const Eigen::Vector3d &P) const
@@ -64,29 +64,21 @@ struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
-             const std::optional<Eigen::Vector3d> scale = {})
+             const std::optional<Eigen::Vector3d> k = {})
         : polyline_(polyline), //
           N_(polyline.rows()), //
-          scale_(scale)
+          k_(k)
     {
     }
 
     const RowVectors &polyline() const { return polyline_; }
-    std::optional<Eigen::Vector3d> scale() const { return scale_; }
-    bool is_wgs84() const { return (bool)scale_; }
+    std::optional<Eigen::Vector3d> k() const { return k_; }
+    bool is_wgs84() const { return (bool)k_; }
 
-    double range(int seg_idx) const { return ranges()[seg_idx]; }
-    double range(int seg_idx, double t) const
+    double range(int seg_idx, double t = 0.0) const
     {
         auto &ranges = this->ranges();
         return ranges[seg_idx] * (1.0 - t) + ranges[seg_idx + 1] * t;
-    }
-
-    int segment_index(double range) const
-    {
-        const double *ranges = this->ranges().data();
-        int I = std::upper_bound(ranges, ranges + N_, range) - ranges;
-        return std::min(std::max(0, I - 1), N_ - 2);
     }
 
     std::pair<int, double> segment_index_t(double range) const
@@ -127,7 +119,7 @@ struct Polyline
   private:
     const RowVectors polyline_;
     const int N_;
-    const std::optional<Eigen::Vector3d> scale_;
+    const std::optional<Eigen::Vector3d> k_;
 
     mutable std::optional<std::vector<LineSegment>> segments_;
     mutable std::optional<Eigen::VectorXd> ranges_;

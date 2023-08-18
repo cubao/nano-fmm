@@ -57,8 +57,17 @@ void bind_polyline(py::module &m)
              "coords"_a, py::kw_only(), "k"_a = std::nullopt)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)
-        .def("scale", &Polyline::scale)
+        .def("k", &Polyline::k)
         .def("is_wgs84", &Polyline::is_wgs84)
+        //
+        .def("range", &Polyline::range, "seg_idx"_a, py::kw_only(), "t"_a)
+        .def("segment_index_t", &Polyline::segment_index_t, "range"_a)
+        .def("length", &Polyline::length)
+        .def("along", &Polyline::along, "range"_a, py::kw_only(),
+             "extend"_a = false)
+        .def("snap", &Polyline::snap, "point"_a)
+        .def("slice", &Polyline::slice, py::kw_only(), "min"_a = std::nullopt,
+             "max"_a = std::nullopt)
         //
         ;
 }
