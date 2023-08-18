@@ -10,3 +10,4 @@ wheelhouse
 site
 data/*
 !data/Makefile
+*.whl
