@@ -39,6 +39,8 @@ struct Network
 
     bool build_ubodt(std::optional<double> thresh) const;
 
+    static Eigen::Vector3d cheap_ruler_k(double latitude);
+
   private:
     bool is_wgs84_{true};
     std::vector<int64_t> ids_;

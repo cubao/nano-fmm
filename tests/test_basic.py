@@ -51,6 +51,8 @@ def test_polyline():
     fmm.Polyline(enus)
     print()
 
+for i in range(90):
+    print(f'K({i})', end=',')
 
 test_polyline()
 print()
