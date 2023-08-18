@@ -32,6 +32,11 @@ struct LineSegment
     {
         return std::sqrt(distance2(P));
     }
+    Eigen::Vector3d interpolate(double t) const
+    {
+        // 0 -> A, 1 -> B
+        return A;
+    }
 
     // dist, t, dot
 };
@@ -41,22 +46,70 @@ struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
-             const std::optional<Eigen::Vector3d> k = {})
+             const std::optional<Eigen::Vector3d> scale = {})
         : polyline_(polyline), //
           N_(polyline.rows()), //
-          k_(k)
+          scale_(scale)
     {
     }
 
     const RowVectors &polyline() const { return polyline_; }
-    int N() const { return N_; }
-    std::optional<Eigen::Vector3d> k() const { return k_; }
-    bool is_wgs84() const { return (bool)k_; }
+    std::optional<Eigen::Vector3d> scale() const { return scale_; }
+    bool is_wgs84() const { return (bool)scale_; }
+
+    double range(int seg_idx) const { return ranges()[seg_idx]; }
+    double range(int seg_idx, double t) const
+    {
+        auto &ranges = this->ranges();
+        return ranges[seg_idx] * (1.0 - t) + ranges[seg_idx + 1] * t;
+    }
+
+    int segment_index(double range) const
+    {
+        const double *ranges = this->ranges().data();
+        int I = std::upper_bound(ranges, ranges + N_, range) - ranges;
+        return std::min(std::max(0, I - 1), N_ - 2);
+    }
+
+    std::pair<int, double> segment_index_t(double range) const
+    {
+        const double *ranges = this->ranges().data();
+        int I = std::upper_bound(ranges, ranges + N_, range) - ranges;
+        int i = std::min(std::max(0, I - 1), N_ - 2);
+        double t = (range - ranges[i]) / (ranges[i + 1] - ranges[i]);
+        return {i, t};
+    }
+    double length() const { return ranges()[N_ - 1]; }
+
+    Eigen::Vector3d along(double range, bool extend = false) const
+    {
+        if (!extend) {
+            range = std::max(0.0, std::min(range, length()));
+        }
+        auto [i, t] = segment_index_t(range);
+        return interpolate(polyline_.row(i), polyline_.row(i + 1), t);
+    }
+
+    std::tuple<Eigen::Vector3d, int, double>
+    snap(const Eigen::Vector3d &point) const
+    {
+        return std::make_tuple(Eigen::Vector3d(), 0, 0);
+    }
+    RowVectors slice(std::optional<double> min, std::optional<double> max) const
+    {
+        return RowVectors(0, 3);
+    }
+
+    static Eigen::Vector3d interpolate(const Eigen::Vector3d &a,
+                                       const Eigen::Vector3d &b, double t)
+    {
+        return a + (b - a) * t;
+    }
 
   private:
     const RowVectors polyline_;
     const int N_;
-    const std::optional<Eigen::Vector3d> k_;
+    const std::optional<Eigen::Vector3d> scale_;
 
     mutable std::optional<std::vector<LineSegment>> segments_;
     mutable std::optional<Eigen::VectorXd> ranges_;

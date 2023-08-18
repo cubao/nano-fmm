@@ -51,7 +51,8 @@ void bind_polyline(py::module &m)
              "coords"_a, py::kw_only(), "k"_a = std::nullopt)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)
-        .def("N", &Polyline::N)
+        .def("scale", &Polyline::scale)
+        .def("is_wgs84", &Polyline::is_wgs84)
         //
         ;
 }
