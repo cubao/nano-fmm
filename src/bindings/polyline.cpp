@@ -20,7 +20,6 @@ void bind_polyline(py::module &m)
              "A"_a, "B"_a)
         .def("distance", &LineSegment::distance, "P"_a)
         .def("distance2", &LineSegment::distance2, "P"_a)
-        .def("intersects", &LineSegment::intersects, "other"_a)
         .def_property_readonly(
             "length",
             [](const LineSegment &self) { return std::sqrt(self.len2); })

@@ -51,7 +51,7 @@ struct PolylineRuler
     const RowVectors &polyline() const { return polyline_; }
     int N() const { return N_; }
     std::optional<Eigen::Vector3d> k() const { return k_; }
-    bool is_wgs84() const { return k_; }
+    bool is_wgs84() const { return (bool)k_; }
 
   private:
     const RowVectors polyline_;
@@ -62,7 +62,7 @@ struct PolylineRuler
     mutable std::optional<Eigen::VectorXd> ranges_;
     mutable std::optional<std::vector<LineSegment>> segments_;
 
-    const std::vector<LineSegment> &ranges() const
+    const Eigen::VectorXd &ranges() const
     {
         if (ranges_) {
             return *ranges_;

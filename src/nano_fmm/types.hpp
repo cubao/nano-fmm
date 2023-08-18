@@ -7,6 +7,7 @@
 #endif
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 
 namespace nano_fmm
 {
