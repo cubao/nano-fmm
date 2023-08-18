@@ -37,10 +37,10 @@ struct LineSegment
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
-struct PolylineRuler
+struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    PolylineRuler(const Eigen::Ref<const RowVectors> &polyline,
+    Polyline(const Eigen::Ref<const RowVectors> &polyline,
                   const std::optional<Eigen::Vector3d> k = {})
         : polyline_(polyline), //
           N_(polyline.rows()), //
@@ -58,10 +58,12 @@ struct PolylineRuler
     const int N_;
     const std::optional<Eigen::Vector3d> k_;
 
-    // cache
-    mutable std::optional<Eigen::VectorXd> ranges_;
     mutable std::optional<std::vector<LineSegment>> segments_;
+    mutable std::optional<Eigen::VectorXd> ranges_;
 
+    const std::vector<LineSegment> &segments() const {
+        //
+        return *segments_; }
     const Eigen::VectorXd &ranges() const
     {
         if (ranges_) {
@@ -75,7 +77,6 @@ struct PolylineRuler
         ranges_ = std::move(ranges);
         return *ranges_;
     }
-    const std::vector<LineSegment> &segments() const { return *segments_; }
 };
 
 } // namespace nano_fmm
