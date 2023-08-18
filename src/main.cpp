@@ -7,6 +7,11 @@ int add(int i, int j) { return i + j; }
 
 namespace py = pybind11;
 
+namespace nano_fmm
+{
+void bind_polyline(py::module &m);
+}
+
 PYBIND11_MODULE(_nano_fmm, m)
 {
     m.def("add", &add, R"pbdoc(
@@ -20,4 +25,6 @@ PYBIND11_MODULE(_nano_fmm, m)
 #else
     m.attr("__version__") = "dev";
 #endif
+
+    nano_fmm::bind_polyline(m);
 }
