@@ -51,8 +51,19 @@ def test_polyline():
     fmm.Polyline(enus)
     print()
 
-for i in range(90):
-    print(f'K({i})', end=',')
 
+N = 100000
+
+import time
+
+tic = time.time()
+fmm.benchmarks.cheap_ruler_k(N)
+toc = time.time()
+print(toc - tic, "secs")
+
+tic = time.time()
+fmm.benchmarks.cheap_ruler_k_lookup_table(N)
+toc = time.time()
+print(toc - tic, "secs")
 test_polyline()
 print()

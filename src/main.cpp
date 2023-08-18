@@ -9,6 +9,8 @@ namespace py = pybind11;
 
 namespace nano_fmm
 {
+void bind_benchmarks(py::module &m);
+void bind_network(py::module &m);
 void bind_polyline(py::module &m);
 void bind_utils(py::module &m);
 } // namespace nano_fmm
@@ -28,7 +30,10 @@ PYBIND11_MODULE(_nano_fmm, m)
 #endif
 
     auto utils = m.def_submodule("utils");
+    auto benchmarks = m.def_submodule("benchmarks");
 
+    nano_fmm::bind_benchmarks(benchmarks);
+    nano_fmm::bind_network(m);
     nano_fmm::bind_polyline(m);
     nano_fmm::bind_utils(utils);
 }

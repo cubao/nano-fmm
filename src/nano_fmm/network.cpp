@@ -31,7 +31,8 @@ bool Network::dump(const std::string &path) const
     //
 }
 
-Eigen::Vector3d Network::cheap_ruler_k(double latitude) {
+Eigen::Vector3d Network::cheap_ruler_k(double latitude)
+{
     // lookup table
 #ifdef K
 #undef K
@@ -48,7 +49,8 @@ Eigen::Vector3d Network::cheap_ruler_k(double latitude) {
         K(79),K(80),K(81),K(82),K(83),K(84),K(85),K(86),K(87),K(88),K(89),K(90)
         // clang-format on
     };
-    int idx = std::min(90, static_cast<int>(std::floor(std::fabs(latitude) + 0.5)));
+    int idx =
+        std::min(90, static_cast<int>(std::floor(std::fabs(latitude) + 0.5)));
     return Ks[idx];
 }
 
