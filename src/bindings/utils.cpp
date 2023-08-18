@@ -16,11 +16,11 @@ void bind_utils(py::module &m)
 {
     m //
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
-        .def("lla2enu", &utils::lla2enu, "llas"_a, //
-             py::kw_only(),                        //
-             "anchor_lla"_a = std::nullopt,        //
+        .def("lla2enu", &utils::lla2enu,    //
+             "llas"_a, py::kw_only(),       //
+             "anchor_lla"_a = std::nullopt, //
              "k"_a = std::nullopt)
-        .def("enu2lla", &utils::lla2enu, //
+        .def("enu2lla", &utils::enu2lla, //
              "enus"_a, py::kw_only(),    //
              "anchor_lla"_a,             //
              "k"_a = std::nullopt)

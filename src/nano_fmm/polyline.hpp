@@ -116,17 +116,17 @@ struct Polyline
         return a + (b - a) * t;
     }
 
-  private:
-    const RowVectors polyline_;
-    const int N_;
-    const std::optional<Eigen::Vector3d> k_;
-
-    mutable std::optional<std::vector<LineSegment>> segments_;
-    mutable std::optional<Eigen::VectorXd> ranges_;
-
     const std::vector<LineSegment> &segments() const
     {
-        //
+        if (segments_) {
+            return *segments_;
+        }
+        segments_ = std::vector<LineSegment>{};
+        segments_->reserve(N_ - 1);
+        if (k_) {
+
+        } else {
+        }
         return *segments_;
     }
     const Eigen::VectorXd &ranges() const
@@ -135,13 +135,23 @@ struct Polyline
             return *ranges_;
         }
         Eigen::VectorXd ranges(N_);
+        ranges.setZero();
         int idx = 0;
         for (auto &seg : segments()) {
-            ranges[idx++] = std::sqrt(seg.len2);
+            ranges[idx + 1] = ranges[idx] + seg.length();
+            ++idx;
         }
         ranges_ = std::move(ranges);
         return *ranges_;
     }
+
+  private:
+    const RowVectors polyline_;
+    const int N_;
+    const std::optional<Eigen::Vector3d> k_;
+
+    mutable std::optional<std::vector<LineSegment>> segments_;
+    mutable std::optional<Eigen::VectorXd> ranges_;
 };
 
 } // namespace nano_fmm

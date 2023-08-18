@@ -38,8 +38,19 @@ def test_utils():
     k0 = fmm.utils.cheap_ruler_k(0.0)
     k1 = fmm.utils.cheap_ruler_k(30.0)
     assert k0[0] > k1[0]
+
+    anchor = [123.4, 5.6, 7.8]
+    enus = [[1, 2, 3], [4, 5, 6]]
+    llas = fmm.utils.enu2lla(enus, anchor_lla=anchor)
+    enus2 = fmm.utils.lla2enu(llas, anchor_lla=anchor)
+    assert np.max(enus2 - enus) < 1e-9
+
+
+def test_polyline():
+    enus = [[0, 0, 0], [10, 0, 0], [13, 4, 0]]
+    fmm.Polyline(enus)
     print()
 
 
-test_utils()
+test_polyline()
 print()
