@@ -116,6 +116,11 @@ struct Polyline
         return a + (b - a) * t;
     }
 
+    const LineSegment &segment(int index) const
+    {
+        index = index < 0 ? index + N_ - 1 : index;
+        return segments()[index];
+    }
     const std::vector<LineSegment> &segments() const
     {
         if (segments_) {
@@ -123,9 +128,18 @@ struct Polyline
         }
         segments_ = std::vector<LineSegment>{};
         segments_->reserve(N_ - 1);
-        if (k_) {
-
+        if (!k_) {
+            for (int i = 1; i < N_; ++i) {
+                segments_->emplace_back(polyline_.row(i - 1), polyline_.row(i));
+            }
         } else {
+            for (int i = 1; i < N_; ++i) {
+                Eigen::Vector3d A = polyline_.row(i - 1) - polyline_.row(0);
+                Eigen::Vector3d B = polyline_.row(i) - polyline_.row(0);
+                A.array() *= k_->array();
+                B.array() *= k_->array();
+                segments_->emplace_back(A, B);
+            }
         }
         return *segments_;
     }

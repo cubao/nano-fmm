@@ -69,6 +69,7 @@ void bind_polyline(py::module &m)
         .def("slice", &Polyline::slice, py::kw_only(), "min"_a = std::nullopt,
              "max"_a = std::nullopt)
         //
+        .def("segment", &Polyline::segment, "index"_a, rvp::reference_internal)
         // .def("segments", &Polyline::segments)
         .def("ranges", &Polyline::ranges, rvp::reference_internal)
         //

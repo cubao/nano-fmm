@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 import nano_fmm as fmm
@@ -48,22 +50,33 @@ def test_utils():
 
 def test_polyline():
     enus = [[0, 0, 0], [10, 0, 0], [13, 4, 0]]
-    fmm.Polyline(enus)
-    print()
+    polyline = fmm.Polyline(enus)
+    assert polyline.segment(-1) == polyline.segment(1)
+    assert polyline.segment(-1) != polyline.segment(0)
+    assert np.all(polyline.ranges() == [0, 10, 15])
+
+    anchor = [123.4, 5.6, 7.8]
+    k = fmm.utils.cheap_ruler_k(anchor[1])
+    llas = fmm.utils.enu2lla(enus, anchor_lla=anchor)
+    polyline2 = fmm.Polyline(llas, k=k)
+    for i in range(2):
+        seg1 = polyline.segment(i)
+        seg2 = polyline2.segment(i)
+        assert np.max(np.fabs(seg1.A - seg2.A)) < 1e-9
+        assert np.max(np.fabs(seg1.B - seg2.B)) < 1e-9
 
 
-N = 100000
+def test_cheap_ruler_k():
+    N = 100000
+    tic = time.time()
+    fmm.benchmarks.cheap_ruler_k(N)
+    toc = time.time()
+    print(toc - tic, "secs")
+    tic = time.time()
+    fmm.benchmarks.cheap_ruler_k_lookup_table(N)
+    toc = time.time()
+    print(toc - tic, "secs (with lookup)")
 
-import time
 
-tic = time.time()
-fmm.benchmarks.cheap_ruler_k(N)
-toc = time.time()
-print(toc - tic, "secs")
-
-tic = time.time()
-fmm.benchmarks.cheap_ruler_k_lookup_table(N)
-toc = time.time()
-print(toc - tic, "secs")
 test_polyline()
 print()
