@@ -77,6 +77,8 @@ void bind_packedrtree(py::module &m)
         .def(py::init<const std::vector<NodeItem> &, const NodeItem &,
                       const uint16_t>(),
              "nodes"_a, "extent"_a, "nodeSize"_a = 16)
+        // .def(py::init([](const Eigen::Ref<const RowVectorsNxi> &mins,) {
+        // }))
         .def("search", &PackedRTree::search, "minX"_a, "minY"_a, "maxX"_a,
              "maxY"_a)
         .def_static("generateLevelBounds", &PackedRTree::generateLevelBounds,
