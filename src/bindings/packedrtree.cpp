@@ -19,7 +19,18 @@ void bind_packedrtree(py::module &m)
     py::class_<NodeItem>(m, "NodeItem", py::module_local()) //
         .def(py::init<>())
         .def(py::init<double, double, double, double, uint64_t>(), "minX"_a,
-             "minY"_a, "maxX"_a, "maxY"_a, "offset"_a)
+             "minY"_a, "maxX"_a, "maxY"_a, "offset"_a = 0)
+        .def(py::init([](const Eigen::Vector2d &min, //
+                         const Eigen::Vector2d &max, //
+                         uint64_t offset) -> NodeItem {
+                 return {min[0], min[1], max[0], max[1], offset};
+             }),
+             "min"_a, "max"_a, "offset"_a = 0)
+        .def(py::init(
+                 [](const Eigen::Vector4d &bbox, uint64_t offset) -> NodeItem {
+                     return {bbox[0], bbox[1], bbox[2], bbox[3], offset};
+                 }),
+             "bbox"_a, "offset"_a = 0)
         .def_readwrite("minX", &NodeItem::minX)
         .def_readwrite("minY", &NodeItem::minY)
         .def_readwrite("maxX", &NodeItem::maxX)
@@ -32,6 +43,11 @@ void bind_packedrtree(py::module &m)
         .def("expand", &NodeItem::expand, "r"_a)
         .def("intersects", &NodeItem::intersects, "r"_a)
         .def("toVector", &NodeItem::toVector)
+        .def("to_numpy",
+             [](const NodeItem &self) {
+                 return Eigen::Vector4d(self.minX, self.minY, //
+                                        self.maxX, self.maxY);
+             })
         .def("__repr__",
              [](const NodeItem &n) {
                  return fmt::format(
