@@ -4,6 +4,7 @@ import numpy as np
 
 import nano_fmm as fmm
 from nano_fmm import LineSegment
+from nano_fmm import flatbush as fb
 
 
 def test_add():
@@ -78,5 +79,15 @@ def test_cheap_ruler_k():
     print(toc - tic, "secs (with lookup)")
 
 
-test_polyline()
+def test_geobuf_rtree():
+    n = fb.NodeItem()
+    assert n.minX == n.minY == n.maxX == n.maxY == 0.0
+    assert n.offset == 0
+    assert n.width() == n.height() == 0.0
+
+    fb.NodeItem.sum(fb.NodeItem(0, 1, 2, 3, 4), fb.NodeItem(0, 10, 20, 30, 40))
+    print()
+
+
+test_geobuf_rtree()
 print()
