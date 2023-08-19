@@ -53,7 +53,7 @@ void bind_packedrtree(py::module &m)
         ;
 
     m.def("hilbert", py::overload_cast<uint32_t, uint32_t>(&hilbert), //
-    "x"_a, "y"_a)
+          "x"_a, "y"_a)
         //
         ;
 
@@ -67,6 +67,14 @@ void bind_packedrtree(py::module &m)
                     "numItems"_a, "nodeSize"_a)
         .def("size", py::overload_cast<>(&PackedRTree::size, py::const_))
         .def("getExtent", &PackedRTree::getExtent)
+        .def("to_bytes",
+             [](PackedRTree &self) {
+                 std::string bytes;
+                 self.streamWrite([&](uint8_t *ptr, size_t num_bytes) {
+                     bytes = std::string((char *)ptr, num_bytes);
+                 });
+                 return py::bytes(bytes);
+             })
 
         //
         ;

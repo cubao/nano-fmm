@@ -85,8 +85,13 @@ def test_geobuf_rtree():
     assert n.offset == 0
     assert n.width() == n.height() == 0.0
 
-    fb.NodeItem.sum(fb.NodeItem(0, 1, 2, 3, 4), fb.NodeItem(0, 10, 20, 30, 40))
-    print()
+    n = fb.NodeItem.sum(fb.NodeItem(0, 1, 2, 3, 4), fb.NodeItem(0, 10, 20, 30, 40))
+
+    tree = fb.PackedRTree(
+        [fb.NodeItem(1, 1, 9, 9, 0), fb.NodeItem(5, 5, 8, 8, 0)],
+        extent=fb.NodeItem(0, 0, 10, 10, 0),
+    )
+    assert len(tree.to_bytes())
 
 
 test_geobuf_rtree()
