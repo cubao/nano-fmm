@@ -21,7 +21,7 @@ struct ProjectedPoint
 
 struct Network
 {
-    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
 
     std::shared_ptr<Config> config();
     void config(std::shared_ptr<Config> config);
