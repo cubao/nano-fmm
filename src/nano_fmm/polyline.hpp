@@ -170,7 +170,6 @@ struct Polyline
     mutable std::optional<Eigen::VectorXd> ranges_;
 
     // same as utils.hpp/cheap_ruler_k
-    // maybe try cheap_ruler_k_lookup_table?
     inline Eigen::Vector3d cheap_ruler_k(double latitude)
     {
         static constexpr double RE = 6378.137;

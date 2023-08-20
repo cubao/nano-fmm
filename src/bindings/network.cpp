@@ -15,7 +15,7 @@ using rvp = py::return_value_policy;
 void bind_network(py::module &m)
 {
     py::class_<Network>(m, "Network", py::module_local()) //
-        //
+                                                          //
         ;
 }
 } // namespace nano_fmm

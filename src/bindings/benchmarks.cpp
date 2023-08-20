@@ -12,14 +12,14 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 using rvp = py::return_value_policy;
 
-Eigen::Vector3d cheap_ruler_k_lookup_table(double latitude)
+inline Eigen::Vector3d cheap_ruler_k_lookup_table(double latitude)
 {
     // lookup table
 #ifdef K
 #undef K
 #endif
 #define K(lat) utils::cheap_ruler_k((double)lat)
-    Eigen::Vector3d Ks[] = {
+    const static Eigen::Vector3d Ks[] = {
         // clang-format off
         K(0),K(1),K(2),K(3),K(4),K(5),K(6),K(7),K(8),K(9),K(10),K(11),K(12),K(13),
         K(14),K(15),K(16),K(17),K(18),K(19),K(20),K(21),K(22),K(23),K(24),K(25),K(26),
@@ -44,7 +44,7 @@ void bind_benchmarks(py::module &m)
                 Eigen::Vector3d k(0, 0, 0);
                 for (int i = 0; i < round; ++i) {
                     for (double l = 0; l < 90.0; l += 0.5) {
-                        k += cheap_ruler_k_lookup_table(l);
+                        k += utils::cheap_ruler_k(l);
                     }
                 }
                 return k;
@@ -56,7 +56,7 @@ void bind_benchmarks(py::module &m)
                 Eigen::Vector3d k(0, 0, 0);
                 for (int i = 0; i < round; ++i) {
                     for (double l = 0; l < 90.0; l += 0.5) {
-                        k += utils::cheap_ruler_k(l);
+                        k += cheap_ruler_k_lookup_table(l);
                     }
                 }
                 return k;

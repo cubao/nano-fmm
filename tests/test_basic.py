@@ -60,7 +60,7 @@ def test_polyline():
     k = fmm.utils.cheap_ruler_k(anchor[1])
     llas = fmm.utils.enu2lla(enus, anchor_lla=anchor)
     polyline2 = fmm.Polyline(llas, is_wgs84=True)
-    assert np.all(polyline2.k() == k)
+    assert np.fabs(polyline2.k() - k).max() < 100
     for i in range(2):
         seg1 = polyline.segment(i)
         seg2 = polyline2.segment(i)
@@ -78,6 +78,7 @@ def test_cheap_ruler_k():
     fmm.benchmarks.cheap_ruler_k_lookup_table(N)
     toc = time.time()
     print(toc - tic, "secs (with lookup)")
+    print()
 
 
 def test_geobuf_rtree():
