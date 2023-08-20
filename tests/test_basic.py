@@ -151,7 +151,9 @@ def test_cpp_migrated_2():
     assert nodes[0].intersects(2, 2, 3, 3)
 
     tree = fb.PackedRTree(nodes, extent)
-    assert len(tree.to_bytes()) == 120
+    data = tree.to_bytes()
+    assert len(data) == 120
+    assert type(data) == bytes
 
     hits = tree.search(0, 0, 1, 1)
     assert len(hits) == 1
@@ -200,13 +202,8 @@ def test_cpp_migrated_3():
         print(h, node)
         assert node.intersects(102, 102, 103, 103)
 
-    tree.to_bytes()
-    # tree2 = fb.PackedRTree(data, len(nodes))
-    print()
-
-
-# test_geobuf_rtree()
-# test_cpp_migrated_1()
-# test_cpp_migrated_2()
-test_cpp_migrated_3()
-print()
+    data = tree.to_bytes()
+    tree2 = fb.PackedRTree(data, len(nodes))
+    hits2 = tree2.search(102, 102, 103, 103)
+    assert hits == hits2
+    assert hits != hits2[::-1]

@@ -73,11 +73,7 @@ struct NodeItem
 
 inline bool operator==(const NodeItem& lhs, const NodeItem& rhs)
 {
-    return lhs.minX == rhs.minX
-    && lhs.minY == rhs.minY
-    && lhs.maxX == rhs.maxX
-    && lhs.maxY == rhs.maxY
-    && lhs.offset == rhs.offset;
+    return lhs.minX == rhs.minX && lhs.minY == rhs.minY && lhs.maxX == rhs.maxX && lhs.maxY == rhs.maxY && lhs.offset == rhs.offset;
 }
 
 struct Item
@@ -90,6 +86,11 @@ struct SearchResultItem
     uint64_t offset;
     uint64_t index;
 };
+
+inline bool operator==(const SearchResultItem& lhs, const SearchResultItem& rhs)
+{
+    return lhs.index == rhs.index && lhs.offset == rhs.offset;
+}
 
 std::ostream &operator<<(std::ostream &os, NodeItem const &value);
 

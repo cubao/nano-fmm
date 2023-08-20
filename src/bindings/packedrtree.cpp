@@ -88,6 +88,8 @@ void bind_packedrtree(py::module &m)
                                     self.offset, self.index);
              })
         //
+        .def(py::self == py::self)
+        //
         ;
 
     m                                                                    //
@@ -115,8 +117,12 @@ void bind_packedrtree(py::module &m)
         .def(py::init<const std::vector<NodeItem> &, const NodeItem &,
                       const uint16_t>(),
              "nodes"_a, "extent"_a, "nodeSize"_a = 16)
-        .def(py::init<const void *, const uint64_t, const uint16_t>(), "data"_a,
-             "numItems"_a, "nodeSize"_a = 16)
+        .def(py::init([](py::buffer buf, const uint64_t numItems,
+                         const uint16_t nodeSize) {
+                 py::buffer_info info = buf.request();
+                 return PackedRTree(info.ptr, numItems, nodeSize);
+             }),
+             "data"_a, "numItems"_a, "nodeSize"_a = 16)
         .def(py::init([](const Eigen::Ref<const RowVectorsNx2> &bbox_min,
                          const Eigen::Ref<const RowVectorsNx2> &bbox_max,
                          const uint16_t node_size) {
@@ -174,7 +180,7 @@ void bind_packedrtree(py::module &m)
                  self.streamWrite([&bytes](uint8_t *buf, size_t size) {
                      std::copy(buf, buf + size, std::back_inserter(bytes));
                  });
-                 return bytes;
+                 return py::bytes((const char *)bytes.data(), bytes.size());
              })
 
         //
