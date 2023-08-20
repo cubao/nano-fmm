@@ -21,13 +21,13 @@ struct ProjectedPoint
 
 struct Network
 {
-    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
 
     std::shared_ptr<Config> config();
+    void config(std::shared_ptr<Config> config);
 
-    void add(const Eigen::Ref<RowVectors> &polyline, int64_t id = -1);
-    void add(const std::vector<RowVectors> &polylines,
-             std::optional<int64_t> ids = std::nullopt);
+    void add_node(int64_t node_id, const Eigen::Ref<RowVectors> &polyline);
+    void add_edge(int64_t edge_id, int64_t source_node, int64_t target_node);
 
     std::vector<ProjectedPoint>
     query(const Eigen::Vector3d &position,
@@ -38,6 +38,8 @@ struct Network
     bool dump(const std::string &path) const;
 
     bool build_ubodt(std::optional<double> thresh) const;
+
+    Network to_2d() const;
 
   private:
     bool is_wgs84_{true};

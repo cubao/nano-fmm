@@ -180,9 +180,12 @@ void hilbertSort(std::vector<std::shared_ptr<Item>> &items)
               });
 }
 
-void hilbertSort(std::vector<NodeItem> &items)
+void hilbertSort(std::vector<NodeItem> &items) {
+    hilbertSort(items, calcExtent(items));
+}
+
+void hilbertSort(std::vector<NodeItem> &items, const NodeItem &extent)
 {
-    NodeItem extent = calcExtent(items);
     const double minX = extent.minX;
     const double minY = extent.minY;
     const double width = extent.width();

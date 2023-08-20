@@ -54,11 +54,13 @@ test_in_dev_container:
 
 PYTHON ?= python3
 python_install:
-	$(PYTHON) setup.py install
+	$(PYTHON) setup.py install --force
 python_build:
 	$(PYTHON) setup.py bdist_wheel
 python_sdist:
 	$(PYTHON) setup.py sdist
+python_sdist_wheel:
+	$(PYTHON) -m pip wheel dist/nano_fmm-*.tar.gz --no-deps
 python_test:
 	$(PYTHON) -c 'from pybind11_rdp import rdp; print(rdp([[1, 1], [2, 2], [3, 3], [4, 4]]))'
 	$(PYTHON) -c 'import nano_fmm; print(nano_fmm.add(1, 2))'

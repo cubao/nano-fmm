@@ -18,7 +18,7 @@ inline Eigen::Vector3d cheap_ruler_k(double latitude)
     static constexpr double RAD = M_PI / 180.0;
     static constexpr double MUL = RAD * RE * 1000.;
     double coslat = std::cos(latitude * RAD);
-    double w2 = 1 / (1 - E2 * (1 - coslat * coslat));
+    double w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
     double w = std::sqrt(w2);
     return Eigen::Vector3d(MUL * w * coslat, MUL * w * w2 * (1 - E2), 1.0);
 }
@@ -50,10 +50,12 @@ inline RowVectors enu2lla(const Eigen::Ref<const RowVectors> &enus,
     if (!enus.rows()) {
         return RowVectors(0, 3);
     }
-    auto k = cheap_ruler_k(anchor_lla[1]);
+    if (!k) {
+        k = cheap_ruler_k(anchor_lla[1]);
+    }
     RowVectors llas = enus;
     for (int i = 0; i < 3; ++i) {
-        llas.col(i).array() /= k[i];
+        llas.col(i).array() /= (*k)[i];
         llas.col(i).array() += anchor_lla[i];
     }
     return llas;
@@ -62,7 +64,7 @@ inline RowVectors enu2lla(const Eigen::Ref<const RowVectors> &enus,
 // https://github.com/cubao/headers/blob/main/include/cubao/eigen_helpers.hpp
 
 inline Eigen::VectorXi
-indexes2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
+index2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
 {
     Eigen::VectorXi mask(N);
     mask.setZero();
@@ -72,8 +74,7 @@ indexes2mask(const Eigen::Ref<const Eigen::VectorXi> &indexes, int N)
     return mask;
 }
 
-inline Eigen::VectorXi
-mask2indexes(const Eigen::Ref<const Eigen::VectorXi> &mask)
+inline Eigen::VectorXi mask2index(const Eigen::Ref<const Eigen::VectorXi> &mask)
 {
     Eigen::VectorXi indexes(mask.sum());
     for (int i = 0, j = 0, N = mask.size(); i < N; ++i) {

@@ -17,4 +17,6 @@ using RowVectorsNx3 = RowVectors;
 // without-z
 using RowVectorsNx2 = Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>;
 
+using VectorUi64 = Eigen::Matrix<uint64_t, Eigen::Dynamic, 1>;
+
 } // namespace nano_fmm

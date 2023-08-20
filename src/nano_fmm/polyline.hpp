@@ -13,7 +13,7 @@ struct LineSegment
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
         : A(a), B(b), AB(b - a), //
-          len2((b - a).squaredNorm()), inv_len2(1.0 / len2)
+          len2(AB.squaredNorm()), inv_len2(1.0 / len2)
     {
     }
     double distance2(const Eigen::Vector3d &P) const
@@ -32,13 +32,31 @@ struct LineSegment
     {
         return std::sqrt(distance2(P));
     }
-    Eigen::Vector3d interpolate(double t) const
+    // return P', distance, t
+    std::tuple<Eigen::Vector3d, double, double>
+    nearest(const Eigen::Vector3d &P) const
     {
-        // 0 -> A, 1 -> B
-        return A;
+        double dot = (P - A).dot(AB);
+        if (dot <= 0) {
+            return std::make_tuple(A, (P - A).squaredNorm(), 0.0);
+        } else if (dot >= len2) {
+            return std::make_tuple(B, (P - B).squaredNorm(), 1.0);
+        }
+        Eigen::Vector3d PP = A + (dot * inv_len2 * AB);
+        return std::make_tuple(PP, (PP - P).squaredNorm(), dot * inv_len2);
+    }
+    double t(const Eigen::Vector3d &P) const
+    {
+        return (P - A).dot(AB) * inv_len2;
     }
 
-    // dist, t, dot
+    Eigen::Vector3d interpolate(double t) const
+    {
+        return A * (1.0 - t) + B * t;
+    }
+
+    double length() const { return std::sqrt(len2); }
+    Eigen::Vector3d dir() const { return AB / length(); }
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
@@ -46,29 +64,22 @@ struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
-             const std::optional<Eigen::Vector3d> scale = {})
+             bool is_wgs84 = false)
         : polyline_(polyline), //
           N_(polyline.rows()), //
-          scale_(scale)
+          is_wgs84_(is_wgs84),
+          k_(is_wgs84 ? cheap_ruler_k(polyline(0, 1)) : Eigen::Vector3d::Ones())
     {
     }
 
     const RowVectors &polyline() const { return polyline_; }
-    std::optional<Eigen::Vector3d> scale() const { return scale_; }
-    bool is_wgs84() const { return (bool)scale_; }
+    Eigen::Vector3d k() const { return k_; }
+    bool is_wgs84() const { return is_wgs84_; }
 
-    double range(int seg_idx) const { return ranges()[seg_idx]; }
-    double range(int seg_idx, double t) const
+    double range(int seg_idx, double t = 0.0) const
     {
         auto &ranges = this->ranges();
         return ranges[seg_idx] * (1.0 - t) + ranges[seg_idx + 1] * t;
-    }
-
-    int segment_index(double range) const
-    {
-        const double *ranges = this->ranges().data();
-        int I = std::upper_bound(ranges, ranges + N_, range) - ranges;
-        return std::min(std::max(0, I - 1), N_ - 2);
     }
 
     std::pair<int, double> segment_index_t(double range) const
@@ -106,17 +117,31 @@ struct Polyline
         return a + (b - a) * t;
     }
 
-  private:
-    const RowVectors polyline_;
-    const int N_;
-    const std::optional<Eigen::Vector3d> scale_;
-
-    mutable std::optional<std::vector<LineSegment>> segments_;
-    mutable std::optional<Eigen::VectorXd> ranges_;
-
+    const LineSegment &segment(int index) const
+    {
+        index = index < 0 ? index + N_ - 1 : index;
+        return segments()[index];
+    }
     const std::vector<LineSegment> &segments() const
     {
-        //
+        if (segments_) {
+            return *segments_;
+        }
+        segments_ = std::vector<LineSegment>{};
+        segments_->reserve(N_ - 1);
+        if (!is_wgs84_) {
+            for (int i = 1; i < N_; ++i) {
+                segments_->emplace_back(polyline_.row(i - 1), polyline_.row(i));
+            }
+        } else {
+            for (int i = 1; i < N_; ++i) {
+                Eigen::Vector3d A = polyline_.row(i - 1) - polyline_.row(0);
+                Eigen::Vector3d B = polyline_.row(i) - polyline_.row(0);
+                A.array() *= k_.array();
+                B.array() *= k_.array();
+                segments_->emplace_back(A, B);
+            }
+        }
         return *segments_;
     }
     const Eigen::VectorXd &ranges() const
@@ -125,12 +150,37 @@ struct Polyline
             return *ranges_;
         }
         Eigen::VectorXd ranges(N_);
+        ranges.setZero();
         int idx = 0;
         for (auto &seg : segments()) {
-            ranges[idx++] = std::sqrt(seg.len2);
+            ranges[idx + 1] = ranges[idx] + seg.length();
+            ++idx;
         }
         ranges_ = std::move(ranges);
         return *ranges_;
+    }
+
+  private:
+    const RowVectors polyline_;
+    const int N_;
+    const bool is_wgs84_;
+    const Eigen::Vector3d k_;
+
+    mutable std::optional<std::vector<LineSegment>> segments_;
+    mutable std::optional<Eigen::VectorXd> ranges_;
+
+    // same as utils.hpp/cheap_ruler_k
+    inline Eigen::Vector3d cheap_ruler_k(double latitude)
+    {
+        static constexpr double RE = 6378.137;
+        static constexpr double FE = 1.0 / 298.257223563;
+        static constexpr double E2 = FE * (2 - FE);
+        static constexpr double RAD = M_PI / 180.0;
+        static constexpr double MUL = RAD * RE * 1000.;
+        double coslat = std::cos(latitude * RAD);
+        double w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
+        double w = std::sqrt(w2);
+        return Eigen::Vector3d(MUL * w * coslat, MUL * w * w2 * (1 - E2), 1.0);
     }
 };
 

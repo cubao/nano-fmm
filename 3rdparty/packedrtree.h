@@ -71,6 +71,11 @@ struct NodeItem
     std::vector<double> toVector();
 };
 
+inline bool operator==(const NodeItem& lhs, const NodeItem& rhs)
+{
+    return lhs.minX == rhs.minX && lhs.minY == rhs.minY && lhs.maxX == rhs.maxX && lhs.maxY == rhs.maxY && lhs.offset == rhs.offset;
+}
+
 struct Item
 {
     NodeItem nodeItem;
@@ -81,6 +86,11 @@ struct SearchResultItem
     uint64_t offset;
     uint64_t index;
 };
+
+inline bool operator==(const SearchResultItem& lhs, const SearchResultItem& rhs)
+{
+    return lhs.index == rhs.index && lhs.offset == rhs.offset;
+}
 
 std::ostream &operator<<(std::ostream &os, NodeItem const &value);
 
@@ -119,6 +129,7 @@ template <class ITEM_TYPE> void hilbertSort(std::deque<ITEM_TYPE> &items)
 }
 
 void hilbertSort(std::vector<NodeItem> &items);
+void hilbertSort(std::vector<NodeItem> &items, const NodeItem &extent);
 NodeItem calcExtent(const std::vector<std::shared_ptr<Item>> &items);
 NodeItem calcExtent(const std::vector<NodeItem> &rects);
 

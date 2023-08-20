@@ -19,11 +19,17 @@ void bind_polyline(py::module &m)
              "A"_a, "B"_a)
         .def("distance", &LineSegment::distance, "P"_a)
         .def("distance2", &LineSegment::distance2, "P"_a)
+        .def("nearest", &LineSegment::nearest, "P"_a)
+        .def("t", &LineSegment::t, "P"_a)
+        .def("interpolate", &LineSegment::interpolate, "t"_a)
         .def_property_readonly(
-            "length",
-            [](const LineSegment &self) { return std::sqrt(self.len2); })
+            "length", [](const LineSegment &self) { return self.length(); })
         .def_property_readonly(
             "length2", [](const LineSegment &self) { return self.len2; })
+        .def_property_readonly("dir",
+                               [](const LineSegment &self) -> Eigen::Vector3d {
+                                   return self.dir();
+                               })
         .def_property_readonly(
             "A",
             [](const LineSegment &self) -> const Eigen::Vector3d & {
@@ -46,13 +52,25 @@ void bind_polyline(py::module &m)
         ;
 
     py::class_<Polyline>(m, "Polyline", py::module_local()) //
-        .def(py::init<const Eigen::Ref<const RowVectors> &,
-                      const std::optional<Eigen::Vector3d>>(), //
-             "coords"_a, py::kw_only(), "k"_a = std::nullopt)
+        .def(py::init<const Eigen::Ref<const RowVectors> &, bool>(), "coords"_a,
+             py::kw_only(), "is_wgs84"_a = false)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)
-        .def("scale", &Polyline::scale)
+        .def("k", &Polyline::k)
         .def("is_wgs84", &Polyline::is_wgs84)
+        //
+        .def("range", &Polyline::range, "seg_idx"_a, py::kw_only(), "t"_a)
+        .def("segment_index_t", &Polyline::segment_index_t, "range"_a)
+        .def("length", &Polyline::length)
+        .def("along", &Polyline::along, "range"_a, py::kw_only(),
+             "extend"_a = false)
+        .def("snap", &Polyline::snap, "point"_a)
+        .def("slice", &Polyline::slice, py::kw_only(), "min"_a = std::nullopt,
+             "max"_a = std::nullopt)
+        //
+        .def("segment", &Polyline::segment, "index"_a, rvp::reference_internal)
+        // .def("segments", &Polyline::segments)
+        .def("ranges", &Polyline::ranges, rvp::reference_internal)
         //
         ;
 }
