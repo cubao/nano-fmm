@@ -100,7 +100,10 @@ def test_geobuf_rtree():
         [2, 2, 9, 3],
     ]
     bboxes = np.array(bboxes, dtype=np.float64)
+    tree = fb.PackedRTree(bboxes[:, :2], bboxes[:, 2:])
+
     tree.search(0, 0, 3, 3)
+    tree.searchIndex(0, 0, 1, 1)
     print()
 
 

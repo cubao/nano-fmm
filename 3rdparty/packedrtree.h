@@ -119,6 +119,7 @@ template <class ITEM_TYPE> void hilbertSort(std::deque<ITEM_TYPE> &items)
 }
 
 void hilbertSort(std::vector<NodeItem> &items);
+void hilbertSort(std::vector<NodeItem> &items, const NodeItem &extent);
 NodeItem calcExtent(const std::vector<std::shared_ptr<Item>> &items);
 NodeItem calcExtent(const std::vector<NodeItem> &rects);
 

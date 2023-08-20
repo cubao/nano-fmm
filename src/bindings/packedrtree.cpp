@@ -97,17 +97,21 @@ void bind_packedrtree(py::module &m)
                          const uint16_t node_size) {
                  auto extent = NodeItem::create();
                  const uint64_t N = bbox_min.rows();
-                 auto items = std::vector<NodeItem>(N);
+                 auto nodes = std::vector<NodeItem>(N);
                  for (uint64_t i = 0; i < N; ++i) {
-                     items[i].minX = bbox_min(i, 0);
-                     items[i].minY = bbox_min(i, 1);
-                     items[i].maxX = bbox_max(i, 0);
-                     items[i].maxY = bbox_max(i, 1);
-                     items[i].offset = i;
-                     extent.expand(items[i]);
+                     nodes[i].minX = bbox_min(i, 0);
+                     nodes[i].minY = bbox_min(i, 1);
+                     nodes[i].maxX = bbox_max(i, 0);
+                     nodes[i].maxY = bbox_max(i, 1);
+                     extent.expand(nodes[i]);
                  }
-                 hilbertSort(items);
-                 return PackedRTree(items, extent, node_size);
+                 hilbertSort(nodes, extent);
+                 uint64_t offset = 0;
+                 for (auto &node : nodes) {
+                     node.offset = offset;
+                     offset += sizeof(NodeItem);
+                 }
+                 return PackedRTree(nodes, extent, node_size);
              }),
              "min"_a, "max"_a, "nodeSize"_a = 16)
         .def("search", &PackedRTree::search, //
@@ -115,8 +119,10 @@ void bind_packedrtree(py::module &m)
              "maxX"_a, "maxY"_a)
         .def(
             "searchIndex",
-            [](const PackedRTree &self, double minX, double minY, double maxX,
-               double maxY, bool use_offset) {
+            [](const PackedRTree &self,  //
+               double minX, double minY, //
+               double maxX, double maxY, //
+               bool use_offset) {
                 auto hits = self.search(minX, minY, maxX, maxY);
                 const size_t N = hits.size();
                 VectorUi64 idx(N);
@@ -129,6 +135,7 @@ void bind_packedrtree(py::module &m)
                         idx[i] = hits[i].index;
                     }
                 }
+                return idx;
             },
             "minX"_a, "minY"_a, //
             "maxX"_a, "maxY"_a, py::kw_only(), "use_offset"_a = true)
@@ -139,8 +146,8 @@ void bind_packedrtree(py::module &m)
         .def("to_bytes",
              [](PackedRTree &self) {
                  std::vector<uint8_t> bytes;
-                 self.streamWrite([&](uint8_t *ptr, size_t num_bytes) {
-                     bytes = std::vector<uint8_t>(ptr, ptr + num_bytes);
+                 self.streamWrite([&bytes](uint8_t *buf, size_t size) {
+                     std::copy(buf, buf + size, std::back_inserter(bytes));
                  });
                  return bytes;
              })
