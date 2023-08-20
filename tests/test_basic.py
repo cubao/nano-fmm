@@ -59,7 +59,8 @@ def test_polyline():
     anchor = [123.4, 5.6, 7.8]
     k = fmm.utils.cheap_ruler_k(anchor[1])
     llas = fmm.utils.enu2lla(enus, anchor_lla=anchor)
-    polyline2 = fmm.Polyline(llas, k=k)
+    polyline2 = fmm.Polyline(llas, is_wgs84=True)
+    assert np.all(polyline2.k() == k)
     for i in range(2):
         seg1 = polyline.segment(i)
         seg2 = polyline2.segment(i)

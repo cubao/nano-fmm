@@ -15,6 +15,7 @@ using rvp = py::return_value_policy;
 void bind_network(py::module &m)
 {
     py::class_<Network>(m, "Network", py::module_local()) //
-        .def_static("cheap_ruler_k", &Network::cheap_ruler_k, "latitude"_a);
+        //
+        ;
 }
 } // namespace nano_fmm
