@@ -25,18 +25,18 @@ void bind_packedrtree(py::module &m)
              "offset"_a = 0)
         .def(py::init([](const Eigen::Vector2d &min, //
                          const Eigen::Vector2d &max, //
-                         uint64_t offset) -> NodeItem {
-                 return {min[0], min[1], max[0], max[1], offset};
+                         uint64_t offset) {
+                 return new NodeItem{min[0], min[1], max[0], max[1], offset};
              }),
              "min"_a, "max"_a, "offset"_a = 0)
-        .def(py::init(
-                 [](const Eigen::Vector4d &bbox, uint64_t offset) -> NodeItem {
-                     return {bbox[0], bbox[1], bbox[2], bbox[3], offset};
-                 }),
-             "bbox"_a, "offset"_a = 0)
+        .def(
+            py::init([](const Eigen::Vector4d &bbox, uint64_t offset) {
+                return new NodeItem{bbox[0], bbox[1], bbox[2], bbox[3], offset};
+            }),
+            "bbox"_a, "offset"_a = 0)
         .def(py::init([](const Eigen::Vector2d &min, const Eigen::Vector2d &max,
-                         uint64_t offset) -> NodeItem {
-                 return {min[0], min[1], max[0], max[1], offset};
+                         uint64_t offset) {
+                 return new NodeItem{min[0], min[1], max[0], max[1], offset};
              }),
              "min"_a, "max"_a, "offset"_a = 0)
         .def_readwrite("minX", &NodeItem::minX)
@@ -120,7 +120,7 @@ void bind_packedrtree(py::module &m)
         .def(py::init([](py::buffer buf, const uint64_t numItems,
                          const uint16_t nodeSize) {
                  py::buffer_info info = buf.request();
-                 return PackedRTree(info.ptr, numItems, nodeSize);
+                 return new PackedRTree(info.ptr, numItems, nodeSize);
              }),
              "data"_a, "numItems"_a, "nodeSize"_a = 16)
         .def(py::init([](const Eigen::Ref<const RowVectorsNx2> &bbox_min,
@@ -142,7 +142,7 @@ void bind_packedrtree(py::module &m)
                      node.offset = offset;
                      offset += sizeof(NodeItem);
                  }
-                 return PackedRTree(nodes, extent, node_size);
+                 return new PackedRTree(nodes, extent, node_size);
              }),
              "min"_a, "max"_a, "nodeSize"_a = 16)
         .def("search", &PackedRTree::search, //
