@@ -71,6 +71,15 @@ struct NodeItem
     std::vector<double> toVector();
 };
 
+inline bool operator==(const NodeItem& lhs, const NodeItem& rhs)
+{
+    return lhs.minX == rhs.minX
+    && lhs.minY == rhs.minY
+    && lhs.maxX == rhs.maxX
+    && lhs.maxY == rhs.maxY
+    && lhs.offset == rhs.offset;
+}
+
 struct Item
 {
     NodeItem nodeItem;

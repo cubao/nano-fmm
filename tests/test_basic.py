@@ -107,5 +107,58 @@ def test_geobuf_rtree():
     print()
 
 
-test_geobuf_rtree()
+def test_cpp_migrated_1():
+    """
+    migrated test: https://github.com/flatgeobuf/flatgeobuf/blob/master/src/cpp/test/packedrtree.h
+    PackedRTree 2 item one dimension
+    """
+    nodes = [
+        fb.NodeItem(0, 0, 0, 0),
+        fb.NodeItem(0, 0, 0, 0),
+    ]
+    assert nodes[0] == nodes[1]
+    extent = fb.calcExtent(nodes)
+    assert nodes[0].intersects(fb.NodeItem(0, 0, 0, 0))
+    nodes = fb.hilbertSort(nodes)
+    offset = 0
+    for node in nodes:
+        node.offset = offset
+        offset += fb.NodeItem._size_()
+    tree = fb.PackedRTree(nodes, extent)
+    hits = tree.search(0, 0, 0, 0)
+    assert len(hits) == 2
+    assert nodes[hits[0].index].intersects(0, 0, 0, 0)
+
+
+def test_cpp_migrated_2():
+    """
+    migrated test: https://github.com/flatgeobuf/flatgeobuf/blob/master/src/cpp/test/packedrtree.h
+    PackedRTree 2 items 2
+    """
+    nodes = [
+        fb.NodeItem(0, 0, 1, 1),
+        fb.NodeItem(2, 2, 3, 3),
+    ]
+    extent = fb.calcExtent(nodes)
+    assert nodes[0].intersects(0, 0, 1, 1)
+    assert nodes[1].intersects(2, 2, 3, 3)
+    nodes = fb.hilbertSort(nodes)
+    offset = 0
+    for node in nodes:
+        node.offset = offset
+        offset += fb.NodeItem._size_()
+    assert nodes[1].intersects(0, 0, 1, 1)
+    assert nodes[0].intersects(2, 2, 3, 3)
+
+    tree = fb.PackedRTree(nodes, extent)
+    assert len(tree.to_bytes()) == 120
+
+    hits = tree.search(0, 0, 1, 1)
+    assert len(hits) == 1
+    assert nodes[hits[0].index].intersects(0, 0, 1, 1)
+
+
+# test_geobuf_rtree()
+test_cpp_migrated_1()
+test_cpp_migrated_2()
 print()

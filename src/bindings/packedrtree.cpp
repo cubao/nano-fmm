@@ -50,6 +50,13 @@ void bind_packedrtree(py::module &m)
         .def_static("create", &NodeItem::create, "offset"_a = 0)
         .def("expand", &NodeItem::expand, "r"_a)
         .def("intersects", &NodeItem::intersects, "r"_a)
+        .def(
+            "intersects",
+            [](const NodeItem &self, double minX, double minY, double maxX,
+               double maxY) {
+                return self.intersects({minX, minY, maxX, maxY});
+            },
+            "minX"_a, "minY"_a, "maxX"_a, "maxY"_a)
         .def("toVector", &NodeItem::toVector)
         .def("to_numpy",
              [](const NodeItem &self) {
@@ -63,7 +70,9 @@ void bind_packedrtree(py::module &m)
                      n.minY, n.maxX, n.maxY, n.offset);
              })
         //
-        ;
+        .def(py::self == py::self)
+        //
+        .def_static("_size_", []() { return sizeof(NodeItem); });
     py::class_<Item>(m, "Item", py::module_local()) //
         .def(py::init<>())
         .def_readwrite("nodeItem", &Item::nodeItem)
@@ -81,8 +90,24 @@ void bind_packedrtree(py::module &m)
         //
         ;
 
-    m.def("hilbert", py::overload_cast<uint32_t, uint32_t>(&hilbert), //
-          "x"_a, "y"_a)
+    m                                                                    //
+        .def("hilbert", py::overload_cast<uint32_t, uint32_t>(&hilbert), //
+             "x"_a, "y"_a)
+        //
+        .def(
+            "hilbertSort",
+            [](const std::vector<NodeItem> &items) {
+                auto sorted = items;
+                hilbertSort(sorted);
+                return sorted;
+            },
+            "items"_a)
+        .def(
+            "calcExtent",
+            [](const std::vector<NodeItem> &rects) {
+                return calcExtent(rects);
+            },
+            "rects"_a)
         //
         ;
 
