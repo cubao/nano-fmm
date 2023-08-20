@@ -158,7 +158,55 @@ def test_cpp_migrated_2():
     assert nodes[hits[0].index].intersects(0, 0, 1, 1)
 
 
+def test_cpp_migrated_3():
+    """
+    migrated test: https://githuconstexpr bool operator==(point<T> const& lhs, point<T> const& rhs)
+    PackedRTree 19 items + roundtrip + streamSearch
+    """
+    nodes = [
+        fb.NodeItem(0, 0, 1, 1),
+        fb.NodeItem(2, 2, 3, 3),
+        fb.NodeItem(10, 10, 11, 11),
+        fb.NodeItem(100, 100, 110, 110),
+        fb.NodeItem(101, 101, 111, 111),
+        fb.NodeItem(102, 102, 112, 112),
+        fb.NodeItem(103, 103, 113, 113),
+        fb.NodeItem(104, 104, 114, 114),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+        fb.NodeItem(10010, 10010, 10110, 10110),
+    ]
+    extent = fb.calcExtent(nodes)
+    nodes = fb.hilbertSort(nodes)
+    offset = 0
+    for node in nodes:
+        node.offset = offset
+        offset += fb.NodeItem._size_()
+
+    tree = fb.PackedRTree(nodes, extent)
+    hits = tree.search(102, 102, 103, 103)
+    assert len(hits) == 4
+    for h in hits:
+        node = nodes[h.index]
+        print(h, node)
+        assert node.intersects(102, 102, 103, 103)
+
+    tree.to_bytes()
+    # tree2 = fb.PackedRTree(data, len(nodes))
+    print()
+
+
 # test_geobuf_rtree()
-test_cpp_migrated_1()
-test_cpp_migrated_2()
+# test_cpp_migrated_1()
+# test_cpp_migrated_2()
+test_cpp_migrated_3()
 print()
