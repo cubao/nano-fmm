@@ -93,6 +93,16 @@ def test_geobuf_rtree():
     )
     assert len(tree.to_bytes())
 
+    bboxes = [
+        [0, 0, 10, 10],
+        [1, 1, 5, 5],
+        [3, 3, 7, 7],
+        [2, 2, 9, 3],
+    ]
+    bboxes = np.array(bboxes, dtype=np.float64)
+    tree.search(0, 0, 3, 3)
+    print()
+
 
 test_geobuf_rtree()
 print()
