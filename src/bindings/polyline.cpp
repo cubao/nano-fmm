@@ -54,6 +54,9 @@ void bind_polyline(py::module &m)
     py::class_<Polyline>(m, "Polyline", py::module_local()) //
         .def(py::init<const Eigen::Ref<const RowVectors> &, bool>(), "coords"_a,
              py::kw_only(), "is_wgs84"_a = false)
+        .def(py::init<const Eigen::Ref<const RowVectors> &,
+                      const Eigen::Vector3d>(),
+             "coords"_a, py::kw_only(), "k"_a)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)
         .def("k", &Polyline::k)

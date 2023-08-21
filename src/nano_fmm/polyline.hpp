@@ -71,6 +71,13 @@ struct Polyline
           k_(is_wgs84 ? cheap_ruler_k(polyline(0, 1)) : Eigen::Vector3d::Ones())
     {
     }
+    Polyline(const Eigen::Ref<const RowVectors> &polyline,
+             const Eigen::Vector3d &k)
+        : polyline_(polyline), //
+          N_(polyline.rows()), //
+          is_wgs84_(true), k_(k)
+    {
+    }
 
     const RowVectors &polyline() const { return polyline_; }
     Eigen::Vector3d k() const { return k_; }
