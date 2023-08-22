@@ -41,6 +41,7 @@ inline Eigen::Vector3d cheap_ruler_k_lookup_table(double latitude)
         K(79),K(80),K(81),K(82),K(83),K(84),K(85),K(86),K(87),K(88),K(89),K(90)
         // clang-format on
     };
+#undef K
     int idx =
         std::min(90, static_cast<int>(std::floor(std::fabs(latitude) + 0.5)));
     return Ks[idx];
