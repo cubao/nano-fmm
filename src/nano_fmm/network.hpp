@@ -4,10 +4,13 @@
 #include "nano_fmm/config.hpp"
 #include "nano_fmm/polyline.hpp"
 
+#include "packedrtree.h"
+
 #include <optional>
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace nano_fmm
 {
@@ -15,8 +18,8 @@ struct ProjectedPoint
 {
     Eigen::Vector3d position_;
     double distance_;
-    int64_t edge_id_;
-    double edge_along_;
+    int64_t road_id_;
+    double offset_;
 };
 
 struct Network
@@ -26,15 +29,19 @@ struct Network
     std::shared_ptr<Config> config();
     void config(std::shared_ptr<Config> config);
 
-    void add_node(int64_t node_id, const Eigen::Ref<RowVectors> &polyline);
-    void add_edge(int64_t edge_id, int64_t source_node, int64_t target_node);
+    void add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
+    void add_link(int64_t source_road, int64_t target_road);
+    void remove_road(int64_t road_id);
+    void remove_link(int64_t source_road, int64_t target_road);
+    std::unordered_set<int64_t> prev_roads(int64_t road_id) const;
+    std::unordered_set<int64_t> next_roads(int64_t road_id) const;
+    std::unordered_set<int64_t> roads() const;
 
-    std::vector<ProjectedPoint>
-    query(const Eigen::Vector3d &position,
-          std::optional<double> radius = std::nullopt,
-          std::optional<double> k = std::nullopt);
+    std::vector<ProjectedPoint> query(const Eigen::Vector3d &position,
+                                      double radius,
+                                      std::optional<int> k = std::nullopt);
 
-    int load(const std::string &path);
+    static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path) const;
 
     bool build_ubodt(std::optional<double> thresh) const;
@@ -42,11 +49,18 @@ struct Network
     Network to_2d() const;
 
   private:
-    bool is_wgs84_{true};
-    std::vector<int64_t> ids_;
-    std::unordered_map<int64_t, size_t> id2index_;
-    std::unordered_map<int64_t, Polyline> polylines_;
-
+    const bool is_wgs84_{false};
+    // roads (id -> geom)
+    std::unordered_map<int64_t, Polyline> roads_;
+    // links (id -> {nexts}, id -> {prevs})
+    std::unordered_map<int64_t, std::unordered_set<int64_t>> nexts_, prevs_;
+    // config
     std::shared_ptr<Config> config_;
+
+    // spatial index
+    mutable std::vector<IndexIJ> segs_;
+    mutable std::unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;
+    mutable std::optional<FlatGeobuf::PackedRTree> rtree_;
+    FlatGeobuf::PackedRTree &rtree() const;
 };
 } // namespace nano_fmm

@@ -13,7 +13,8 @@ struct LineSegment
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
         : A(a), B(b), AB(b - a), //
-          len2(AB.squaredNorm()), inv_len2(1.0 / len2)
+          len2(AB.squaredNorm()),
+          inv_len2(1.0 / (std::numeric_limits<double>::epsilon() + len2))
     {
     }
     double distance2(const Eigen::Vector3d &P) const
@@ -38,12 +39,12 @@ struct LineSegment
     {
         double dot = (P - A).dot(AB);
         if (dot <= 0) {
-            return std::make_tuple(A, (P - A).squaredNorm(), 0.0);
+            return std::make_tuple(A, (P - A).norm(), 0.0);
         } else if (dot >= len2) {
-            return std::make_tuple(B, (P - B).squaredNorm(), 1.0);
+            return std::make_tuple(B, (P - B).norm(), 1.0);
         }
         Eigen::Vector3d PP = A + (dot * inv_len2 * AB);
-        return std::make_tuple(PP, (PP - P).squaredNorm(), dot * inv_len2);
+        return std::make_tuple(PP, (PP - P).norm(), dot * inv_len2);
     }
     double t(const Eigen::Vector3d &P) const
     {
@@ -56,7 +57,10 @@ struct LineSegment
     }
 
     double length() const { return std::sqrt(len2); }
-    Eigen::Vector3d dir() const { return AB / length(); }
+    Eigen::Vector3d dir() const
+    {
+        return AB / (std::numeric_limits<double>::epsilon() + length());
+    }
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
@@ -69,6 +73,13 @@ struct Polyline
           N_(polyline.rows()), //
           is_wgs84_(is_wgs84),
           k_(is_wgs84 ? cheap_ruler_k(polyline(0, 1)) : Eigen::Vector3d::Ones())
+    {
+    }
+    Polyline(const Eigen::Ref<const RowVectors> &polyline,
+             const Eigen::Vector3d &k)
+        : polyline_(polyline), //
+          N_(polyline.rows()), //
+          is_wgs84_(true), k_(k)
     {
     }
 
@@ -101,14 +112,69 @@ struct Polyline
         return interpolate(polyline_.row(i), polyline_.row(i + 1), t);
     }
 
-    std::tuple<Eigen::Vector3d, int, double>
-    snap(const Eigen::Vector3d &point) const
+    // P', distance, seg_idx, t
+    std::tuple<Eigen::Vector3d, double, int, double>
+    nearest(const Eigen::Vector3d &point,
+            std::optional<int> seg_min = std::nullopt,
+            std::optional<int> seg_max = std::nullopt) const
     {
-        return std::make_tuple(Eigen::Vector3d(), 0, 0);
+        if (!seg_min) {
+            seg_min = 0;
+        }
+        if (!seg_max) {
+            seg_max = N_ - 2;
+        }
+        assert(0 <= *seg_min && *seg_min <= *seg_max && *seg_max <= N_ - 2);
+        auto &segs = segments();
+        Eigen::Vector3d xyz = point;
+        if (is_wgs84_) {
+            xyz -= polyline_.row(0);
+            xyz.array() *= k_.array();
+        }
+        Eigen::Vector3d PP = xyz;
+        double dd = std::numeric_limits<double>::max();
+        int ss = -1;
+        double tt = 0.0;
+        for (int s = *seg_min; s < *seg_max; ++s) {
+            auto [P, d, t] = segs[s].nearest(xyz);
+            if (d < dd) {
+                PP = P;
+                dd = d;
+                ss = s;
+                tt = t;
+            }
+        }
+        if (is_wgs84_) {
+            PP.array() /= k_.array();
+            PP += polyline_.row(0);
+        }
+        return std::make_tuple(PP, dd, ss, tt);
     }
+
     RowVectors slice(std::optional<double> min, std::optional<double> max) const
     {
-        return RowVectors(0, 3);
+        if (!min) {
+            min = 0.0;
+        }
+        if (!max) {
+            max = length();
+        }
+        if (*min > *max) {
+            return RowVectors(0, 3);
+        }
+        auto [seg0, t0] = segment_index_t(*min);
+        auto [seg1, t1] = segment_index_t(*max);
+        auto coords = std::vector<Eigen::Vector3d>();
+        coords.push_back(
+            interpolate(polyline_.row(seg0), polyline_.row(seg0 + 1), t0));
+        for (int s = seg0 + 1; s <= seg1; ++s) {
+            coords.push_back(polyline_.row(s));
+        }
+        if (t1 > 0) {
+            coords.push_back(
+                interpolate(polyline_.row(seg1), polyline_.row(seg1 + 1), t1));
+        }
+        return Eigen::Map<const RowVectors>(coords[0].data(), coords.size(), 3);
     }
 
     static Eigen::Vector3d interpolate(const Eigen::Vector3d &a,

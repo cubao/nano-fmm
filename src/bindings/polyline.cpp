@@ -17,8 +17,8 @@ void bind_polyline(py::module &m)
     py::class_<LineSegment>(m, "LineSegment", py::module_local())      //
         .def(py::init<const Eigen::Vector3d, const Eigen::Vector3d>(), //
              "A"_a, "B"_a)
-        .def("distance", &LineSegment::distance, "P"_a)
         .def("distance2", &LineSegment::distance2, "P"_a)
+        .def("distance", &LineSegment::distance, "P"_a)
         .def("nearest", &LineSegment::nearest, "P"_a)
         .def("t", &LineSegment::t, "P"_a)
         .def("interpolate", &LineSegment::interpolate, "t"_a)
@@ -54,18 +54,24 @@ void bind_polyline(py::module &m)
     py::class_<Polyline>(m, "Polyline", py::module_local()) //
         .def(py::init<const Eigen::Ref<const RowVectors> &, bool>(), "coords"_a,
              py::kw_only(), "is_wgs84"_a = false)
+        .def(py::init<const Eigen::Ref<const RowVectors> &,
+                      const Eigen::Vector3d>(),
+             "coords"_a, py::kw_only(), "k"_a)
         //
         .def("polyline", &Polyline::polyline, rvp::reference_internal)
         .def("k", &Polyline::k)
         .def("is_wgs84", &Polyline::is_wgs84)
         //
-        .def("range", &Polyline::range, "seg_idx"_a, py::kw_only(), "t"_a)
+        .def("range", &Polyline::range, "seg_idx"_a, py::kw_only(), "t"_a = 0.0)
         .def("segment_index_t", &Polyline::segment_index_t, "range"_a)
         .def("length", &Polyline::length)
         .def("along", &Polyline::along, "range"_a, py::kw_only(),
              "extend"_a = false)
-        .def("snap", &Polyline::snap, "point"_a)
-        .def("slice", &Polyline::slice, py::kw_only(), "min"_a = std::nullopt,
+        .def("nearest", &Polyline::nearest, "point"_a, py::kw_only(), //
+             "seg_min"_a = std::nullopt,                              //
+             "seg_max"_a = std::nullopt)
+        .def("slice", &Polyline::slice, py::kw_only(), //
+             "min"_a = std::nullopt,                   //
              "max"_a = std::nullopt)
         //
         .def("segment", &Polyline::segment, "index"_a, rvp::reference_internal)

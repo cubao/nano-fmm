@@ -209,3 +209,48 @@ def test_cpp_migrated_3():
     hits2 = tree2.search(102, 102, 103, 103)
     assert hits == hits2
     assert hits != hits2[::-1]
+
+
+def test_polyline_nearest_slice():
+    enus = [[0, 0, 0], [3, 0, 0], [10, 0, 0], [13, 4, 0]]
+    polyline = fmm.Polyline(enus)
+    assert polyline.range(0) == 0.0
+    assert polyline.range(1) == 3.0
+    assert polyline.range(2) == 10.0
+    assert polyline.range(3) == 15.0
+    assert polyline.range(2, t=0.5) == 12.5
+    assert polyline.segment_index_t(12.5) == (2, 0.5)
+    assert polyline.segment_index_t(-3.0) == (0, -1.0)
+    assert polyline.segment_index_t(-6.0) == (0, -2.0)
+    assert polyline.segment_index_t(20.0) == (2, 2.0)
+
+    pt, dist, seg_idx, t = polyline.nearest([1.5, 0, 0])
+    assert np.all(pt == [1.5, 0, 0])
+    assert dist == 0.0
+    assert seg_idx == 0 and t == 0.5
+
+    pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0])
+    assert np.all(pt == [1.5, 0, 0])
+    assert dist == 3.0
+    assert seg_idx == 0 and t == 0.5
+
+    pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0], seg_min=1)
+    assert np.all(pt == [3, 0, 0])
+    assert np.fabs(dist - np.linalg.norm(pt - [1.5, 3, 0])) < 1e-9
+    assert seg_idx == 1 and t == 0.0
+
+    assert np.all(polyline.slice(min=15) == [enus[-1], enus[-1]])
+    assert len(polyline.slice(min=16)) == 0
+
+    anchor = [123.4, 5.6, 7.8]
+    llas = fmm.utils.enu2lla([*enus, [1.5, 3.0, 0.0]], anchor_lla=anchor)
+    polyline = fmm.Polyline(llas[:-1], is_wgs84=True)
+    pt, dist, seg_idx, t = polyline.nearest(llas[-1])
+    assert np.fabs(pt - (llas[0] + llas[1]) / 2.0).max() < 1e-18
+    assert np.fabs(dist - 3.0) < 1e-9
+    assert seg_idx == 0 and t == 0.5
+
+    pt, dist, seg_idx, t = polyline.nearest(llas[-1], seg_min=1)
+    assert np.all(pt == llas[1])
+    assert dist
+    assert seg_idx == 1 and t == 0.0
