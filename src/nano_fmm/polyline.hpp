@@ -114,9 +114,9 @@ struct Polyline
 
     // P', distance, seg_idx, t
     std::tuple<Eigen::Vector3d, double, int, double>
-    snap(const Eigen::Vector3d &point,
-         std::optional<int> seg_min = std::nullopt,
-         std::optional<int> seg_max = std::nullopt) const
+    nearest(const Eigen::Vector3d &point,
+            std::optional<int> seg_min = std::nullopt,
+            std::optional<int> seg_max = std::nullopt) const
     {
         if (!seg_min) {
             seg_min = 0;

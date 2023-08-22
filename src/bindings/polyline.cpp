@@ -67,8 +67,8 @@ void bind_polyline(py::module &m)
         .def("length", &Polyline::length)
         .def("along", &Polyline::along, "range"_a, py::kw_only(),
              "extend"_a = false)
-        .def("snap", &Polyline::snap, "point"_a, py::kw_only(), //
-             "seg_min"_a = std::nullopt,                        //
+        .def("nearest", &Polyline::nearest, "point"_a, py::kw_only(), //
+             "seg_min"_a = std::nullopt,                              //
              "seg_max"_a = std::nullopt)
         .def("slice", &Polyline::slice, py::kw_only(), //
              "min"_a = std::nullopt,                   //
