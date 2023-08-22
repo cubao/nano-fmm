@@ -104,7 +104,7 @@ FlatGeobuf::PackedRTree &Network::rtree() const
         auto &polyline = pair.second.polyline();
         for (int64_t seg_idx = 0, N = polyline.rows(); seg_idx < N - 1;
              ++seg_idx) {
-            auto index = std::make_pair(poly_idx, seg_idx);
+            IndexIJ index(poly_idx, seg_idx);
             seg2idx_[index] = segs_.size();
             segs_.push_back(index);
             double x0 = polyline(seg_idx, 0);

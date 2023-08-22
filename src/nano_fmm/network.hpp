@@ -58,8 +58,8 @@ struct Network
     std::shared_ptr<Config> config_;
 
     // spatial index
-    mutable std::vector<std::pair<int64_t, int64_t>> segs_;
-    mutable std::unordered_map<std::pair<int64_t, int64_t>, size_t> seg2idx_;
+    mutable std::vector<IndexIJ> segs_;
+    mutable std::unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;
     mutable std::optional<FlatGeobuf::PackedRTree> rtree_;
     FlatGeobuf::PackedRTree &rtree() const;
 };
