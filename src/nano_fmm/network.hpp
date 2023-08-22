@@ -4,6 +4,8 @@
 #include "nano_fmm/config.hpp"
 #include "nano_fmm/polyline.hpp"
 
+#include "packedrtree.h"
+
 #include <optional>
 #include <memory>
 #include <vector>
@@ -39,7 +41,7 @@ struct Network
                                       double radius,
                                       std::optional<int> k = std::nullopt);
 
-    static Network load(const std::string &path);
+    static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path) const;
 
     bool build_ubodt(std::optional<double> thresh) const;
@@ -54,5 +56,11 @@ struct Network
     std::unordered_map<int64_t, std::unordered_set<int64_t>> nexts_, prevs_;
     // config
     std::shared_ptr<Config> config_;
+
+    // spatial index
+    mutable std::vector<std::pair<int64_t, int64_t>> segs_;
+    mutable std::unordered_map<std::pair<int64_t, int64_t>, size_t> seg2idx_;
+    mutable std::optional<FlatGeobuf::PackedRTree> rtree_;
+    FlatGeobuf::PackedRTree &rtree() const;
 };
 } // namespace nano_fmm
