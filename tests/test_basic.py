@@ -238,3 +238,16 @@ def test_polyline_snap_slice():
     assert np.all(pt == [3, 0, 0])
     assert np.fabs(dist - np.linalg.norm(pt - [1.5, 3, 0])) < 1e-9
     assert seg_idx == 1 and t == 0.0
+
+    anchor = [123.4, 5.6, 7.8]
+    llas = fmm.utils.enu2lla([*enus, [1.5, 3.0, 0.0]], anchor_lla=anchor)
+    polyline = fmm.Polyline(llas[:-1], is_wgs84=True)
+    pt, dist, seg_idx, t = polyline.snap(llas[-1])
+    assert np.fabs(pt - (llas[0] + llas[1]) / 2.0).max() < 1e-18
+    assert np.fabs(dist - 3.0) < 1e-9
+    assert seg_idx == 0 and t == 0.5
+
+    pt, dist, seg_idx, t = polyline.snap(llas[-1], seg_min=1)
+    assert np.all(pt == llas[1])
+    assert dist
+    assert seg_idx == 1 and t == 0.0
