@@ -13,7 +13,8 @@ struct LineSegment
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
         : A(a), B(b), AB(b - a), //
-          len2(AB.squaredNorm()), inv_len2(1.0 / len2)
+          len2(AB.squaredNorm()),
+          inv_len2(1.0 / (std::numeric_limits<double>::epsilon() + len2))
     {
     }
     double distance2(const Eigen::Vector3d &P) const
@@ -38,12 +39,12 @@ struct LineSegment
     {
         double dot = (P - A).dot(AB);
         if (dot <= 0) {
-            return std::make_tuple(A, (P - A).squaredNorm(), 0.0);
+            return std::make_tuple(A, (P - A).norm(), 0.0);
         } else if (dot >= len2) {
-            return std::make_tuple(B, (P - B).squaredNorm(), 1.0);
+            return std::make_tuple(B, (P - B).norm(), 1.0);
         }
         Eigen::Vector3d PP = A + (dot * inv_len2 * AB);
-        return std::make_tuple(PP, (PP - P).squaredNorm(), dot * inv_len2);
+        return std::make_tuple(PP, (PP - P).norm(), dot * inv_len2);
     }
     double t(const Eigen::Vector3d &P) const
     {
@@ -56,7 +57,10 @@ struct LineSegment
     }
 
     double length() const { return std::sqrt(len2); }
-    Eigen::Vector3d dir() const { return AB / length(); }
+    Eigen::Vector3d dir() const
+    {
+        return AB / (std::numeric_limits<double>::epsilon() + length());
+    }
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
@@ -124,7 +128,8 @@ struct Polyline
         auto &segs = segments();
         Eigen::Vector3d xyz = point;
         if (is_wgs84_) {
-            xyz = (point - polyline_.row(0)) * k_;
+            xyz -= polyline_.row(0);
+            xyz.array() *= k_.array();
         }
         Eigen::Vector3d PP = xyz;
         double dd = std::numeric_limits<double>::max();
