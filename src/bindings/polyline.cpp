@@ -26,10 +26,12 @@ void bind_polyline(py::module &m)
             "length", [](const LineSegment &self) { return self.length(); })
         .def_property_readonly(
             "length2", [](const LineSegment &self) { return self.len2; })
-        .def_property_readonly("dir",
-                               [](const LineSegment &self) -> Eigen::Vector3d {
-                                   return self.dir();
-                               })
+        .def_property_readonly(
+            "dir",
+            [](const LineSegment &self) -> const Eigen::Vector3d & {
+                return self.dir();
+            },
+            rvp::reference_internal)
         .def_property_readonly(
             "A",
             [](const LineSegment &self) -> const Eigen::Vector3d & {
