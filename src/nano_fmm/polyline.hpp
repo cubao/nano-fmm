@@ -8,7 +8,7 @@ namespace nano_fmm
 // https://github.com/cubao/pybind11-rdp/blob/master/src/main.cpp
 struct LineSegment
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    // LineSegment(A -> B)
     const Eigen::Vector3d A, B, AB;
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
@@ -56,11 +56,24 @@ struct LineSegment
         return A * (1.0 - t) + B * t;
     }
 
-    double length() const { return std::sqrt(len2); }
-    Eigen::Vector3d dir() const
+    double length() const
     {
-        return AB / (std::numeric_limits<double>::epsilon() + length());
+        if (!length_) {
+            length_ = std::sqrt(len2);
+        }
+        return *length_;
     }
+    const Eigen::Vector3d &dir() const
+    {
+        if (!dir_) {
+            dir_ = AB * std::sqrt(inv_len2);
+        }
+        return *dir_;
+    }
+
+  private:
+    mutable std::optional<Eigen::Vector3d> dir_;
+    mutable std::optional<double> length_;
 };
 
 // https://github.com/cubao/headers/blob/main/include/cubao/polyline_ruler.hpp
@@ -135,7 +148,7 @@ struct Polyline
         double dd = std::numeric_limits<double>::max();
         int ss = -1;
         double tt = 0.0;
-        for (int s = *seg_min; s < *seg_max; ++s) {
+        for (int s = *seg_min; s <= *seg_max; ++s) {
             auto [P, d, t] = segs[s].nearest(xyz);
             if (d < dd) {
                 PP = P;

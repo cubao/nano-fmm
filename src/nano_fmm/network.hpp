@@ -16,10 +16,23 @@ namespace nano_fmm
 {
 struct ProjectedPoint
 {
+    ProjectedPoint(const Eigen::Vector3d &position = {0.0, 0.0, 0.0}, //
+                   double distance = 0.0,                             //
+                   int64_t road_id = 0, double offset = 0.0)
+        : position_(position), distance_(distance), //
+          road_id_(road_id), offset_(offset_)
+    {
+    }
     Eigen::Vector3d position_;
     double distance_;
     int64_t road_id_;
     double offset_;
+};
+
+struct UBODT
+{
+    int64_t origin_;
+    int64_t destination_;
 };
 
 struct Network
@@ -37,14 +50,22 @@ struct Network
     std::unordered_set<int64_t> next_roads(int64_t road_id) const;
     std::unordered_set<int64_t> roads() const;
 
-    std::vector<ProjectedPoint> query(const Eigen::Vector3d &position,
-                                      double radius,
-                                      std::optional<int> k = std::nullopt);
+    const Polyline *road(int64_t road_id) const;
+
+    std::vector<ProjectedPoint>
+    query(const Eigen::Vector3d &position, double radius,
+          std::optional<int> k = std::nullopt,
+          std::optional<double> z_max_offset = std::nullopt) const;
+    std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+    query(const Eigen::Vector4d &bbox) const;
 
     static std::unique_ptr<Network> load(const std::string &path);
-    bool dump(const std::string &path) const;
+    bool dump(const std::string &path, bool with_config = true) const;
 
-    bool build_ubodt(std::optional<double> thresh) const;
+    std::vector<UBODT> build_ubodt(std::optional<double> thresh) const;
+    bool load_ubodt(const std::string &path);
+    bool dump_ubodt(const std::string &path,
+                    std::optional<double> thresh) const;
 
     Network to_2d() const;
 

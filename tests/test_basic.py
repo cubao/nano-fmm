@@ -239,6 +239,11 @@ def test_polyline_nearest_slice():
     assert np.fabs(dist - np.linalg.norm(pt - [1.5, 3, 0])) < 1e-9
     assert seg_idx == 1 and t == 0.0
 
+    pt, dist, seg_idx, t = polyline.nearest([5, 0, 0], seg_max=0)
+    assert np.all(pt == [3, 0, 0])
+    assert dist == 2.0
+    assert seg_idx == 0 and t == 1.0
+
     assert np.all(polyline.slice(min=15) == [enus[-1], enus[-1]])
     assert len(polyline.slice(min=16)) == 0
 

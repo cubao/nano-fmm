@@ -70,11 +70,82 @@ std::unordered_set<int64_t> Network::roads() const
     return ret;
 }
 
-std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
-                                           double radius, std::optional<int> k)
+const Polyline *Network::road(int64_t road_id) const
 {
-    //
-    return {};
+    auto itr = roads_.find(road_id);
+    if (itr == roads_.end()) {
+        return nullptr;
+    }
+    return &itr->second;
+}
+
+std::vector<ProjectedPoint>
+Network::query(const Eigen::Vector3d &position, double radius,
+               std::optional<int> k, std::optional<double> z_max_offset) const
+{
+    double x = position[0], y = position[1];
+    double dx = radius, dy = radius;
+    if (is_wgs84_) {
+        auto kk = utils::cheap_ruler_k_lookup_table(position[1]);
+        dx /= kk[0];
+        dy /= kk[1];
+    }
+    auto &tree = this->rtree();
+    auto hits = tree.search(x - dx, y - dy, x + dx, y + dy);
+    auto poly2seg_minmax =
+        std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
+    for (auto &hit : hits) {
+        auto poly_seg = segs_[hit.offset];
+        auto poly_idx = poly_seg[0];
+        auto seg_idx = poly_seg[1];
+        auto itr = poly2seg_minmax.find(poly_idx);
+        if (itr == poly2seg_minmax.end()) {
+            poly2seg_minmax.emplace(poly_idx, std::make_pair(seg_idx, seg_idx));
+        } else {
+            if (seg_idx < itr->second.first) {
+                itr->second.first = seg_idx;
+            }
+            if (seg_idx > itr->second.second) {
+                itr->second.second = seg_idx;
+            }
+        }
+    }
+    auto nearests = std::vector<ProjectedPoint>();
+    nearests.reserve(poly2seg_minmax.size());
+    for (auto &pair : poly2seg_minmax) {
+        auto &poly = roads_.at(pair.first);
+        auto [P, d, s, t] =
+            poly.nearest(position, pair.second.first, pair.second.second);
+        if (z_max_offset && std::fabs(P[2] - position[2]) > *z_max_offset) {
+            continue;
+        }
+        if (d > radius) {
+            continue;
+        }
+        nearests.push_back({P, d, pair.first, poly.range(s, t)});
+    }
+    std::sort(nearests.begin(), nearests.end(),
+              [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });
+    if (k && nearests.size() > *k) {
+        nearests.resize(*k);
+    }
+    return nearests;
+}
+
+std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+Network::query(const Eigen::Vector4d &bbox) const
+{
+    auto ret = std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>{};
+    auto &tree = this->rtree();
+    auto hits = tree.search(bbox[0], bbox[1], bbox[2], bbox[3]);
+    for (auto &hit : hits) {
+        auto poly_seg = segs_[hit.offset];
+        auto poly_idx = poly_seg[0];
+        auto seg_idx = poly_seg[1];
+        ret.emplace(poly_seg,
+                    roads_.at(poly_idx).polyline().middleRows(seg_idx, 2));
+    }
+    return ret;
 }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
@@ -82,11 +153,30 @@ std::unique_ptr<Network> Network::load(const std::string &path)
     //
     return {};
 }
-bool Network::dump(const std::string &path) const
+bool Network::dump(const std::string &path, bool with_config) const
 {
     //
     return false;
 }
+
+std::vector<UBODT> Network::build_ubodt(std::optional<double> thresh) const
+{
+    return {};
+}
+
+bool Network::load_ubodt(const std::string &path)
+{
+    //
+    return false;
+}
+bool Network::dump_ubodt(const std::string &path,
+                         std::optional<double> thresh) const
+{
+    //
+    return false;
+}
+
+Network Network::to_2d() const { return *this; }
 
 FlatGeobuf::PackedRTree &Network::rtree() const
 {
@@ -99,14 +189,12 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     using namespace FlatGeobuf;
 
     auto nodes = std::vector<NodeItem>{};
+    uint64_t ii = 0;
     for (auto &pair : roads_) {
         int64_t poly_idx = pair.first;
         auto &polyline = pair.second.polyline();
         for (int64_t seg_idx = 0, N = polyline.rows(); seg_idx < N - 1;
              ++seg_idx) {
-            IndexIJ index(poly_idx, seg_idx);
-            seg2idx_[index] = segs_.size();
-            segs_.push_back(index);
             double x0 = polyline(seg_idx, 0);
             double y0 = polyline(seg_idx, 1);
             double x1 = polyline(seg_idx + 1, 0);
@@ -117,7 +205,11 @@ FlatGeobuf::PackedRTree &Network::rtree() const
             if (y0 > y1) {
                 std::swap(y0, y1);
             }
-            nodes.push_back({x0, y0, x1, y1, segs_.size()});
+            nodes.push_back({x0, y0, x1, y1, ii});
+            IndexIJ index(poly_idx, seg_idx);
+            seg2idx_[index] = ii;
+            segs_.push_back(index);
+            ++ii;
         }
     }
     auto extent = calcExtent(nodes);
