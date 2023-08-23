@@ -1,7 +1,10 @@
 from nano_fmm import Network
 
+
 class RoadNetwork(Network):
-    pass
+    def __init__(self, is_wgs84: bool = False):
+        super().__init__(is_wgs84)
+
 
 if __name__ == "__main__":
     import fire

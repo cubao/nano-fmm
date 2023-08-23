@@ -22,6 +22,12 @@ struct ProjectedPoint
     double offset_;
 };
 
+struct UBODT
+{
+    int64_t origin;
+    int64_t destitation;
+};
+
 struct Network
 {
     Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
@@ -42,9 +48,12 @@ struct Network
                                       std::optional<int> k = std::nullopt);
 
     static std::unique_ptr<Network> load(const std::string &path);
-    bool dump(const std::string &path) const;
+    bool dump(const std::string &path, bool with_config = true) const;
 
-    bool build_ubodt(std::optional<double> thresh) const;
+    std::vector<UBODT> build_ubodt(std::optional<double> thresh) const;
+    bool load_ubodt(const std::string &path);
+    bool dump_ubodt(const std::string &path,
+                    std::optional<double> thresh) const;
 
     Network to_2d() const;
 

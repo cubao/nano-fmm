@@ -121,11 +121,30 @@ std::unique_ptr<Network> Network::load(const std::string &path)
     //
     return {};
 }
-bool Network::dump(const std::string &path) const
+bool Network::dump(const std::string &path, bool with_config) const
 {
     //
     return false;
 }
+
+std::vector<UBODT> Network::build_ubodt(std::optional<double> thresh) const
+{
+    return {};
+}
+
+bool Network::load_ubodt(const std::string &path)
+{
+    //
+    return false;
+}
+bool Network::dump_ubodt(const std::string &path,
+                         std::optional<double> thresh) const
+{
+    //
+    return false;
+}
+
+Network Network::to_2d() const { return *this; }
 
 FlatGeobuf::PackedRTree &Network::rtree() const
 {
