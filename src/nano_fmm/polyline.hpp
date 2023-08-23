@@ -135,7 +135,7 @@ struct Polyline
         double dd = std::numeric_limits<double>::max();
         int ss = -1;
         double tt = 0.0;
-        for (int s = *seg_min; s < *seg_max; ++s) {
+        for (int s = *seg_min; s <= *seg_max; ++s) {
             auto [P, d, t] = segs[s].nearest(xyz);
             if (d < dd) {
                 PP = P;
