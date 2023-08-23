@@ -86,16 +86,17 @@ std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
         std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
     for (auto &hit : hits) {
         auto poly_seg = segs_[hit.offset];
-        auto itr = poly2seg_minmax.find(poly_seg[0]);
+        auto poly_idx = poly_seg[0];
+        auto seg_idx = poly_seg[1];
+        auto itr = poly2seg_minmax.find(poly_idx);
         if (itr == poly2seg_minmax.end()) {
-            poly2seg_minmax.emplace(poly_seg[0],
-                                    IndexIJ(poly_seg[1], poly_seg[1]));
+            poly2seg_minmax.emplace(poly_idx, std::make_pair(seg_idx, seg_idx));
         } else {
-            if (poly_seg[1] < itr->second.first) {
-                itr->second.first = poly_seg[1];
+            if (seg_idx < itr->second.first) {
+                itr->second.first = seg_idx;
             }
-            if (poly_seg[1] > itr->second.second) {
-                itr->second.second = poly_seg[1];
+            if (seg_idx > itr->second.second) {
+                itr->second.second = seg_idx;
             }
         }
     }
