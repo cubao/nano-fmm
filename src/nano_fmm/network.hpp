@@ -16,6 +16,13 @@ namespace nano_fmm
 {
 struct ProjectedPoint
 {
+    ProjectedPoint(const Eigen::Vector3d &position = {0.0, 0.0, 0.0}, //
+                   double distance = 0.0,                             //
+                   int64_t road_id = 0, double offset = 0.0)
+        : position_(position), distance_(distance), //
+          road_id_(road_id), offset_(offset_)
+    {
+    }
     Eigen::Vector3d position_;
     double distance_;
     int64_t road_id_;
@@ -24,8 +31,8 @@ struct ProjectedPoint
 
 struct UBODT
 {
-    int64_t origin;
-    int64_t destitation;
+    int64_t origin_;
+    int64_t destination_;
 };
 
 struct Network

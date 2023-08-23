@@ -14,9 +14,37 @@ using rvp = py::return_value_policy;
 
 void bind_network(py::module &m)
 {
+    py::class_<ProjectedPoint>(m, "ProjectedPoint", py::module_local()) //
+        .def(py::init<const Eigen::Vector3d &, double, int64_t, double>(),
+             "position"_a = Eigen::Vector3d(0, 0, 0), "distance"_a = 0.0,
+             "road_id"_a = 0, "offset"_a = 0.0)
+        //
+        .def_property_readonly(
+            "position",
+            [](const ProjectedPoint &self) { return self.position_; })
+        .def_property_readonly(
+            "distance",
+            [](const ProjectedPoint &self) { return self.distance_; })
+        .def_property_readonly(
+            "road_id", [](const ProjectedPoint &self) { return self.road_id_; })
+        .def_property_readonly(
+            "offset", [](const ProjectedPoint &self) { return self.offset_; })
+        //
+        ;
+
+    py::class_<UBODT>(m, "UBODT", py::module_local()) //
+        .def(py::init<>())
+        //
+        .def_property_readonly("origin",
+                               [](const UBODT &self) { return self.origin_; })
+        .def_property_readonly(
+            "destination", [](const UBODT &self) { return self.destination_; });
+    //
+    ;
+
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
-        .def(py::init<bool>(), "is_wgs84"_a = false)
+        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = false)
         //
         .def("add_road", &Network::add_road, "geom"_a, py::kw_only(), "id"_a)
         .def("add_link", &Network::add_link, "source_road"_a, "target_road"_a)
