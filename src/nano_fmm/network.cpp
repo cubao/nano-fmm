@@ -1,6 +1,7 @@
 #include "nano_fmm/network.hpp"
 #include "nano_fmm/utils.hpp"
 #include "spdlog/spdlog.h"
+#include "dbg.h"
 
 namespace nano_fmm
 {
@@ -70,8 +71,18 @@ std::unordered_set<int64_t> Network::roads() const
     return ret;
 }
 
-std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
-                                           double radius, std::optional<int> k)
+const Polyline *Network::road(int64_t road_id) const
+{
+    auto itr = roads_.find(road_id);
+    if (itr == roads_.end()) {
+        return nullptr;
+    }
+    return &itr->second;
+}
+
+std::vector<ProjectedPoint>
+Network::query(const Eigen::Vector3d &position, double radius,
+               std::optional<int> k, std::optional<double> z_max_offset) const
 {
     double x = position[0], y = position[1];
     double dx = radius, dy = radius;
@@ -106,9 +117,14 @@ std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
         auto &poly = roads_.at(pair.first);
         auto [P, d, s, t] =
             poly.nearest(position, pair.second.first, pair.second.second);
-        if (d <= radius) {
-            nearests.push_back({P, d, pair.first, poly.range(s, t)});
+        if (z_max_offset && std::fabs(P[2] - position[2]) > *z_max_offset) {
+            continue;
         }
+        dbg(P, d, s, t);
+        if (d > radius) {
+            continue;
+        }
+        nearests.push_back({P, d, pair.first, poly.range(s, t)});
     }
     std::sort(nearests.begin(), nearests.end(),
               [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });
@@ -116,6 +132,22 @@ std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
         nearests.resize(*k);
     }
     return nearests;
+}
+
+std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+Network::query(const Eigen::Vector4d &bbox) const
+{
+    auto ret = std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>{};
+    auto &tree = this->rtree();
+    auto hits = tree.search(bbox[0], bbox[1], bbox[2], bbox[3]);
+    for (auto &hit : hits) {
+        auto poly_seg = segs_[hit.offset];
+        auto poly_idx = poly_seg[0];
+        auto seg_idx = poly_seg[1];
+        ret.emplace(poly_seg,
+                    roads_.at(poly_idx).polyline().middleRows(seg_idx, 2));
+    }
+    return ret;
 }
 
 std::unique_ptr<Network> Network::load(const std::string &path)

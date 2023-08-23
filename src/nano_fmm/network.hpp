@@ -50,9 +50,14 @@ struct Network
     std::unordered_set<int64_t> next_roads(int64_t road_id) const;
     std::unordered_set<int64_t> roads() const;
 
-    std::vector<ProjectedPoint> query(const Eigen::Vector3d &position,
-                                      double radius,
-                                      std::optional<int> k = std::nullopt);
+    const Polyline *road(int64_t road_id) const;
+
+    std::vector<ProjectedPoint>
+    query(const Eigen::Vector3d &position, double radius,
+          std::optional<int> k = std::nullopt,
+          std::optional<double> z_max_offset = std::nullopt) const;
+    std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+    query(const Eigen::Vector4d &bbox) const;
 
     static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path, bool with_config = true) const;

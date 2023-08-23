@@ -55,8 +55,22 @@ void bind_network(py::module &m)
         .def("next_roads", &Network::next_roads, "id"_a)
         .def("roads", &Network::roads)
         //
-        .def("query", &Network::query, "position"_a, //
-             py::kw_only(), "radius"_a, "k"_a = std::nullopt)
+        .def("road", &Network::road, "road_id"_a, rvp::reference_internal)
+        .def("query",
+             py::overload_cast<const Eigen::Vector3d &, //
+                               double,                  //
+                               std::optional<int>,      //
+                               std::optional<double>>(&Network::query,
+                                                      py::const_),
+             "position"_a,         //
+             py::kw_only(),        //
+             "radius"_a,           //
+             "k"_a = std::nullopt, //
+             "z_max_offset"_a = std::nullopt)
+        .def("query",
+             py::overload_cast<const Eigen::Vector4d &>(&Network::query,
+                                                        py::const_),
+             "bbox"_a)
         //
         .def_static("load", &Network::load, "path"_a)
         .def("dump", &Network::dump, "path"_a, py::kw_only(),

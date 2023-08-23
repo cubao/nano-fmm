@@ -47,6 +47,20 @@ inline Eigen::Vector3d cheap_ruler_k_lookup_table(double latitude)
     return Ks[idx];
 }
 
+inline Eigen::Vector4d bbox(const Eigen::Vector2d &lon_lat, //
+                            double width, double height)
+{
+    auto k = cheap_ruler_k(lon_lat[1]);
+    double dlon = 1.0 / k[0] * width / 2.0;
+    double dlat = 1.0 / k[1] * height / 2.0;
+    return Eigen::Vector4d(lon_lat[0] - dlon, lon_lat[1] - dlat,
+                           lon_lat[0] + dlon, lon_lat[1] + dlat);
+}
+inline Eigen::Vector4d bbox(const Eigen::Vector2d &lon_lat, double size)
+{
+    return bbox(lon_lat, size, size);
+}
+
 inline RowVectors lla2enu(const Eigen::Ref<const RowVectors> &llas,
                           std::optional<Eigen::Vector3d> anchor_lla = {},
                           std::optional<Eigen::Vector3d> k = {})
