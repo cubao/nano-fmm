@@ -73,8 +73,46 @@ std::unordered_set<int64_t> Network::roads() const
 std::vector<ProjectedPoint> Network::query(const Eigen::Vector3d &position,
                                            double radius, std::optional<int> k)
 {
-    //
-    return {};
+    double x = position[0], y = position[1];
+    double dx = radius, dy = radius;
+    if (is_wgs84_) {
+        auto kk = utils::cheap_ruler_k_lookup_table(position[1]);
+        dx /= kk[0];
+        dy /= kk[1];
+    }
+    auto &tree = this->rtree();
+    auto hits = tree.search(x - dx, y - dy, x + dx, y + dy);
+    auto poly2seg_minmax =
+        std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
+    for (auto &hit : hits) {
+        auto poly_seg = segs_[hit.offset];
+        auto itr = poly2seg_minmax.find(poly_seg[0]);
+        if (itr == poly2seg_minmax.end()) {
+            poly2seg_minmax.emplace(poly_seg[0],
+                                    IndexIJ(poly_seg[1], poly_seg[1]));
+        } else {
+            if (poly_seg[1] < itr->second.first) {
+                itr->second.first = poly_seg[1];
+            }
+            if (poly_seg[1] > itr->second.second) {
+                itr->second.second = poly_seg[1];
+            }
+        }
+    }
+    auto nearests = std::vector<ProjectedPoint>();
+    nearests.reserve(poly2seg_minmax.size());
+    for (auto &pair : poly2seg_minmax) {
+        auto &poly = roads_.at(pair.first);
+        auto [P, d, s, t] =
+            poly.nearest(position, pair.second.first, pair.second.second);
+        nearests.push_back({P, d, pair.first, poly.range(s, t)});
+    }
+    std::sort(nearests.begin(), nearests.end(),
+              [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });
+    if (k && nearests.size() > *k) {
+        nearests.resize(*k);
+    }
+    return nearests;
 }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
