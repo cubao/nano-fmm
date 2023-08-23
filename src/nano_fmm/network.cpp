@@ -1,7 +1,6 @@
 #include "nano_fmm/network.hpp"
 #include "nano_fmm/utils.hpp"
 #include "spdlog/spdlog.h"
-#include "dbg.h"
 
 namespace nano_fmm
 {
@@ -120,7 +119,6 @@ Network::query(const Eigen::Vector3d &position, double radius,
         if (z_max_offset && std::fabs(P[2] - position[2]) > *z_max_offset) {
             continue;
         }
-        dbg(P, d, s, t);
         if (d > radius) {
             continue;
         }
@@ -191,14 +189,12 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     using namespace FlatGeobuf;
 
     auto nodes = std::vector<NodeItem>{};
+    uint64_t ii = 0;
     for (auto &pair : roads_) {
         int64_t poly_idx = pair.first;
         auto &polyline = pair.second.polyline();
         for (int64_t seg_idx = 0, N = polyline.rows(); seg_idx < N - 1;
              ++seg_idx) {
-            IndexIJ index(poly_idx, seg_idx);
-            seg2idx_[index] = segs_.size();
-            segs_.push_back(index);
             double x0 = polyline(seg_idx, 0);
             double y0 = polyline(seg_idx, 1);
             double x1 = polyline(seg_idx + 1, 0);
@@ -209,7 +205,11 @@ FlatGeobuf::PackedRTree &Network::rtree() const
             if (y0 > y1) {
                 std::swap(y0, y1);
             }
-            nodes.push_back({x0, y0, x1, y1, segs_.size()});
+            nodes.push_back({x0, y0, x1, y1, ii});
+            IndexIJ index(poly_idx, seg_idx);
+            seg2idx_[index] = ii;
+            segs_.push_back(index);
+            ++ii;
         }
     }
     auto extent = calcExtent(nodes);
