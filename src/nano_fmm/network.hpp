@@ -9,6 +9,7 @@
 #include <optional>
 #include <memory>
 #include <vector>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -56,7 +57,7 @@ struct Network
     query(const Eigen::Vector3d &position, double radius,
           std::optional<int> k = std::nullopt,
           std::optional<double> z_max_offset = std::nullopt) const;
-    std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+    std::map<std::tuple<int64_t, int64_t>, RowVectors>
     query(const Eigen::Vector4d &bbox) const;
 
     static std::unique_ptr<Network> load(const std::string &path);

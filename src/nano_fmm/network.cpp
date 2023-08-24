@@ -132,17 +132,17 @@ Network::query(const Eigen::Vector3d &position, double radius,
     return nearests;
 }
 
-std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+std::map<std::tuple<int64_t, int64_t>, RowVectors>
 Network::query(const Eigen::Vector4d &bbox) const
 {
-    auto ret = std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>{};
+    auto ret = std::map<std::tuple<int64_t, int64_t>, RowVectors>();
     auto &tree = this->rtree();
     auto hits = tree.search(bbox[0], bbox[1], bbox[2], bbox[3]);
     for (auto &hit : hits) {
         auto poly_seg = segs_[hit.offset];
         auto poly_idx = poly_seg[0];
         auto seg_idx = poly_seg[1];
-        ret.emplace(poly_seg,
+        ret.emplace(std::make_tuple(poly_idx, seg_idx),
                     roads_.at(poly_idx).polyline().middleRows(seg_idx, 2));
     }
     return ret;
