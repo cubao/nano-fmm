@@ -25,6 +25,7 @@ struct ProjectedPoint
     {
     }
     Eigen::Vector3d position_;
+    Eigen::Vector3d direction_;
     double distance_;
     int64_t road_id_;
     double offset_;
@@ -59,6 +60,10 @@ struct Network
           std::optional<double> z_max_offset = std::nullopt) const;
     std::map<std::tuple<int64_t, int64_t>, RowVectors>
     query(const Eigen::Vector4d &bbox) const;
+
+    // graph operations
+    // move forward/backward N meters, return ProjectPoint
+    // single source dijkstra
 
     static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path, bool with_config = true) const;
