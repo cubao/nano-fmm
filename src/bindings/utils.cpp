@@ -35,7 +35,17 @@ void bind_utils(py::module &m)
              "k"_a = std::nullopt)
         .def("index2mask", &utils::index2mask, "index"_a, "N"_a)
         .def("mask2index", &utils::mask2index, "mask"_a)
+        .def("select_by_index", &utils::select_by_index, "coords"_a, "index"_a)
         .def("to_Nx3", &utils::to_Nx3, "coords"_a)
+        .def("remove_duplicates", &utils::remove_duplicates, "coords"_a,
+             py::kw_only(), "just_xy"_a = true, "is_polyline"_a = true)
+        // douglas
+        .def("douglas_simplify_mask", &utils::douglas_simplify_mask, "coords"_a,
+             py::kw_only(), "epsilon"_a, "is_wgs84"_a)
+        .def("douglas_simplify_index", &utils::douglas_simplify_index,
+             "coords"_a, py::kw_only(), "epsilon"_a, "is_wgs84"_a)
+        .def("douglas_simplify", &utils::douglas_simplify, "coords"_a,
+             py::kw_only(), "epsilon"_a, "is_wgs84"_a)
         //
         ;
 }

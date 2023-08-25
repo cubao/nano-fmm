@@ -239,6 +239,8 @@ struct Polyline
         return *ranges_;
     }
 
+    const Polyline remove_duplicates() const {}
+
   private:
     const RowVectors polyline_;
     const int N_;
