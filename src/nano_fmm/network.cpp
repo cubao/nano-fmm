@@ -148,6 +148,14 @@ Network::query(const Eigen::Vector4d &bbox) const
     return ret;
 }
 
+void Network::build() const
+{
+    for (auto &pair : roads_) {
+        pair.second.build();
+    }
+    rtree();
+}
+
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
     //

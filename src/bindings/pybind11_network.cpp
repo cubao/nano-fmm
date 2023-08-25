@@ -72,6 +72,8 @@ void bind_network(py::module &m)
                                                         py::const_),
              "bbox"_a)
         //
+        .def("build", &Network::build)
+        //
         .def_static("load", &Network::load, "path"_a)
         .def("dump", &Network::dump, "path"_a, py::kw_only(),
              "with_config"_a = true)

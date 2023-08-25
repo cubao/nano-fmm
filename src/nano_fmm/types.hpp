@@ -73,6 +73,12 @@ struct LineSegment
         return A * (1.0 - t) + B * t;
     }
 
+    const void build() const
+    {
+        length();
+        dir();
+    }
+
     double length() const
     {
         if (!length_) {

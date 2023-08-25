@@ -125,6 +125,14 @@ struct Polyline
         return a + (b - a) * t;
     }
 
+    void build() const
+    {
+        for (auto &seg : segments()) {
+            seg.build();
+        }
+        ranges();
+    }
+
     const LineSegment &segment(int index) const
     {
         index = index < 0 ? index + N_ - 1 : index;
@@ -170,11 +178,6 @@ struct Polyline
 
     const Polyline remove_backwards() const
     {
-        // if two polylines are joined, there may be some duplicate/backward
-        // points, e.g. polyline 1   o-------------o polyline 2 o-----o-------o
-        // should be merged as
-        //              o-------------o
-        //                                o-------o
         std::vector<int> selected;
         selected.reserve(N_);
         selected.push_back(0);

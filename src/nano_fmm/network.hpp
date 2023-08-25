@@ -61,6 +61,8 @@ struct Network
     std::map<std::tuple<int64_t, int64_t>, RowVectors>
     query(const Eigen::Vector4d &bbox) const;
 
+    void build() const;
+
     // graph operations
     // move forward/backward N meters, return ProjectPoint
     // single source dijkstra
