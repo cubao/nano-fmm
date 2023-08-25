@@ -1,5 +1,6 @@
 #include "nano_fmm/network.hpp"
 #include "nano_fmm/utils.hpp"
+#include "nano_fmm/heap.hpp"
 #include "spdlog/spdlog.h"
 
 namespace nano_fmm
@@ -226,35 +227,29 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     return *rtree_;
 }
 
-/*
-void Network::single_source_upperbound_dijkstra(NodeIndex s, double delta,
-                                                     PredecessorMap *pmap,
-                                                     DistanceMap *dmap) const
+void Network::single_source_upperbound_dijkstra(int64_t s, double delta, //
+                                                IndexMap *pmap,
+                                                DistanceMap *dmap) const
 {
     Heap Q;
-    // Initialization
     Q.push(s, 0);
     pmap->insert({s, s});
     dmap->insert({s, 0});
-    OutEdgeIterator out_i, out_end;
-    double temp_dist = 0;
-    // Dijkstra search
     while (!Q.empty()) {
         HeapNode node = Q.top();
         Q.pop();
-        NodeIndex u = node.index;
         if (node.value > delta)
             break;
-        for (boost::tie(out_i, out_end) = boost::out_edges(u, g);
-             out_i != out_end; ++out_i) {
-            EdgeDescriptor e = *out_i;
-            NodeIndex v = boost::target(e, g);
-            temp_dist = node.value + g[e].length;
+        auto u = node.index;
+        auto itr = nexts_.find(u);
+        if (itr == nexts_.end()) {
+            continue;
+        }
+        for (auto &v : itr->second) {
+            auto temp_dist = node.value + roads_.at(v).length();
             auto iter = dmap->find(v);
             if (iter != dmap->end()) {
-                // dmap contains node v
                 if (iter->second > temp_dist) {
-                    // a smaller distance is found for v
                     (*pmap)[v] = u;
                     (*dmap)[v] = temp_dist;
                     Q.decrease_key(v, temp_dist);
@@ -269,6 +264,5 @@ void Network::single_source_upperbound_dijkstra(NodeIndex s, double delta,
         }
     }
 }
-*/
 
 } // namespace nano_fmm
