@@ -45,7 +45,8 @@
 #include <limits>
 #include <iostream>
 
-namespace nano_fmm {
+namespace nano_fmm
+{
 template <class T, class Comp = std::less<T>> class FibHeap
 {
   public:
@@ -158,6 +159,7 @@ template <class T, class Comp = std::less<T>> class FibHeap
      * The minimum node of the heap.
      */
     FibNode *minimum() { return min; }
+    const FibNode *minimum() const { return min; }
 
     /*
      * union_fibheap(H1,H2)
@@ -514,8 +516,10 @@ template <class T, class Comp = std::less<T>> class FibHeap
     bool empty() const { return n == 0; }
 
     FibNode *topNode() { return minimum(); }
+    const FibNode *topNode() const { return minimum(); }
 
     T &top() { return minimum()->key; }
+    const T &top() const { return minimum()->key; }
 
     void pop()
     {
@@ -535,7 +539,7 @@ template <class T, class Comp = std::less<T>> class FibHeap
 
     FibNode *push(T k) { return push(std::move(k), nullptr); }
 
-    unsigned int size() { return (unsigned int)n; }
+    unsigned int size() const { return (unsigned int)n; }
 
     int n;
     FibNode *min;
@@ -568,10 +572,11 @@ struct Heap
         handle_data.erase(node.index);
         heap.pop();
     }
-    inline HeapNode top() { return heap.top(); }
-    inline bool empty() { return heap.empty(); }
-    inline unsigned int size() { return heap.size(); }
-    inline bool contain_node(int64_t index) {
+    inline HeapNode top() const { return heap.top(); }
+    inline bool empty() const { return heap.empty(); }
+    inline unsigned int size() const { return heap.size(); }
+    inline bool contain_node(int64_t index) const
+    {
         return handle_data.find(index) != handle_data.end();
     }
     inline void decrease_key(int64_t index, double value)
@@ -585,4 +590,4 @@ struct Heap
     typedef FibHeap<HeapNode>::FibNode *HeapNodeHandle;
     std::unordered_map<int64_t, HeapNodeHandle> handle_data;
 };
-}
+} // namespace nano_fmm
