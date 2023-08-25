@@ -91,5 +91,7 @@ struct Network
     mutable std::unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;
     mutable std::optional<FlatGeobuf::PackedRTree> rtree_;
     FlatGeobuf::PackedRTree &rtree() const;
+
+    // dijkstra
 };
 } // namespace nano_fmm

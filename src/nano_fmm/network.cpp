@@ -226,4 +226,49 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     return *rtree_;
 }
 
+/*
+void Network::single_source_upperbound_dijkstra(NodeIndex s, double delta,
+                                                     PredecessorMap *pmap,
+                                                     DistanceMap *dmap) const
+{
+    Heap Q;
+    // Initialization
+    Q.push(s, 0);
+    pmap->insert({s, s});
+    dmap->insert({s, 0});
+    OutEdgeIterator out_i, out_end;
+    double temp_dist = 0;
+    // Dijkstra search
+    while (!Q.empty()) {
+        HeapNode node = Q.top();
+        Q.pop();
+        NodeIndex u = node.index;
+        if (node.value > delta)
+            break;
+        for (boost::tie(out_i, out_end) = boost::out_edges(u, g);
+             out_i != out_end; ++out_i) {
+            EdgeDescriptor e = *out_i;
+            NodeIndex v = boost::target(e, g);
+            temp_dist = node.value + g[e].length;
+            auto iter = dmap->find(v);
+            if (iter != dmap->end()) {
+                // dmap contains node v
+                if (iter->second > temp_dist) {
+                    // a smaller distance is found for v
+                    (*pmap)[v] = u;
+                    (*dmap)[v] = temp_dist;
+                    Q.decrease_key(v, temp_dist);
+                };
+            } else {
+                if (temp_dist <= delta) {
+                    Q.push(v, temp_dist);
+                    pmap->insert({v, u});
+                    dmap->insert({v, temp_dist});
+                }
+            }
+        }
+    }
+}
+*/
+
 } // namespace nano_fmm
