@@ -16,9 +16,11 @@
 // optimal complexity for this task. However they are quite complex to
 // implement, and also have a quite large hidden constant.
 
-// https://github.com/beniz/fiboheap (used by cyang/fmm, LGPL)
+// https://github.com/beniz/fiboheap (used by cyang-kth/fmm, LGPL)
 // other choices (TODO)
 //      https://github.com/woodfrog/FibonacciHeap/blob/master/FibHeap.h (MIT)
+// resources:
+//      https://www.geeksforgeeks.org/fibonacci-heap-set-1-introduction
 
 /**
  * Fibonacci Heap
@@ -43,6 +45,7 @@
 #include <limits>
 #include <iostream>
 
+namespace nano_fmm {
 template <class T, class Comp = std::less<T>> class FibHeap
 {
   public:
@@ -538,3 +541,48 @@ template <class T, class Comp = std::less<T>> class FibHeap
     FibNode *min;
     Comp comp;
 };
+
+// https://github.com/cyang-kth/fmm/tree/master/src/network/heap.hpp
+struct HeapNode
+{
+    int64_t index;
+    double value;
+    bool operator<(const HeapNode &rhs) const
+    {
+        if (value == rhs.value)
+            return index < rhs.index;
+        return value < rhs.value;
+    }
+};
+
+struct Heap
+{
+    inline void push(int64_t index, double value)
+    {
+        HeapNodeHandle handle = heap.push({index, value});
+        handle_data.insert({index, handle});
+    }
+    inline void pop()
+    {
+        HeapNode &node = heap.top();
+        handle_data.erase(node.index);
+        heap.pop();
+    }
+    inline HeapNode top() { return heap.top(); }
+    inline bool empty() { return heap.empty(); }
+    inline unsigned int size() { return heap.size(); }
+    inline bool contain_node(int64_t index) {
+        return handle_data.find(index) != handle_data.end();
+    }
+    inline void decrease_key(int64_t index, double value)
+    {
+        HeapNodeHandle handle = handle_data[index];
+        heap.decrease_key(handle, {index, value});
+    }
+
+  private:
+    FibHeap<HeapNode> heap;
+    typedef FibHeap<HeapNode>::FibNode *HeapNodeHandle;
+    std::unordered_map<int64_t, HeapNodeHandle> handle_data;
+};
+}
