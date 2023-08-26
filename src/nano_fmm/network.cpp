@@ -5,17 +5,6 @@
 
 namespace nano_fmm
 {
-
-std::shared_ptr<Config> Network::config()
-{
-    if (!config_) {
-        config_ = std::make_shared<Config>();
-    }
-    return config_;
-}
-
-void Network::config(std::shared_ptr<Config> config) { config_ = config; }
-
 void Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
 {
     if (roads_.find(road_id) != roads_.end()) {
@@ -168,9 +157,35 @@ bool Network::dump(const std::string &path, bool with_config) const
     return false;
 }
 
-std::vector<UBODT> Network::build_ubodt(std::optional<double> thresh) const
+std::vector<UbodtRecord>
+Network::build_ubodt(std::optional<double> thresh) const
 {
-    return {};
+    if (!thresh) {
+        thresh = config_.ubodt_thresh;
+    }
+    auto records = std::vector<UbodtRecord>();
+    for (auto &pair : roads_) {
+        auto s = pair.first;
+        IndexMap pmap;
+        DistanceMap dmap;
+        single_source_upperbound_dijkstra(s, *thresh, &pmap, &dmap);
+        for (const auto &iter : pmap) {
+            auto curr = iter.first;
+            if (curr == s) {
+                continue;
+            }
+            auto prev = iter.second;
+            auto v = curr;
+            int64_t u;
+            while ((u = pmap[v]) != s) {
+                v = u;
+            }
+            auto succ = v;
+            // records.push_back({s, curr, succ, prev, dmap[curr],
+            // std::nullptr});
+        }
+    }
+    return records;
 }
 
 bool Network::load_ubodt(const std::string &path)
@@ -231,8 +246,13 @@ void Network::single_source_upperbound_dijkstra(int64_t s, double delta, //
                                                 IndexMap *pmap,
                                                 DistanceMap *dmap) const
 {
+    auto itr = nexts_.find(s);
+    if (itr == nexts_.end()) {
+        return;
+    }
+
     Heap Q;
-    Q.push(s, 0);
+    Q.push(s, -roads_.at(s).length());
     pmap->insert({s, s});
     dmap->insert({s, 0});
     while (!Q.empty()) {
@@ -245,20 +265,21 @@ void Network::single_source_upperbound_dijkstra(int64_t s, double delta, //
         if (itr == nexts_.end()) {
             continue;
         }
-        for (auto &v : itr->second) {
-            auto temp_dist = node.value + roads_.at(v).length();
+        double u_cost = roads_.at(u).length();
+        for (auto v : itr->second) {
+            auto c = node.value + u_cost;
             auto iter = dmap->find(v);
             if (iter != dmap->end()) {
-                if (iter->second > temp_dist) {
+                if (c < iter->second) {
                     (*pmap)[v] = u;
-                    (*dmap)[v] = temp_dist;
-                    Q.decrease_key(v, temp_dist);
+                    (*dmap)[v] = c;
+                    Q.decrease_key(v, c);
                 };
             } else {
-                if (temp_dist <= delta) {
-                    Q.push(v, temp_dist);
+                if (c <= delta) {
+                    Q.push(v, c);
                     pmap->insert({v, u});
-                    dmap->insert({v, temp_dist});
+                    dmap->insert({v, c});
                 }
             }
         }

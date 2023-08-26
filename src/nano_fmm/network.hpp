@@ -31,18 +31,22 @@ struct ProjectedPoint
     double offset_;
 };
 
-struct UBODT
+struct UbodtRecord
 {
-    int64_t origin_;
-    int64_t destination_;
+    int64_t source_road;
+    int64_t target_road;
+    int64_t source_next;
+    int64_t target_prev;
+    double cost;
+    UbodtRecord *next;
 };
 
 struct Network
 {
     Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
 
-    std::shared_ptr<Config> config();
-    void config(std::shared_ptr<Config> config);
+    const Config &config() const { return config_; }
+    Config &config() { return config_; }
 
     void add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
     void add_link(int64_t source_road, int64_t target_road);
@@ -70,7 +74,7 @@ struct Network
     static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path, bool with_config = true) const;
 
-    std::vector<UBODT> build_ubodt(std::optional<double> thresh) const;
+    std::vector<UbodtRecord> build_ubodt(std::optional<double> thresh) const;
     bool load_ubodt(const std::string &path);
     bool dump_ubodt(const std::string &path,
                     std::optional<double> thresh) const;
@@ -84,7 +88,7 @@ struct Network
     // links (id -> {nexts}, id -> {prevs})
     std::unordered_map<int64_t, std::unordered_set<int64_t>> nexts_, prevs_;
     // config
-    std::shared_ptr<Config> config_;
+    Config config_;
 
     // spatial index
     mutable std::vector<IndexIJ> segs_;

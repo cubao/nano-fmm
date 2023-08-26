@@ -32,15 +32,23 @@ void bind_network(py::module &m)
         //
         ;
 
-    py::class_<UBODT>(m, "UBODT", py::module_local()) //
+    py::class_<UbodtRecord>(m, "UbodtRecord", py::module_local()) //
         .def(py::init<>())
         //
-        .def_property_readonly("origin",
-                               [](const UBODT &self) { return self.origin_; })
         .def_property_readonly(
-            "destination", [](const UBODT &self) { return self.destination_; });
-    //
-    ;
+            "source_road",
+            [](const UbodtRecord &self) { return self.source_road; })
+        .def_property_readonly(
+            "target_road",
+            [](const UbodtRecord &self) { return self.target_road; })
+        .def_property_readonly(
+            "source_next",
+            [](const UbodtRecord &self) { return self.source_next; })
+        .def_property_readonly(
+            "target_prev",
+            [](const UbodtRecord &self) { return self.target_prev; })
+        //
+        ;
 
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
