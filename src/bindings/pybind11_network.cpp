@@ -47,6 +47,11 @@ void bind_network(py::module &m)
         .def_property_readonly(
             "target_prev",
             [](const UbodtRecord &self) { return self.target_prev; })
+        .def_property_readonly(
+            "cost", [](const UbodtRecord &self) { return self.cost; })
+        .def_property_readonly(
+            "next", [](const UbodtRecord &self) { return self.next; },
+            rvp::reference_internal)
         //
         ;
 
@@ -90,6 +95,8 @@ void bind_network(py::module &m)
         .def("load_ubodt", &Network::load_ubodt, "path"_a)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)
+        //
+        .def("to_2d", &Network::to_2d)
         //
         ;
 }
