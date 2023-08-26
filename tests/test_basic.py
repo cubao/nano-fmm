@@ -1,9 +1,11 @@
 import time
+from collections import defaultdict
+from typing import Dict, List
 
 import numpy as np
 
 import nano_fmm as fmm
-from nano_fmm import LineSegment
+from nano_fmm import LineSegment, Network
 from nano_fmm import flatbush as fb
 
 
@@ -259,3 +261,76 @@ def test_polyline_nearest_slice():
     assert np.all(pt == llas[1])
     assert dist
     assert seg_idx == 1 and t == 0.0
+
+
+def build_network(
+    *,
+    nodes: Dict[str, np.ndarray],
+    ways: Dict[str, List[str]],
+    is_wgs84: bool = False,
+):
+    node2nexts = defaultdict(list)
+    for w, nn in ways.items():
+        node2nexts[nn[0]].append(w)
+    {nn[-1]: w for w, nn in ways.items()}
+    way_ids = dict(zip(ways.keys(), range(len(ways))))
+    roads = {}
+    for w, nn in ways.items():
+        assert len(nn) >= 2
+        coords = np.array([nodes[n] for n in nn], dtype=np.float64)
+        roads[w] = coords
+    network = Network(is_wgs84=is_wgs84)
+    for rid, coords in zip(way_ids.values(), roads.values()):
+        assert network.add_road(coords, id=rid)
+    for rid, nn in ways.items():
+        curr_road = way_ids[rid]
+        next_roads = node2nexts.get(nn[-1], [])
+        print(f"curr road: '{rid}', nexts: {next_roads}")
+        next_roads = [way_ids[r] for r in next_roads]
+        for n in next_roads:
+            assert network.add_link(curr_road, n)
+    return network
+
+
+def two_way_streets(ways: Dict[str, List[str]]):
+    return {
+        **ways,
+        **({w[::-1]: nn[::-1] for w, nn in ways.items()}),
+    }
+
+
+def test_dijkstra():
+    """
+             E                   F
+              o------------------o
+           /  |                  |
+         /    |                  |
+      /       |                  |
+    o---------o------------------o---------------o
+    A         B                  C               D
+    """
+    build_network(
+        nodes={
+            "A": [0, 0, 0],
+            "B": [1, 0, 0],
+            "C": [3, 0, 0],
+            "D": [5, 0, 0],
+            "E": [1, 1, 0],
+            "F": [3, 1, 0],
+        },
+        ways=two_way_streets(
+            {
+                "AB": ["A", "B"],
+                "BC": ["B", "C"],
+                "CD": ["C", "D"],
+                "AE": ["A", "E"],
+                "BE": ["B", "E"],
+                "EF": ["E", "F"],
+                "CF": ["C", "F"],
+            }
+        ),
+    )
+    print()
+
+
+test_dijkstra()
