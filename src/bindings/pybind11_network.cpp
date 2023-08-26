@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/network.hpp"
+#include "spdlog/spdlog.h"
 
 namespace nano_fmm
 {
@@ -53,7 +54,15 @@ void bind_network(py::module &m)
             "next", [](const UbodtRecord &self) { return self.next; },
             rvp::reference_internal)
         //
-        ;
+        .def("__repr__", [](const UbodtRecord &self) {
+            return fmt::format(
+                "UbodtRecord(s->t=[{}->{}], cost:{}, sn:{},tp:{})",
+                self.source_road, self.target_road, //
+                self.cost,                          //
+                self.source_next, self.target_prev);
+        });
+    //
+    ;
 
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
@@ -91,7 +100,15 @@ void bind_network(py::module &m)
         .def("dump", &Network::dump, "path"_a, py::kw_only(),
              "with_config"_a = true)
         //
-        .def("build_ubodt", &Network::build_ubodt, "thresh"_a = std::nullopt)
+        .def("build_ubodt",
+             py::overload_cast<std::optional<double>>(&Network::build_ubodt,
+                                                      py::const_),
+             "thresh"_a = std::nullopt)
+        .def("build_ubodt",
+             py::overload_cast<const std::vector<int64_t> &,
+                               std::optional<double>>(&Network::build_ubodt,
+                                                      py::const_),
+             "thresh"_a = std::nullopt)
         .def("load_ubodt", &Network::load_ubodt, "path"_a)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)

@@ -289,7 +289,12 @@ def build_network(
         next_roads = [way_ids[r] for r in next_roads]
         for n in next_roads:
             assert network.add_link(curr_road, n)
-    return network
+    return network, {
+        "roads": roads,
+        "nodes": nodes,
+        "ways": ways,
+        "way_ids": way_ids,
+    }
 
 
 def two_way_streets(ways: Dict[str, List[str]]):
@@ -309,7 +314,7 @@ def test_dijkstra():
     o---------o------------------o---------------o
     A         B                  C               D
     """
-    build_network(
+    network, meta = build_network(
         nodes={
             "A": [0, 0, 0],
             "B": [1, 0, 0],
@@ -330,6 +335,7 @@ def test_dijkstra():
             }
         ),
     )
+    nodes, ways, ids = (meta[k] for k in ["nodes", "ways", "way_ids"])
     print()
 
 

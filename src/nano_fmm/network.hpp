@@ -83,7 +83,11 @@ struct Network
     static std::unique_ptr<Network> load(const std::string &path);
     bool dump(const std::string &path, bool with_config = true) const;
     // ubodt
-    std::vector<UbodtRecord> build_ubodt(std::optional<double> thresh) const;
+    std::vector<UbodtRecord>
+    build_ubodt(std::optional<double> thresh = std::nullopt) const;
+    std::vector<UbodtRecord>
+    build_ubodt(const std::vector<int64_t> &roads,
+                std::optional<double> thresh = std::nullopt) const;
     bool load_ubodt(const std::string &path);
     bool dump_ubodt(const std::string &path,
                     std::optional<double> thresh) const;

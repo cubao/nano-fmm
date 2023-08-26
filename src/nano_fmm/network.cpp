@@ -182,12 +182,23 @@ bool Network::dump(const std::string &path, bool with_config) const
 std::vector<UbodtRecord>
 Network::build_ubodt(std::optional<double> thresh) const
 {
+    auto roads = std::vector<int64_t>{};
+    roads.reserve(roads_.size());
+    for (auto &pair : roads_) {
+        roads.push_back(pair.first);
+    }
+    return build_ubodt(roads, thresh);
+}
+
+std::vector<UbodtRecord>
+Network::build_ubodt(const std::vector<int64_t> &roads,
+                     std::optional<double> thresh = std::nullopt) const
+{
     if (!thresh) {
         thresh = config_.ubodt_thresh;
     }
     auto records = std::vector<UbodtRecord>();
-    for (auto &pair : roads_) {
-        auto s = pair.first;
+    for (auto s : roads) {
         IndexMap pmap;
         DistanceMap dmap;
         single_source_upperbound_dijkstra(s, *thresh, pmap, dmap);
