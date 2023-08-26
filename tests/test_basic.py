@@ -304,6 +304,16 @@ def two_way_streets(ways: Dict[str, List[str]]):
     }
 
 
+def ubodt2json(row, way_ids):
+    return {
+        "source": way_ids[row.source_road],
+        "target": way_ids[row.target_road],
+        "next": way_ids[row.source_next],
+        "prev": way_ids[row.target_prev],
+        "cost": row.cost,
+    }
+
+
 def test_dijkstra():
     """
              E                   F
@@ -314,29 +324,40 @@ def test_dijkstra():
     o---------o------------------o---------------o
     A         B                  C               D
     """
+    nodes = {
+        "A": [0, 0, 0],
+        "B": [1, 0, 0],
+        "C": [3, 0, 0],
+        "D": [5, 0, 0],
+        "E": [1, 1, 0],
+        "F": [3, 1, 0],
+    }
+    ways = {
+        "AB": ["A", "B"],
+        "BC": ["B", "C"],
+        "CD": ["C", "D"],
+        "AE": ["A", "E"],
+        "BE": ["B", "E"],
+        "EF": ["E", "F"],
+        "CF": ["C", "F"],
+    }
     network, meta = build_network(
-        nodes={
-            "A": [0, 0, 0],
-            "B": [1, 0, 0],
-            "C": [3, 0, 0],
-            "D": [5, 0, 0],
-            "E": [1, 1, 0],
-            "F": [3, 1, 0],
-        },
-        ways=two_way_streets(
-            {
-                "AB": ["A", "B"],
-                "BC": ["B", "C"],
-                "CD": ["C", "D"],
-                "AE": ["A", "E"],
-                "BE": ["B", "E"],
-                "EF": ["E", "F"],
-                "CF": ["C", "F"],
-            }
-        ),
+        nodes=nodes,
+        ways=ways,
     )
-    nodes, ways, ids = (meta[k] for k in ["nodes", "ways", "way_ids"])
+    nodes, ways, wid2index = (meta[k] for k in ["nodes", "ways", "way_ids"])
+    way_ids = list(wid2index.keys())
+
+    rows = network.build_ubodt([0], thresh=1)
+    rows = [ubodt2json(r, way_ids) for r in rows]
+    assert rows == [
+        {"source": "AB", "target": "BC", "next": "BC", "prev": "AB", "cost": 0.0},
+        {"source": "AB", "target": "BE", "next": "BE", "prev": "AB", "cost": 0.0},
+        {"source": "AB", "target": "EF", "next": "BE", "prev": "BE", "cost": 1.0},
+    ]
     print()
+
+    # ways=two_way_streets(
 
 
 test_dijkstra()

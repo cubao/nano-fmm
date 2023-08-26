@@ -192,7 +192,7 @@ Network::build_ubodt(std::optional<double> thresh) const
 
 std::vector<UbodtRecord>
 Network::build_ubodt(const std::vector<int64_t> &roads,
-                     std::optional<double> thresh = std::nullopt) const
+                     std::optional<double> thresh) const
 {
     if (!thresh) {
         thresh = config_.ubodt_thresh;

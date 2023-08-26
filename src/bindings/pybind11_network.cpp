@@ -103,12 +103,12 @@ void bind_network(py::module &m)
         .def("build_ubodt",
              py::overload_cast<std::optional<double>>(&Network::build_ubodt,
                                                       py::const_),
-             "thresh"_a = std::nullopt)
+             py::kw_only(), "thresh"_a = std::nullopt)
         .def("build_ubodt",
              py::overload_cast<const std::vector<int64_t> &,
                                std::optional<double>>(&Network::build_ubodt,
                                                       py::const_),
-             "thresh"_a = std::nullopt)
+             "roads"_a, py::kw_only(), "thresh"_a = std::nullopt)
         .def("load_ubodt", &Network::load_ubodt, "path"_a)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)
