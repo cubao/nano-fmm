@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/network.hpp"
+#include "spdlog/spdlog.h"
 
 namespace nano_fmm
 {
@@ -32,13 +33,37 @@ void bind_network(py::module &m)
         //
         ;
 
-    py::class_<UBODT>(m, "UBODT", py::module_local()) //
+    py::class_<UbodtRecord>(m, "UbodtRecord", py::module_local()) //
         .def(py::init<>())
         //
-        .def_property_readonly("origin",
-                               [](const UBODT &self) { return self.origin_; })
         .def_property_readonly(
-            "destination", [](const UBODT &self) { return self.destination_; });
+            "source_road",
+            [](const UbodtRecord &self) { return self.source_road; })
+        .def_property_readonly(
+            "target_road",
+            [](const UbodtRecord &self) { return self.target_road; })
+        .def_property_readonly(
+            "source_next",
+            [](const UbodtRecord &self) { return self.source_next; })
+        .def_property_readonly(
+            "target_prev",
+            [](const UbodtRecord &self) { return self.target_prev; })
+        .def_property_readonly(
+            "cost", [](const UbodtRecord &self) { return self.cost; })
+        .def_property_readonly(
+            "next", [](const UbodtRecord &self) { return self.next; },
+            rvp::reference_internal)
+        //
+        .def(py::self == py::self)
+        .def(py::self < py::self)
+        //
+        .def("__repr__", [](const UbodtRecord &self) {
+            return fmt::format(
+                "UbodtRecord(s->t=[{}->{}], cost:{}, sn:{},tp:{})",
+                self.source_road, self.target_road, //
+                self.cost,                          //
+                self.source_next, self.target_prev);
+        });
     //
     ;
 
@@ -72,14 +97,26 @@ void bind_network(py::module &m)
                                                         py::const_),
              "bbox"_a)
         //
+        .def("build", &Network::build)
+        //
         .def_static("load", &Network::load, "path"_a)
         .def("dump", &Network::dump, "path"_a, py::kw_only(),
              "with_config"_a = true)
         //
-        .def("build_ubodt", &Network::build_ubodt, "thresh"_a = std::nullopt)
+        .def("build_ubodt",
+             py::overload_cast<std::optional<double>>(&Network::build_ubodt,
+                                                      py::const_),
+             py::kw_only(), "thresh"_a = std::nullopt)
+        .def("build_ubodt",
+             py::overload_cast<const std::vector<int64_t> &,
+                               std::optional<double>>(&Network::build_ubodt,
+                                                      py::const_),
+             "roads"_a, py::kw_only(), "thresh"_a = std::nullopt)
         .def("load_ubodt", &Network::load_ubodt, "path"_a)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)
+        //
+        .def("to_2d", &Network::to_2d)
         //
         ;
 }

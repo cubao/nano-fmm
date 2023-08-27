@@ -123,6 +123,17 @@ inline Eigen::VectorXi mask2index(const Eigen::Ref<const Eigen::VectorXi> &mask)
     return indexes;
 }
 
+inline RowVectors select_by_index(const Eigen::Ref<const RowVectors> &coords,
+                                  const Eigen::VectorXi &index)
+{
+    RowVectors selected(index.size(), 3);
+    int j = -1;
+    for (int i = 0; i < index.size(); ++i) {
+        selected.row(++j) = coords.row(index[i]);
+    }
+    return selected;
+}
+
 inline RowVectors to_Nx3(const Eigen::Ref<const RowVectorsNx2> &coords)
 {
     RowVectors _coords(coords.rows(), 3);
@@ -130,5 +141,105 @@ inline RowVectors to_Nx3(const Eigen::Ref<const RowVectorsNx2> &coords)
     _coords.col(2).setZero();
     return _coords;
 }
+
+inline RowVectors remove_duplicates(const Eigen::Ref<const RowVectors> &coords,
+                                    bool just_xy = true,
+                                    bool is_polyline = true)
+{
+    const int N = coords.rows();
+    std::vector<int> selected;
+    selected.reserve(N);
+    selected.push_back(0);
+    if (just_xy) {
+        for (int i = 1; i < N; ++i) {
+            if (coords(i, 0) == coords(selected.back(), 0) &&
+                coords(i, 1) == coords(selected.back(), 1)) {
+                continue;
+            }
+            selected.push_back(i);
+        }
+    } else {
+        for (int i = 1; i < N; ++i) {
+            if (coords(i, 0) == coords(selected.back(), 0) &&
+                coords(i, 1) == coords(selected.back(), 1) &&
+                coords(i, 2) == coords(selected.back(), 2)) {
+                continue;
+            }
+            selected.push_back(i);
+        }
+    }
+    if (is_polyline && selected.size() == 1) {
+        selected.push_back(N - 1);
+    }
+    return select_by_index(coords,
+                           Eigen::VectorXi::Map(&selected[0], selected.size()));
+}
+
+// https://github.com/cubao/pybind11-rdp/blob/master/src/main.cpp
+inline void __douglas_simplify(const Eigen::Ref<const RowVectors> &coords,
+                               Eigen::VectorXi &to_keep, const int i,
+                               const int j, const double epsilon)
+{
+    to_keep[i] = to_keep[j] = 1;
+    if (j - i <= 1) {
+        return;
+    }
+    LineSegment line(coords.row(i), coords.row(j));
+    double max_dist2 = 0.0;
+    int max_index = i;
+    int mid = i + (j - i) / 2;
+    int min_pos_to_mid = j - i;
+    for (int k = i + 1; k < j; ++k) {
+        double dist2 = line.distance2(coords.row(k));
+        if (dist2 > max_dist2) {
+            max_dist2 = dist2;
+            max_index = k;
+        } else if (dist2 == max_dist2) {
+            // a workaround to ensure we choose a pivot close to the middle of
+            // the list, reducing recursion depth, for certain degenerate inputs
+            // https://github.com/mapbox/geojson-vt/issues/104
+            int pos_to_mid = std::fabs(k - mid);
+            if (pos_to_mid < min_pos_to_mid) {
+                min_pos_to_mid = pos_to_mid;
+                max_index = k;
+            }
+        }
+    }
+    if (max_dist2 <= epsilon * epsilon) {
+        return;
+    }
+    __douglas_simplify(coords, to_keep, i, max_index, epsilon);
+    __douglas_simplify(coords, to_keep, max_index, j, epsilon);
+}
+
+inline Eigen::VectorXi
+douglas_simplify_mask(const Eigen::Ref<const RowVectors> &coords,
+                      double epsilon, bool is_wgs84)
+{
+    Eigen::VectorXi mask(coords.rows());
+    mask.setZero();
+    if (is_wgs84) {
+        auto enus = lla2enu(coords);
+        __douglas_simplify(enus, mask, 0, mask.size() - 1, epsilon);
+    } else {
+        __douglas_simplify(coords, mask, 0, mask.size() - 1, epsilon);
+    }
+    return mask;
+}
+
+inline Eigen::VectorXi
+douglas_simplify_index(const Eigen::Ref<const RowVectors> &coords,
+                       double epsilon, bool is_wgs84)
+{
+    return mask2index(douglas_simplify_mask(coords, epsilon, is_wgs84));
+}
+
+inline RowVectors douglas_simplify(const Eigen::Ref<const RowVectors> &coords,
+                                   double epsilon, bool is_wgs84)
+{
+    return select_by_index(coords,
+                           douglas_simplify_index(coords, epsilon, is_wgs84));
+}
+
 } // namespace utils
 } // namespace nano_fmm

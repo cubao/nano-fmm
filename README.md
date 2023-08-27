@@ -7,3 +7,9 @@ Online document: **[readthedocs](http://nano-fmm.readthedocs.io/)**
 TODO
 
 <!--intro-end-->
+
+
+TODO:
+
+- collapse
+- export geojson with random stroke (should be consistent)

@@ -1,25 +1,16 @@
 #include "nano_fmm/network.hpp"
 #include "nano_fmm/utils.hpp"
+#include "nano_fmm/heap.hpp"
 #include "spdlog/spdlog.h"
 
 namespace nano_fmm
 {
-
-std::shared_ptr<Config> Network::config()
-{
-    if (!config_) {
-        config_ = std::make_shared<Config>();
-    }
-    return config_;
-}
-
-void Network::config(std::shared_ptr<Config> config) { config_ = config; }
-
-void Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
+bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
 {
     if (roads_.find(road_id) != roads_.end()) {
-        spdlog::error("duplicate road, id={}", road_id);
-        return;
+        spdlog::error("duplicate road, id={}, should remove_road first",
+                      road_id);
+        return false;
     }
     if (is_wgs84_) {
         roads_.emplace(
@@ -29,21 +20,42 @@ void Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
         roads_.emplace(road_id, Polyline(geom));
     }
     rtree_.reset();
+    return true;
 }
-void Network::add_link(int64_t source_road, int64_t target_road)
+bool Network::add_link(int64_t source_road, int64_t target_road)
 {
+    if (roads_.find(source_road) == roads_.end()) {
+        spdlog::error("source_road={} not in network", source_road);
+        return false;
+    }
+    if (roads_.find(target_road) == roads_.end()) {
+        spdlog::error("target_road={} not in network", target_road);
+        return false;
+    }
     nexts_[source_road].insert(target_road);
     prevs_[target_road].insert(source_road);
+    return true;
 }
 
-void Network::remove_road(int64_t road_id)
+bool Network::remove_road(int64_t road_id)
 {
-    // TODO
-    rtree_.reset();
+    if (roads_.erase(road_id)) {
+        rtree_.reset();
+        return true;
+    }
+    return false;
 }
-void Network::remove_link(int64_t source_road, int64_t target_road)
+bool Network::remove_link(int64_t source_road, int64_t target_road)
 {
-    // TODO
+    auto itr = nexts_.find(source_road);
+    if (itr == nexts_.end()) {
+        return false;
+    }
+    if (itr->second.erase(target_road)) {
+        prevs_[target_road].erase(source_road);
+        return true;
+    }
+    return false;
 }
 std::unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
 {
@@ -132,20 +144,28 @@ Network::query(const Eigen::Vector3d &position, double radius,
     return nearests;
 }
 
-std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>
+std::map<std::tuple<int64_t, int64_t>, RowVectors>
 Network::query(const Eigen::Vector4d &bbox) const
 {
-    auto ret = std::unordered_map<IndexIJ, RowVectors, hash_eigen<IndexIJ>>{};
+    auto ret = std::map<std::tuple<int64_t, int64_t>, RowVectors>();
     auto &tree = this->rtree();
     auto hits = tree.search(bbox[0], bbox[1], bbox[2], bbox[3]);
     for (auto &hit : hits) {
         auto poly_seg = segs_[hit.offset];
         auto poly_idx = poly_seg[0];
         auto seg_idx = poly_seg[1];
-        ret.emplace(poly_seg,
+        ret.emplace(std::make_tuple(poly_idx, seg_idx),
                     roads_.at(poly_idx).polyline().middleRows(seg_idx, 2));
     }
     return ret;
+}
+
+void Network::build() const
+{
+    for (auto &pair : roads_) {
+        pair.second.build();
+    }
+    rtree();
 }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
@@ -159,9 +179,44 @@ bool Network::dump(const std::string &path, bool with_config) const
     return false;
 }
 
-std::vector<UBODT> Network::build_ubodt(std::optional<double> thresh) const
+std::vector<UbodtRecord>
+Network::build_ubodt(std::optional<double> thresh) const
 {
-    return {};
+    auto roads = std::vector<int64_t>{};
+    roads.reserve(roads_.size());
+    for (auto &pair : roads_) {
+        roads.push_back(pair.first);
+    }
+    return build_ubodt(roads, thresh);
+}
+
+std::vector<UbodtRecord>
+Network::build_ubodt(const std::vector<int64_t> &roads,
+                     std::optional<double> thresh) const
+{
+    if (!thresh) {
+        thresh = config_.ubodt_thresh;
+    }
+    auto records = std::vector<UbodtRecord>();
+    for (auto s : roads) {
+        IndexMap pmap;
+        DistanceMap dmap;
+        single_source_upperbound_dijkstra(s, *thresh, pmap, dmap);
+        for (const auto &iter : pmap) {
+            auto curr = iter.first;
+            if (curr == s) {
+                continue;
+            }
+            const auto prev = iter.second;
+            auto succ = curr;
+            int64_t u;
+            while ((u = pmap[succ]) != s) {
+                succ = u;
+            }
+            records.push_back({s, curr, succ, prev, dmap[curr], nullptr});
+        }
+    }
+    return records;
 }
 
 bool Network::load_ubodt(const std::string &path)
@@ -176,7 +231,22 @@ bool Network::dump_ubodt(const std::string &path,
     return false;
 }
 
-Network Network::to_2d() const { return *this; }
+Network Network::to_2d() const
+{
+    auto net = Network(is_wgs84_);
+    net.config(config_);
+    for (auto &pair : roads_) {
+        auto xy0 = utils::to_Nx3(pair.second.polyline().leftCols(2));
+        net.add_road(xy0, pair.first);
+    }
+    for (auto &pair : nexts_) {
+        auto curr = pair.first;
+        for (auto next : pair.second) {
+            net.add_link(curr, next);
+        }
+    }
+    return net;
+}
 
 FlatGeobuf::PackedRTree &Network::rtree() const
 {
@@ -216,6 +286,45 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     hilbertSort(nodes);
     rtree_ = FlatGeobuf::PackedRTree(nodes, extent);
     return *rtree_;
+}
+
+void Network::single_source_upperbound_dijkstra(int64_t s, double delta, //
+                                                IndexMap &pmap,
+                                                DistanceMap &dmap) const
+{
+    Heap Q;
+    Q.push(s, -roads_.at(s).length());
+    pmap.insert({s, s});
+    dmap.insert({s, 0});
+    while (!Q.empty()) {
+        HeapNode node = Q.top();
+        Q.pop();
+        if (node.value > delta)
+            break;
+        auto u = node.index;
+        auto itr = nexts_.find(u);
+        if (itr == nexts_.end()) {
+            continue;
+        }
+        double u_cost = roads_.at(u).length();
+        for (auto v : itr->second) {
+            auto c = node.value + u_cost;
+            auto iter = dmap.find(v);
+            if (iter != dmap.end()) {
+                if (c < iter->second) {
+                    pmap[v] = u;
+                    dmap[v] = c;
+                    Q.decrease_key(v, c);
+                };
+            } else {
+                if (c <= delta) {
+                    Q.push(v, c);
+                    pmap.insert({v, u});
+                    dmap.insert({v, c});
+                }
+            }
+        }
+    }
 }
 
 } // namespace nano_fmm

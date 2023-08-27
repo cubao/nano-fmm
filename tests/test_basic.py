@@ -1,9 +1,11 @@
 import time
+from collections import defaultdict
+from typing import Dict, List
 
 import numpy as np
 
 import nano_fmm as fmm
-from nano_fmm import LineSegment
+from nano_fmm import LineSegment, Network
 from nano_fmm import flatbush as fb
 
 
@@ -259,3 +261,128 @@ def test_polyline_nearest_slice():
     assert np.all(pt == llas[1])
     assert dist
     assert seg_idx == 1 and t == 0.0
+
+
+def build_network(
+    *,
+    nodes: Dict[str, np.ndarray],
+    ways: Dict[str, List[str]],
+    is_wgs84: bool = False,
+):
+    node2nexts = defaultdict(list)
+    for w, nn in ways.items():
+        node2nexts[nn[0]].append(w)
+    {nn[-1]: w for w, nn in ways.items()}
+    way_ids = dict(zip(ways.keys(), range(len(ways))))
+    roads = {}
+    for w, nn in ways.items():
+        assert len(nn) >= 2
+        coords = np.array([nodes[n] for n in nn], dtype=np.float64)
+        roads[w] = coords
+    network = Network(is_wgs84=is_wgs84)
+    for rid, coords in zip(way_ids.values(), roads.values()):
+        assert network.add_road(coords, id=rid)
+    for rid, nn in ways.items():
+        curr_road = way_ids[rid]
+        next_roads = node2nexts.get(nn[-1], [])
+        # print(f"curr road: '{rid}', nexts: {next_roads}")
+        next_roads = [way_ids[r] for r in next_roads]
+        for n in next_roads:
+            assert network.add_link(curr_road, n)
+    return network, {
+        "roads": roads,
+        "nodes": nodes,
+        "ways": ways,
+        "way_ids": way_ids,
+    }
+
+
+def two_way_streets(ways: Dict[str, List[str]]):
+    return {
+        **ways,
+        **({w[::-1]: nn[::-1] for w, nn in ways.items()}),
+    }
+
+
+def ubodt2json(row, way_ids):
+    return {
+        "source": way_ids[row.source_road],
+        "target": way_ids[row.target_road],
+        "next": way_ids[row.source_next],
+        "prev": way_ids[row.target_prev],
+        "cost": row.cost,
+    }
+
+
+def test_dijkstra():
+    """
+             E                   F
+              o------------------o
+           /  |                  |
+         /    |                  |
+      /       |                  |
+    o---------o------------------o---------------o
+    A         B                  C               D
+    """
+    nodes = {
+        "A": [0, 0, 0],
+        "B": [1, 0, 0],
+        "C": [3, 0, 0],
+        "D": [5, 0, 0],
+        "E": [1, 1, 0],
+        "F": [3, 1, 0],
+    }
+    ways = {
+        "AB": ["A", "B"],
+        "BC": ["B", "C"],
+        "CD": ["C", "D"],
+        "AE": ["A", "E"],
+        "BE": ["B", "E"],
+        "EF": ["E", "F"],
+        "CF": ["C", "F"],
+    }
+    network, meta = build_network(
+        nodes=nodes,
+        ways=ways,
+    )
+    nodes, ways, wid2index = (meta[k] for k in ["nodes", "ways", "way_ids"])
+    way_ids = list(wid2index.keys())
+
+    rows = network.build_ubodt([wid2index["AB"]], thresh=1)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
+    assert rows == [
+        {"source": "AB", "target": "BC", "next": "BC", "prev": "AB", "cost": 0.0},
+        {"source": "AB", "target": "BE", "next": "BE", "prev": "AB", "cost": 0.0},
+        {"source": "AB", "target": "EF", "next": "BE", "prev": "BE", "cost": 1.0},
+    ]
+    rows = network.build_ubodt([wid2index["BC"]], thresh=5)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
+    assert rows == [
+        {"source": "BC", "target": "CD", "next": "CD", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CF", "next": "CF", "prev": "BC", "cost": 0.0},
+    ]
+
+    network, meta = build_network(
+        nodes=nodes,
+        ways=two_way_streets(ways),
+    )
+    nodes, ways, wid2index = (meta[k] for k in ["nodes", "ways", "way_ids"])
+    way_ids = list(wid2index.keys())
+
+    rows = network.build_ubodt([wid2index["BC"]], thresh=3)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
+    assert rows == [
+        {"source": "BC", "target": "CD", "next": "CD", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CF", "next": "CF", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CB", "next": "CB", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "FE", "next": "CF", "prev": "CF", "cost": 1.0},
+        {"source": "BC", "target": "FC", "next": "CF", "prev": "CF", "cost": 1.0},
+        {"source": "BC", "target": "DC", "next": "CD", "prev": "CD", "cost": 2.0},
+        {"source": "BC", "target": "BE", "next": "CB", "prev": "CB", "cost": 2.0},
+        {"source": "BC", "target": "BA", "next": "CB", "prev": "CB", "cost": 2.0},
+        {"source": "BC", "target": "EF", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "EA", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "EB", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "AB", "next": "CB", "prev": "BA", "cost": 3.0},
+        {"source": "BC", "target": "AE", "next": "CB", "prev": "BA", "cost": 3.0},
+    ]

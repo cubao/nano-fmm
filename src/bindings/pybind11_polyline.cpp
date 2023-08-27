@@ -22,6 +22,7 @@ void bind_polyline(py::module &m)
         .def("nearest", &LineSegment::nearest, "P"_a)
         .def("t", &LineSegment::t, "P"_a)
         .def("interpolate", &LineSegment::interpolate, "t"_a)
+        .def("build", &LineSegment::build)
         .def_property_readonly(
             "length", [](const LineSegment &self) { return self.length(); })
         .def_property_readonly(
@@ -75,6 +76,7 @@ void bind_polyline(py::module &m)
         .def("slice", &Polyline::slice, py::kw_only(), //
              "min"_a = std::nullopt,                   //
              "max"_a = std::nullopt)
+        .def("build", &Polyline::build)
         //
         .def("segment", &Polyline::segment, "index"_a, rvp::reference_internal)
         // .def("segments", &Polyline::segments)
