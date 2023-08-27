@@ -219,6 +219,26 @@ Network::build_ubodt(const std::vector<int64_t> &roads,
     return records;
 }
 
+size_t Network::clear_ubodt()
+{
+    size_t count = ubodt_.size();
+    ubodt_.clear();
+    return count;
+}
+
+size_t Network::load_ubodt(const std::vector<UbodtRecord> &rows)
+{
+    // ubodt_;
+    size_t count = 0;
+    for (auto &row : rows) {
+        if (ubodt_.emplace(IndexIJ(row.source_road, row.target_road), row)
+                .second) {
+            ++count;
+        }
+    }
+    return count;
+}
+
 bool Network::load_ubodt(const std::string &path)
 {
     //

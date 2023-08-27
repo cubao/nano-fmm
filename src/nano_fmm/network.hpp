@@ -110,6 +110,8 @@ struct Network
     std::vector<UbodtRecord>
     build_ubodt(const std::vector<int64_t> &roads,
                 std::optional<double> thresh = std::nullopt) const;
+    size_t clear_ubodt();
+    size_t load_ubodt(const std::vector<UbodtRecord> &rows);
     bool load_ubodt(const std::string &path);
     bool dump_ubodt(const std::string &path,
                     std::optional<double> thresh) const;
@@ -137,5 +139,6 @@ struct Network
     void single_source_upperbound_dijkstra(int64_t source, double distance, //
                                            IndexMap &predecessor_map,
                                            DistanceMap &distance_map) const;
+    std::unordered_map<IndexIJ, UbodtRecord> ubodt_;
 };
 } // namespace nano_fmm
