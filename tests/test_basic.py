@@ -285,7 +285,7 @@ def build_network(
     for rid, nn in ways.items():
         curr_road = way_ids[rid]
         next_roads = node2nexts.get(nn[-1], [])
-        print(f"curr road: '{rid}', nexts: {next_roads}")
+        # print(f"curr road: '{rid}', nexts: {next_roads}")
         next_roads = [way_ids[r] for r in next_roads]
         for n in next_roads:
             assert network.add_link(curr_road, n)
@@ -348,16 +348,41 @@ def test_dijkstra():
     nodes, ways, wid2index = (meta[k] for k in ["nodes", "ways", "way_ids"])
     way_ids = list(wid2index.keys())
 
-    rows = network.build_ubodt([0], thresh=1)
-    rows = [ubodt2json(r, way_ids) for r in rows]
+    rows = network.build_ubodt([wid2index["AB"]], thresh=1)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
     assert rows == [
         {"source": "AB", "target": "BC", "next": "BC", "prev": "AB", "cost": 0.0},
         {"source": "AB", "target": "BE", "next": "BE", "prev": "AB", "cost": 0.0},
         {"source": "AB", "target": "EF", "next": "BE", "prev": "BE", "cost": 1.0},
     ]
-    print()
+    rows = network.build_ubodt([wid2index["BC"]], thresh=5)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
+    assert rows == [
+        {"source": "BC", "target": "CD", "next": "CD", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CF", "next": "CF", "prev": "BC", "cost": 0.0},
+    ]
 
-    # ways=two_way_streets(
+    network, meta = build_network(
+        nodes=nodes,
+        ways=two_way_streets(ways),
+    )
+    nodes, ways, wid2index = (meta[k] for k in ["nodes", "ways", "way_ids"])
+    way_ids = list(wid2index.keys())
 
-
-test_dijkstra()
+    rows = network.build_ubodt([wid2index["BC"]], thresh=3)
+    rows = [ubodt2json(r, way_ids) for r in sorted(rows)]
+    assert rows == [
+        {"source": "BC", "target": "CD", "next": "CD", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CF", "next": "CF", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "CB", "next": "CB", "prev": "BC", "cost": 0.0},
+        {"source": "BC", "target": "FE", "next": "CF", "prev": "CF", "cost": 1.0},
+        {"source": "BC", "target": "FC", "next": "CF", "prev": "CF", "cost": 1.0},
+        {"source": "BC", "target": "DC", "next": "CD", "prev": "CD", "cost": 2.0},
+        {"source": "BC", "target": "BE", "next": "CB", "prev": "CB", "cost": 2.0},
+        {"source": "BC", "target": "BA", "next": "CB", "prev": "CB", "cost": 2.0},
+        {"source": "BC", "target": "EF", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "EA", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "EB", "next": "CF", "prev": "FE", "cost": 3.0},
+        {"source": "BC", "target": "AB", "next": "CB", "prev": "BA", "cost": 3.0},
+        {"source": "BC", "target": "AE", "next": "CB", "prev": "BA", "cost": 3.0},
+    ]

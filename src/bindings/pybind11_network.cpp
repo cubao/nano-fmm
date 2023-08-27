@@ -54,6 +54,9 @@ void bind_network(py::module &m)
             "next", [](const UbodtRecord &self) { return self.next; },
             rvp::reference_internal)
         //
+        .def(py::self == py::self)
+        .def(py::self < py::self)
+        //
         .def("__repr__", [](const UbodtRecord &self) {
             return fmt::format(
                 "UbodtRecord(s->t=[{}->{}], cost:{}, sn:{},tp:{})",
