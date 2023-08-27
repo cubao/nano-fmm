@@ -18,11 +18,13 @@ void bind_randoms(py::module &m)
         .def("hsv2rgb", &hsv_to_rgb, "h"_a, "s"_a, "v"_a)
         //
         ;
-    py::class_<RandomStroke>(m, "RandomStroke", py::module_local()) //
+    py::class_<RandomColor>(m, "RandomColor", py::module_local()) //
+        .def(py::init<bool>(), py::kw_only(), "on_black"_a = true)
         .def(py::init<int, bool>(), "seed"_a, py::kw_only(),
              "on_black"_a = true)
-        .def(py::init<bool>(), py::kw_only(), "on_black"_a = true)
-        .def("next", &RandomStroke::next)
+        //
+        .def("next_rgb", &RandomStroke::next_rgb)
+        .def("next_hex", &RandomStroke::next_hex)
         //
         ;
 }

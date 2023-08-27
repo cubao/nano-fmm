@@ -2,6 +2,7 @@
 
 #include <random>
 #include <algorithm>
+#include "spdlog/spdlog.h"
 
 namespace nano_fmm
 {
@@ -40,18 +41,18 @@ inline RGB hsv_to_rgb(float h, float s, float v)
             static_cast<uint8_t>(b * 255)};
 }
 
-struct RandomStroke
+struct RandomColor
 {
-    RandomStroke(bool on_black = true) : on_black_(on_black)
+    RandomColor(bool on_black = true) : on_black_(on_black)
     {
         std::random_device rd;
         mt_ = std::mt19937(rd());
     }
-    RandomStroke(int seed, bool on_black = true) : on_black_(on_black)
+    RandomColor(int seed, bool on_black = true) : on_black_(on_black)
     {
         mt_ = std::mt19937(seed);
     }
-    RGB next()
+    RGB next_rgb()
     {
         float h = std::uniform_real_distribution<float>(0.0f, 1.f)(mt_);
         float s = std::uniform_real_distribution<float>(0.4f, 1.f)(mt_);
@@ -61,6 +62,12 @@ struct RandomStroke
             v = 1.f - v;
         }
         return hsv_to_rgb(h, s, v);
+    }
+
+    std::string next_hex()
+    {
+        auto rgb = next_rgb();
+        return fmt::format("#{:02x}{02x}{02x}", rgb[0], rgb[1], rgb[2]);
     }
 
   private:
