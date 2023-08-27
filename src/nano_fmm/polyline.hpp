@@ -166,7 +166,7 @@ struct Polyline
             return *ranges_;
         }
         Eigen::VectorXd ranges(N_);
-        ranges.setZero();
+        ranges[0] = 0.0;
         int idx = 0;
         for (auto &seg : segments()) {
             ranges[idx + 1] = ranges[idx] + seg.length();
