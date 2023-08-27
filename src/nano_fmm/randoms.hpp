@@ -67,7 +67,7 @@ struct RandomColor
     std::string next_hex()
     {
         auto rgb = next_rgb();
-        return fmt::format("#{:02x}{02x}{02x}", rgb[0], rgb[1], rgb[2]);
+        return fmt::format("#{:02x}{:02x}{:02x}", rgb[0], rgb[1], rgb[2]);
     }
 
   private:

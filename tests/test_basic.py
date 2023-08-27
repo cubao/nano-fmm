@@ -386,3 +386,13 @@ def test_dijkstra():
         {"source": "BC", "target": "AB", "next": "CB", "prev": "BA", "cost": 3.0},
         {"source": "BC", "target": "AE", "next": "CB", "prev": "BA", "cost": 3.0},
     ]
+
+
+def test_random_stroke():
+    for _ in range(3):
+        rc = fmm.RandomColor(0)
+        stroke = rc.next_hex()
+        assert stroke == "#38b5e9"
+        rc = fmm.RandomColor()
+        stroke = rc.next_hex()
+        assert stroke != "#38b5e9"

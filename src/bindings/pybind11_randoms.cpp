@@ -23,8 +23,8 @@ void bind_randoms(py::module &m)
         .def(py::init<int, bool>(), "seed"_a, py::kw_only(),
              "on_black"_a = true)
         //
-        .def("next_rgb", &RandomStroke::next_rgb)
-        .def("next_hex", &RandomStroke::next_hex)
+        .def("next_rgb", &RandomColor::next_rgb)
+        .def("next_hex", &RandomColor::next_hex)
         //
         ;
 }
