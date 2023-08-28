@@ -112,7 +112,14 @@ void bind_network(py::module &m)
                                std::optional<double>>(&Network::build_ubodt,
                                                       py::const_),
              "roads"_a, py::kw_only(), "thresh"_a = std::nullopt)
-        .def("load_ubodt", &Network::load_ubodt, "path"_a)
+        .def("clear_ubodt", &Network::clear_ubodt)
+        .def("load_ubodt",
+             py::overload_cast<const std::vector<UbodtRecord> &>(
+                 &Network::load_ubodt),
+             "rows"_a)
+        .def("load_ubodt",
+             py::overload_cast<const std::string &>(&Network::load_ubodt),
+             "path"_a)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)
         //

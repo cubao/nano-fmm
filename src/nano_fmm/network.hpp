@@ -98,6 +98,6 @@ struct Network
     void single_source_upperbound_dijkstra(int64_t source, double distance, //
                                            IndexMap &predecessor_map,
                                            DistanceMap &distance_map) const;
-    std::unordered_map<IndexIJ, UbodtRecord> ubodt_;
+    std::unordered_map<IndexIJ, UbodtRecord, hash_eigen<IndexIJ>> ubodt_;
 };
 } // namespace nano_fmm
