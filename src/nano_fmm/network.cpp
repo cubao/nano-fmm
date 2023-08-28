@@ -160,6 +160,45 @@ Network::query(const Eigen::Vector4d &bbox) const
     return ret;
 }
 
+MatchResult Network::match(const RowVectors &trajectory) const
+{
+    // MatchResult FastMapMatch::match_traj(const Trajectory &traj, const
+    // FastMapMatchConfig &config)
+
+    // Traj_Candidates tc = network_.search_tr_cs_knn(traj.geom, config.k,
+    // config.radius); if (tc.empty())
+    //     return MatchResult{};
+
+    // TransitionGraph tg(tc, config.gps_error);
+    // update_tg(&tg, traj, config.reverse_tolerance);
+    // TGOpath tg_opath = tg.backtrack();
+    // SPDLOG_DEBUG("Optimal path size {}", tg_opath.size());
+
+    // MatchedCandidatePath matched_candidate_path(tg_opath.size());
+    // std::transform(
+    //     tg_opath.begin(), tg_opath.end(), matched_candidate_path.begin(),
+    //     [](const TGNode *a) {
+    //         return MatchedCandidate{*(a->c), a->ep, a->tp, a->sp_dist};
+    //     });
+
+    // O_Path opath(tg_opath.size());
+    // std::transform(tg_opath.begin(), tg_opath.end(), opath.begin(),
+    //                [](const TGNode *a) { return a->c->edge->id; });
+
+    // std::vector<int> indices;
+    // const std::vector<Edge> &edges = network_.get_edges();
+    // C_Path cpath = ubodt_->construct_complete_path(
+    //     traj.id, tg_opath, edges, &indices, config.reverse_tolerance);
+
+    // LineString mgeom = network_.complete_path_to_geometry(traj.geom, cpath);
+
+    // return MatchResult{traj.id, matched_candidate_path, opath, cpath,
+    // indices,
+    //                    mgeom};
+    MatchResult ret;
+    return ret;
+}
+
 void Network::build() const
 {
     for (auto &pair : roads_) {

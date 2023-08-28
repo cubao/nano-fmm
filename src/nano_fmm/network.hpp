@@ -63,6 +63,15 @@ struct UbodtRecord
     }
 };
 
+struct MatchResult
+{
+    // opt_candidates
+    // opath
+    // cpath
+    // indices
+    // geom
+};
+
 struct Network
 {
     Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
@@ -93,6 +102,9 @@ struct Network
           std::optional<double> z_max_offset = std::nullopt) const;
     std::map<std::tuple<int64_t, int64_t>, RowVectors>
     query(const Eigen::Vector4d &bbox) const;
+
+    // traj
+    MatchResult match(const RowVectors &trajectory) const;
 
     // build cache (not necessary)
     void build() const;
