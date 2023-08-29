@@ -6,10 +6,12 @@ namespace nano_fmm
 {
 struct ProjectedPoint
 {
-    ProjectedPoint(const Eigen::Vector3d &position = {0.0, 0.0, 0.0}, //
-                   double distance = 0.0,                             //
+    ProjectedPoint(const Eigen::Vector3d &position = {0.0, 0.0, 0.0},  //
+                   const Eigen::Vector3d &direction = {0.0, 0.0, 1.0}, //
+                   double distance = 0.0,                              //
                    int64_t road_id = 0, double offset = 0.0)
-        : position_(position), distance_(distance), //
+        : position_(position), direction_(direction), //
+          distance_(distance),                        //
           road_id_(road_id), offset_(offset_)
     {
     }
