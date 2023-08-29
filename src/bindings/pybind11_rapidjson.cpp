@@ -1,4 +1,5 @@
-// migrated from cubao/geobuf-cpp
+// migrated from
+// https://github.com/cubao/geobuf-cpp/blob/dev/src/pybind11_rapidjson.cpp
 
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>

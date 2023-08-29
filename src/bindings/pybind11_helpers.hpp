@@ -1,6 +1,7 @@
 #pragma once
 
-// migrated from cubao/geobuf-cpp
+// migrated from
+// https://github.com/cubao/geobuf-cpp/blob/dev/src/geobuf/pybind11_helpers.hpp
 
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>

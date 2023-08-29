@@ -310,7 +310,7 @@ def ubodt2json(row, way_ids):
         "target": way_ids[row.target_road],
         "next": way_ids[row.source_next],
         "prev": way_ids[row.target_prev],
-        "cost": row.cost,
+        "cost": row.cost_,
     }
 
 
