@@ -1,3 +1,5 @@
+import contextlib
+import io
 import time
 from collections import defaultdict
 from typing import Dict, List
@@ -407,4 +409,21 @@ def test_random_stroke():
         assert stroke != "#38b5e9"
 
 
-print()
+def test_logging():
+    fmm.utils.logging("hello one")
+    fmm.utils.set_logging_level(4)
+    fmm.utils.logging("hello three")
+    with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+        fmm.utils.logging("hello four")
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        print("This will be captured")
+    output_string = buffer.getvalue()
+    assert output_string == "This will be captured\n"
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+            fmm.utils.logging("hello five")
+    output_string = buffer.getvalue()
+    assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"

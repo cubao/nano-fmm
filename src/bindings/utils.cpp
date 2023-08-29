@@ -26,6 +26,8 @@ void bind_utils(py::module &m)
                  spdlog::warn("warn msg: {}", msg);
                  spdlog::error("error msg: {}", msg);
                  spdlog::critical("critical msg: {}", msg);
+                 std::cout << "std::cout: " << msg << std::endl;
+                 std::cerr << "std::cerr: " << msg << std::endl;
              })
         .def("set_logging_level",
              [](int level) {
