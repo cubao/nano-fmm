@@ -53,8 +53,9 @@ struct Network
     // traj
     MatchResult match(const RowVectors &trajectory) const;
 
-    // build cache (not necessary)
-    void build() const;
+    // build cache (not necessary), 0 -> seq, 1 -> par, 2 -> par_unseq
+    void build(int execution_polylicy = 2) const;
+    void reset() const;
 
     // graph operations
     // move forward/backward N meters, return ProjectPoint

@@ -82,11 +82,13 @@ def test_cheap_ruler_k():
     tic = time.time()
     fmm.benchmarks.cheap_ruler_k(N)
     toc = time.time()
-    print(toc - tic, "secs")
+    delta = toc - tic
+    print(delta, "secs")
     tic = time.time()
     fmm.benchmarks.cheap_ruler_k_lookup_table(N)
     toc = time.time()
-    print(toc - tic, "secs (with lookup)")
+    delta2 = toc - tic
+    print(delta2, "secs (with lookup)", f"speed up x{delta/delta2:.3f}")
     print()
 
 
