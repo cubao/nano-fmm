@@ -134,7 +134,8 @@ Network::query(const Eigen::Vector3d &position, double radius,
         if (d > radius) {
             continue;
         }
-        nearests.push_back({P, d, pair.first, poly.range(s, t)});
+        nearests.emplace_back(P, poly.segment(s).dir(), d, //
+                              pair.first, poly.range(s, t));
     }
     std::sort(nearests.begin(), nearests.end(),
               [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });

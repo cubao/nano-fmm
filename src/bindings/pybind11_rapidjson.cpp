@@ -14,9 +14,9 @@
 #include <iostream>
 
 #include "nano_fmm/types.hpp"
-#include "nano_fmm/bindings/pybind11_helpers.hpp"
+#include "pybind11_helpers.hpp"
 
-namespace naon_fmm
+namespace nano_fmm
 {
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -104,10 +104,6 @@ void bind_rapidjson(py::module &m)
                     return values;
                 },
                 rvp::reference_internal)
-            //
-            .def("is_subset_of", [](const RapidjsonValue &self, const RapidjsonValue &other) -> bool {
-                return is_subset_of(self, other);
-            }, "other"_a)
             // load/dump file
             .def(
                 "load",
@@ -144,10 +140,6 @@ void bind_rapidjson(py::module &m)
                 sort_keys_inplace(self);
                 return self;
             }, rvp::reference_internal)
-            // locate_nan_inf
-            .def("locate_nan_inf", [](const RapidjsonValue &self) -> std::optional<std::string> {
-                return locate_nan_inf(self);
-            })
             .def("round", [](RapidjsonValue &self, double precision, int depth, //
                 const std::vector<std::string> &skip_keys) -> RapidjsonValue & {
                     round_rapidjson(self, std::pow(10, precision), depth, skip_keys);
@@ -368,4 +360,4 @@ void bind_rapidjson(py::module &m)
         .value("kNumberType", rapidjson::kNumberType)
         .export_values();
 }
-} // namespace naon_fmm
+} // namespace nano_fmm

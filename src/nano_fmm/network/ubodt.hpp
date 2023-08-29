@@ -6,6 +6,8 @@ namespace nano_fmm
 {
 struct UbodtRecord
 {
+    // UbodtRecord(int64_t source_road)
+
     int64_t source_road{0};
     int64_t target_road{0};
     int64_t source_next{0};

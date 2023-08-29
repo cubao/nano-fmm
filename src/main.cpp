@@ -14,6 +14,7 @@ void bind_network(py::module &m);
 void bind_packedrtree(py::module &m);
 void bind_polyline(py::module &m);
 void bind_randoms(py::module &m);
+void bind_rapidjson(py::module &m);
 void bind_utils(py::module &m);
 } // namespace nano_fmm
 
@@ -40,5 +41,6 @@ PYBIND11_MODULE(_nano_fmm, m)
     nano_fmm::bind_packedrtree(flatbush);
     nano_fmm::bind_polyline(m);
     nano_fmm::bind_randoms(m);
+    nano_fmm::bind_rapidjson(m);
     nano_fmm::bind_utils(utils);
 }

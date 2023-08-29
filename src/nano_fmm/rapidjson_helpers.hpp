@@ -312,20 +312,20 @@ normalize_json(RapidjsonValue &json,                              //
     }
     if (round_geojson_non_geometry) {
         double scale = std::pow(10.0, *round_geojson_non_geometry);
-        round_geojson_non_geometry(json, scale);
+        nano_fmm::round_geojson_non_geometry(json, scale);
     }
     if (round_geojson_geometry) {
         auto &precision = *round_geojson_geometry;
-        round_geojson_geometry(json, {std::pow(10.0, precision[0]),
-                                      std::pow(10.0, precision[1]),
-                                      std::pow(10.0, precision[2])});
+        nano_fmm::round_geojson_geometry(json, {std::pow(10.0, precision[0]),
+                                                std::pow(10.0, precision[1]),
+                                                std::pow(10.0, precision[2])});
     }
     if (round_non_geojson) {
         double scale = std::pow(10.0, *round_non_geojson);
-        round_non_geojson(json, scale);
+        nano_fmm::round_non_geojson(json, scale);
     }
     if (strip_geometry_z_0) {
-        strip_geometry_z_0(json);
+        nano_fmm::strip_geometry_z_0(json);
     }
     if (denoise_double_0) {
         denoise_double_0_rapidjson(json);
@@ -369,14 +369,14 @@ inline bool dump_json(const std::string &path, const RapidjsonValue &json,
     if (indent) {
         PrettyWriter<FileWriteStream> writer(os);
         if (sort_keys) {
-            succ = sort_keys(json).Accept(writer);
+            succ = nano_fmm::sort_keys(json).Accept(writer);
         } else {
             succ = json.Accept(writer);
         }
     } else {
         Writer<FileWriteStream> writer(os);
         if (sort_keys) {
-            succ = sort_keys(json).Accept(writer);
+            succ = nano_fmm::sort_keys(json).Accept(writer);
         } else {
             succ = json.Accept(writer);
         }
@@ -401,7 +401,7 @@ inline std::string dumps(const RapidjsonValue &json, bool indent = false,
                          bool sort_keys = false)
 {
     if (sort_keys) {
-        return dumps(sort_keys(json), indent, !sort_keys);
+        return dumps(nano_fmm::sort_keys(json), indent, !sort_keys);
     }
     rapidjson::StringBuffer buffer;
     if (indent) {

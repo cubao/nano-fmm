@@ -16,13 +16,20 @@ using rvp = py::return_value_policy;
 void bind_network(py::module &m)
 {
     py::class_<ProjectedPoint>(m, "ProjectedPoint", py::module_local()) //
-        .def(py::init<const Eigen::Vector3d &, double, int64_t, double>(),
-             "position"_a = Eigen::Vector3d(0, 0, 0), "distance"_a = 0.0,
-             "road_id"_a = 0, "offset"_a = 0.0)
+        .def(py::init<const Eigen::Vector3d &, const Eigen::Vector3d &, double,
+                      int64_t, double>(),
+             "position"_a = Eigen::Vector3d(0, 0, 0),  //
+             "direction"_a = Eigen::Vector3d(0, 0, 1), //
+             "distance"_a = 0.0,                       //
+             "road_id"_a = 0,                          //
+             "offset"_a = 0.0)
         //
         .def_property_readonly(
             "position",
             [](const ProjectedPoint &self) { return self.position_; })
+        .def_property_readonly(
+            "direction",
+            [](const ProjectedPoint &self) { return self.direction_; })
         .def_property_readonly(
             "distance",
             [](const ProjectedPoint &self) { return self.distance_; })

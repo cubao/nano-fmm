@@ -8,6 +8,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/types.hpp"
+#include "nano_fmm/rapidjson_helpers.hpp"
 
 namespace nano_fmm
 {
