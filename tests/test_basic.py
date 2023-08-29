@@ -427,3 +427,18 @@ def test_logging():
             fmm.utils.logging("hello five")
     output_string = buffer.getvalue()
     assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
+
+    fmm.utils.setup()
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        fmm.utils.flush()
+        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+            fmm.utils.logging("hello six")
+            fmm.utils.flush()
+        fmm.utils.flush()
+    output_string = buffer.getvalue()
+    assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
+
+
+test_logging()

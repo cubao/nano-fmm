@@ -5,8 +5,9 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/utils.hpp"
+
 #include "spdlog/spdlog.h"
-#include <streambuf>
+#include <spdlog/sinks/stdout_sinks.h>
 
 namespace nano_fmm
 {
@@ -18,6 +19,7 @@ void bind_utils(py::module &m)
 {
     py::add_ostream_redirect(m, "ostream_redirect");
     m //
+        .def("flush", []() { spdlog::default_logger()->flush(); })
         .def("logging",
              [](const std::string &msg) {
                  spdlog::trace("trace msg: {}", msg);
@@ -35,7 +37,17 @@ void bind_utils(py::module &m)
                      static_cast<spdlog::level::level_enum>(level));
              })
         .def("get_logging_level",
-             []() { return static_cast<int>(spdlog::get_level()); });
+             []() { return static_cast<int>(spdlog::get_level()); })
+        .def("setup",
+             []() {
+                 auto console_sink =
+                     std::make_shared<spdlog::sinks::stdout_sink_st>();
+                 auto logger =
+                     std::make_shared<spdlog::logger>("logger", console_sink);
+                 spdlog::set_default_logger(logger);
+             })
+        //
+        ;
 
     m //
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
