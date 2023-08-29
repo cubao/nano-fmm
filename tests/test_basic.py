@@ -405,3 +405,6 @@ def test_random_stroke():
         rc = fmm.RandomColor()
         stroke = rc.next_hex()
         assert stroke != "#38b5e9"
+
+
+print()

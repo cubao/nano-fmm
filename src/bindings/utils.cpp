@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/utils.hpp"
+#include "spdlog/spdlog.h"
 
 namespace nano_fmm
 {
@@ -15,6 +16,23 @@ using rvp = py::return_value_policy;
 void bind_utils(py::module &m)
 {
     m //
+        .def("logging",
+             [](const std::string &msg) {
+                 spdlog::trace("trace msg: {}", msg);
+                 spdlog::debug("debug msg: {}", msg);
+                 spdlog::info("info msg: {}", msg);
+                 spdlog::warn("warn msg: {}", msg);
+                 spdlog::error("error msg: {}", msg);
+                 spdlog::critical("critical msg: {}", msg);
+             })
+        .def("set_logging_level",
+             [](int level) {
+                 spdlog::set_level(
+                     static_cast<spdlog::level::level_enum>(level));
+             })
+        .def("get_logging_level",
+             []() { return static_cast<int>(spdlog::get_level()); })
+        //
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
         .def("cheap_ruler_k_lookup_table", &utils::cheap_ruler_k_lookup_table,
              "latitude"_a)
