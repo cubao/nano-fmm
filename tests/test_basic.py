@@ -38,6 +38,13 @@ def test_segment():
     assert 5.0 == seg.distance([-4.0, 3.0, 0.0])
     assert 13.0 == seg.distance([5.0, 12.0, 0.0])
 
+    seg = LineSegment([0, 0, 0], [0, 0, 0])
+    assert seg.length == 0.0
+    assert seg.length2 == 0.0
+    assert seg.distance([0, 1, 0]) == 1.0
+    pt, d, t = seg.nearest([1, 0, 0])
+    assert np.all(pt == [0, 0, 0]) and d == 1.0 and t == 0.0
+
 
 def test_utils():
     k0 = fmm.utils.cheap_ruler_k(0.0)
@@ -386,3 +393,13 @@ def test_dijkstra():
         {"source": "BC", "target": "AB", "next": "CB", "prev": "BA", "cost": 3.0},
         {"source": "BC", "target": "AE", "next": "CB", "prev": "BA", "cost": 3.0},
     ]
+
+
+def test_random_stroke():
+    for _ in range(3):
+        rc = fmm.RandomColor(0)
+        stroke = rc.next_hex()
+        assert stroke == "#38b5e9"
+        rc = fmm.RandomColor()
+        stroke = rc.next_hex()
+        assert stroke != "#38b5e9"

@@ -4,6 +4,10 @@
 #include "nano_fmm/config.hpp"
 #include "nano_fmm/polyline.hpp"
 
+#include "nano_fmm/network/projected_point.hpp"
+#include "nano_fmm/network/ubodt.hpp"
+#include "nano_fmm/network/match_result.hpp"
+
 #include "packedrtree.h"
 
 #include <optional>
@@ -15,54 +19,6 @@
 
 namespace nano_fmm
 {
-struct ProjectedPoint
-{
-    ProjectedPoint(const Eigen::Vector3d &position = {0.0, 0.0, 0.0}, //
-                   double distance = 0.0,                             //
-                   int64_t road_id = 0, double offset = 0.0)
-        : position_(position), distance_(distance), //
-          road_id_(road_id), offset_(offset_)
-    {
-    }
-    Eigen::Vector3d position_;
-    Eigen::Vector3d direction_;
-    double distance_;
-    int64_t road_id_;
-    double offset_;
-};
-
-struct UbodtRecord
-{
-    int64_t source_road{0};
-    int64_t target_road{0};
-    int64_t source_next{0};
-    int64_t target_prev{0};
-    double cost{0.0};
-    UbodtRecord *next{nullptr};
-
-    bool operator<(const UbodtRecord &rhs) const
-    {
-        if (source_road != rhs.source_road) {
-            return source_road < rhs.source_road;
-        }
-        if (cost != rhs.cost) {
-            return cost < rhs.cost;
-        }
-        if (source_next != rhs.source_next) {
-            return source_next < rhs.source_next;
-        }
-        return std::make_tuple(target_prev, target_road, next) <
-               std::make_tuple(rhs.target_prev, rhs.target_road, rhs.next);
-    }
-    bool operator==(const UbodtRecord &rhs) const
-    {
-        return source_road == rhs.source_road &&
-               target_road == rhs.target_road &&
-               source_next == rhs.source_next &&
-               target_prev == rhs.target_prev && next == rhs.next;
-    }
-};
-
 struct Network
 {
     Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
@@ -94,6 +50,9 @@ struct Network
     std::map<std::tuple<int64_t, int64_t>, RowVectors>
     query(const Eigen::Vector4d &bbox) const;
 
+    // traj
+    MatchResult match(const RowVectors &trajectory) const;
+
     // build cache (not necessary)
     void build() const;
 
@@ -110,6 +69,8 @@ struct Network
     std::vector<UbodtRecord>
     build_ubodt(const std::vector<int64_t> &roads,
                 std::optional<double> thresh = std::nullopt) const;
+    size_t clear_ubodt();
+    size_t load_ubodt(const std::vector<UbodtRecord> &rows);
     bool load_ubodt(const std::string &path);
     bool dump_ubodt(const std::string &path,
                     std::optional<double> thresh) const;
@@ -137,5 +98,6 @@ struct Network
     void single_source_upperbound_dijkstra(int64_t source, double distance, //
                                            IndexMap &predecessor_map,
                                            DistanceMap &distance_map) const;
+    std::unordered_map<IndexIJ, UbodtRecord, hash_eigen<IndexIJ>> ubodt_;
 };
 } // namespace nano_fmm

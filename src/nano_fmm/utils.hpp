@@ -219,7 +219,8 @@ douglas_simplify_mask(const Eigen::Ref<const RowVectors> &coords,
     Eigen::VectorXi mask(coords.rows());
     mask.setZero();
     if (is_wgs84) {
-        auto enus = lla2enu(coords);
+        auto enus =
+            lla2enu(coords, {}, cheap_ruler_k_lookup_table(coords(0, 1)));
         __douglas_simplify(enus, mask, 0, mask.size() - 1, epsilon);
     } else {
         __douglas_simplify(coords, mask, 0, mask.size() - 1, epsilon);

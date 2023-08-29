@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <optional>
+#include <rapidjson/document.h>
 
 namespace nano_fmm
 {
@@ -21,6 +22,14 @@ using RowVectorsNx2 = Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>;
 using VectorUi64 = Eigen::Matrix<uint64_t, Eigen::Dynamic, 1>;
 using IndexIJ = Eigen::Matrix<int64_t, 1, 2>;
 using IndexIJK = Eigen::Matrix<int64_t, 1, 3>;
+
+// Use the CrtAllocator, because the MemoryPoolAllocator is broken on ARM
+// https://github.com/miloyip/rapidjson/issues/200, 301, 388
+using RapidjsonAllocator = rapidjson::CrtAllocator;
+using RapidjsonDocument =
+    rapidjson::GenericDocument<rapidjson::UTF8<>, RapidjsonAllocator>;
+using RapidjsonValue =
+    rapidjson::GenericValue<rapidjson::UTF8<>, RapidjsonAllocator>;
 
 // https://github.com/cubao/pybind11-rdp/blob/master/src/main.cpp
 struct LineSegment
