@@ -1,19 +1,18 @@
 import contextlib
 import io
+import os
+import sys
+import tempfile
 import time
 from collections import defaultdict
+from contextlib import contextmanager
 from typing import Dict, List
-import sys
-import os
-import tempfile
-from contextlib import redirect_stdout, redirect_stderr
 
 import numpy as np
 
 import nano_fmm as fmm
 from nano_fmm import LineSegment, Network
 from nano_fmm import flatbush as fb
-from contextlib import contextmanager
 
 
 def test_add():
@@ -413,27 +412,25 @@ def test_random_stroke():
         stroke = rc.next_hex()
         assert stroke != "#38b5e9"
 
+
 @contextmanager
 def capture_and_discard_output():
     stdout_fileno = sys.stdout.fileno()
     stderr_fileno = sys.stderr.fileno()
-
     saved_stdout_fileno = os.dup(stdout_fileno)
     saved_stderr_fileno = os.dup(stderr_fileno)
 
-    with tempfile.NamedTemporaryFile(mode='w+') as tempf:
+    with tempfile.NamedTemporaryFile(mode="w+") as tempf:
         try:
             os.dup2(tempf.fileno(), stdout_fileno)
             os.dup2(tempf.fileno(), stderr_fileno)
-            yield
+            yield tempf
         finally:
             os.dup2(saved_stdout_fileno, stdout_fileno)
             os.dup2(saved_stderr_fileno, stderr_fileno)
             os.close(saved_stdout_fileno)
             os.close(saved_stderr_fileno)
-            tempf.seek(0)
-            output = tempf.read()
-    return 'shitme'
+
 
 def test_logging():
     fmm.utils.logging("hello one")
@@ -467,8 +464,11 @@ def test_logging():
     # assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
 
     with capture_and_discard_output() as output:
-        print('hello world')
+        print("hello world")
         fmm.utils.logging("hello seven")
+        fmm.utils.flush()
+        output.seek(0)
+        output.read()
     fmm.utils.logging("hello eight")
     print(f"Captured: {output}")
 
