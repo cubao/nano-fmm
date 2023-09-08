@@ -9,20 +9,18 @@ struct UbodtRecord
     UbodtRecord() {}
     UbodtRecord(int64_t source_road, int64_t target_road, //
                 int64_t source_next, int64_t target_prev, //
-                double cost, UbodtRecord *next = nullptr)
+                double cost)
         : source_road_(source_road), target_road_(target_road), //
           source_next_(source_next), target_prev_(target_prev), //
-          cost_(cost), next_(next)
+          cost_(cost)
     {
     }
 
-    int64_t source_road_{0};
-    int64_t target_road_{0};
-    int64_t source_next_{0};
-    int64_t target_prev_{0};
-    double cost_{0.0};
-    UbodtRecord *next_{nullptr};
-
+    SETUP_FLUENT_API(UbodtRecord, int64_t, source_road)
+    SETUP_FLUENT_API(UbodtRecord, int64_t, target_road)
+    SETUP_FLUENT_API(UbodtRecord, int64_t, source_next)
+    SETUP_FLUENT_API(UbodtRecord, int64_t, target_prev)
+    SETUP_FLUENT_API(UbodtRecord, double, cost)
     UbodtRecord &from_rapidjson(const RapidjsonValue &json);
     RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const;
     RapidjsonValue to_rapidjson() const
@@ -39,19 +37,23 @@ struct UbodtRecord
         if (cost_ != rhs.cost_) {
             return cost_ < rhs.cost_;
         }
-        if (source_next_ != rhs.source_next_) {
-            return source_next_ < rhs.source_next_;
-        }
-        return std::make_tuple(target_prev_, target_road_, next_) <
-               std::make_tuple(rhs.target_prev_, rhs.target_road_, rhs.next_);
+        return std::make_tuple(target_prev_, target_road_) <
+               std::make_tuple(rhs.target_prev_, rhs.target_road_);
     }
     bool operator==(const UbodtRecord &rhs) const
     {
         return source_road_ == rhs.source_road_ &&
                target_road_ == rhs.target_road_ &&
                source_next_ == rhs.source_next_ &&
-               target_prev_ == rhs.target_prev_ && next_ == rhs.next_;
+               target_prev_ == rhs.target_prev_;
     }
+
+  private:
+    int64_t source_road_{0};
+    int64_t target_road_{0};
+    int64_t source_next_{0};
+    int64_t target_prev_{0};
+    double cost_{0.0};
 };
 
 } // namespace nano_fmm

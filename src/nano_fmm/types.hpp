@@ -31,6 +31,17 @@ using RapidjsonDocument =
 using RapidjsonValue =
     rapidjson::GenericValue<rapidjson::UTF8<>, RapidjsonAllocator>;
 
+#ifndef SETUP_FLUENT_API
+#define SETUP_FLUENT_API(Klass, VarType, VarName)                              \
+    Klass &VarName(const VarType &v)                                           \
+    {                                                                          \
+        VarName##_ = v;                                                        \
+        return *this;                                                          \
+    }                                                                          \
+    VarType &VarName() { return VarName##_; }                                  \
+    const VarType &VarName() const { return VarName##_; }
+#endif
+
 // https://github.com/cubao/pybind11-rdp/blob/master/src/main.cpp
 struct LineSegment
 {

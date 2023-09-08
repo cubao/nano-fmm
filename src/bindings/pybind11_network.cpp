@@ -30,17 +30,18 @@ void bind_network(py::module &m)
         //
         .def_property_readonly(
             "position",
-            [](const ProjectedPoint &self) { return self.position_; })
+            [](const ProjectedPoint &self) { return self.position(); })
         .def_property_readonly(
             "direction",
-            [](const ProjectedPoint &self) { return self.direction_; })
+            [](const ProjectedPoint &self) { return self.direction(); })
         .def_property_readonly(
             "distance",
-            [](const ProjectedPoint &self) { return self.distance_; })
+            [](const ProjectedPoint &self) { return self.distance(); })
         .def_property_readonly(
-            "road_id", [](const ProjectedPoint &self) { return self.road_id_; })
+            "road_id",
+            [](const ProjectedPoint &self) { return self.road_id(); })
         .def_property_readonly(
-            "offset", [](const ProjectedPoint &self) { return self.offset_; })
+            "offset", [](const ProjectedPoint &self) { return self.offset(); })
         //
         ;
 
@@ -55,21 +56,18 @@ void bind_network(py::module &m)
         //
         .def_property_readonly(
             "source_road",
-            [](const UbodtRecord &self) { return self.source_road_; })
+            [](const UbodtRecord &self) { return self.source_road(); })
         .def_property_readonly(
             "target_road",
-            [](const UbodtRecord &self) { return self.target_road_; })
+            [](const UbodtRecord &self) { return self.target_road(); })
         .def_property_readonly(
             "source_next",
-            [](const UbodtRecord &self) { return self.source_next_; })
+            [](const UbodtRecord &self) { return self.source_next(); })
         .def_property_readonly(
             "target_prev",
-            [](const UbodtRecord &self) { return self.target_prev_; })
+            [](const UbodtRecord &self) { return self.target_prev(); })
         .def_property_readonly(
-            "cost", [](const UbodtRecord &self) { return self.cost_; })
-        .def_property_readonly(
-            "next", [](const UbodtRecord &self) { return self.next_; },
-            rvp::reference_internal)
+            "cost", [](const UbodtRecord &self) { return self.cost(); })
         //
         .def(py::self == py::self)
         .def(py::self < py::self)
@@ -77,9 +75,9 @@ void bind_network(py::module &m)
         .def("__repr__", [](const UbodtRecord &self) {
             return fmt::format(
                 "UbodtRecord(s->t=[{}->{}], cost:{}, sn:{},tp:{})",
-                self.source_road_, self.target_road_, //
-                self.cost_,                           //
-                self.source_next_, self.target_prev_);
+                self.source_road(), self.target_road(), //
+                self.cost(),                            //
+                self.source_next(), self.target_prev());
         });
     //
     ;
