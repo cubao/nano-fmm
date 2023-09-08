@@ -23,6 +23,14 @@ struct UbodtRecord
     double cost_{0.0};
     UbodtRecord *next_{nullptr};
 
+    UbodtRecord &from_rapidjson(const RapidjsonValue &json);
+    RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const;
+    RapidjsonValue to_rapidjson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_rapidjson(allocator);
+    }
+
     bool operator<(const UbodtRecord &rhs) const
     {
         if (source_road_ != rhs.source_road_) {
