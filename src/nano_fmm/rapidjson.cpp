@@ -1,4 +1,5 @@
 #include "nano_fmm/rapidjson_helpers.hpp"
+#include "nano_fmm/network/projected_point.hpp"
 #include "nano_fmm/network/ubodt.hpp"
 
 namespace nano_fmm
@@ -17,6 +18,20 @@ namespace nano_fmm
         }                                                                      \
     }
 
+//  ProjectedPoint
+ProjectedPoint &ProjectedPoint::from_rapidjson(const RapidjsonValue &json)
+{
+    auto json_end = json.MemberEnd();
+    // FROM_RAPIDJSON((*this), json, json_end, source_road)
+    return *this;
+}
+RapidjsonValue ProjectedPoint::to_rapidjson(RapidjsonAllocator &allocator) const
+{
+    RapidjsonValue json(rapidjson::kObjectType);
+    return json;
+}
+
+// UbodtRecord
 UbodtRecord &UbodtRecord::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
