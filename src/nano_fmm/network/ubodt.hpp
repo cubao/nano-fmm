@@ -7,17 +7,12 @@ namespace nano_fmm
 struct UbodtRecord
 {
     UbodtRecord() {}
-    UbodtRecord(int64_t source_road, int64_t target_road, int64_t source_next,
-                int64_t target_prev, double cost, UbodtRecord *next)
-        : source_road_(source_road), target_road_(target_road),
-          source_next_(source_next), target_prev_(target_prev), cost_(cost),
-          next_(next)
-    {
-    }
-    UbodtRecord(int64_t source_road, int64_t target_road, int64_t source_next,
-                int64_t target_prev, double cost)
-        : UbodtRecord(source_road, target_road, source_next, target_prev, cost,
-                      nullptr)
+    UbodtRecord(int64_t source_road, int64_t target_road, //
+                int64_t source_next, int64_t target_prev, //
+                double cost, UbodtRecord *next = nullptr)
+        : source_road_(source_road), target_road_(target_road), //
+          source_next_(source_next), target_prev_(target_prev), //
+          cost_(cost), next_(next)
     {
     }
 

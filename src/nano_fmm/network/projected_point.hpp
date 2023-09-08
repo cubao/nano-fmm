@@ -8,8 +8,8 @@ struct ProjectedPoint
 {
     ProjectedPoint() {}
     ProjectedPoint(const Eigen::Vector3d &position,
-                   const Eigen::Vector3d &direction, double distance,
-                   int64_t road_id,
+                   const Eigen::Vector3d &direction, //
+                   double distance, int64_t road_id,
                    double offset)
         : position_(position),   //
           direction_(direction), //
