@@ -1,5 +1,6 @@
 import contextlib
 import io
+import json
 import os
 import sys
 import tempfile
@@ -11,7 +12,7 @@ from typing import Dict, List
 import numpy as np
 
 import nano_fmm as fmm
-from nano_fmm import LineSegment, Network
+from nano_fmm import LineSegment, Network, rapidjson
 from nano_fmm import flatbush as fb
 
 
@@ -471,3 +472,16 @@ def test_logging():
         output.read()
     fmm.utils.logging("hello eight")
     print(f"Captured: {output}")
+
+
+def test_json():
+    j = rapidjson()
+    assert j.dumps() == "null"
+    assert json.dumps(None) == "null"
+    j = rapidjson({})
+    assert j.dumps() == "{}"
+    j = rapidjson([])
+    assert j.dumps() == "[]"
+    assert rapidjson(5).dumps() == "5"
+    assert rapidjson(3.14).dumps() == "3.14"
+    assert rapidjson("text").dumps() == '"text"'
