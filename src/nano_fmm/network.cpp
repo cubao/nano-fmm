@@ -140,7 +140,7 @@ Network::query(const Eigen::Vector3d &position, double radius,
                               pair.first, poly.range(s, t));
     }
     std::sort(nearests.begin(), nearests.end(),
-              [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });
+              [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
     if (k && nearests.size() > *k) {
         nearests.resize(*k);
     }
@@ -264,7 +264,7 @@ Network::build_ubodt(const std::vector<int64_t> &roads,
             while ((u = pmap[succ]) != s) {
                 succ = u;
             }
-            records.push_back({s, curr, succ, prev, dmap[curr], nullptr});
+            records.push_back({s, curr, succ, prev, dmap[curr]});
         }
     }
     return records;
@@ -282,7 +282,7 @@ size_t Network::load_ubodt(const std::vector<UbodtRecord> &rows)
     // ubodt_;
     size_t count = 0;
     for (auto &row : rows) {
-        if (ubodt_.emplace(IndexIJ(row.source_road_, row.target_road_), row)
+        if (ubodt_.emplace(IndexIJ(row.source_road(), row.target_road()), row)
                 .second) {
             ++count;
         }
