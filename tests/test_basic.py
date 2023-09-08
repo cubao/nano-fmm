@@ -471,6 +471,3 @@ def test_logging():
         output.read()
     fmm.utils.logging("hello eight")
     print(f"Captured: {output}")
-
-
-test_logging()

@@ -8,7 +8,7 @@
 #include "nano_fmm/network/ubodt.hpp"
 #include "nano_fmm/network/match_result.hpp"
 
-#include "packedrtree.h"
+#include "packedrtree.hpp"
 
 #include <optional>
 #include <memory>

@@ -4,7 +4,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "packedrtree.h"
+#include "packedrtree.hpp"
 #include "spdlog/spdlog.h"
 #include "nano_fmm/types.hpp"
 
@@ -57,7 +57,6 @@ void bind_packedrtree(py::module &m)
                 return self.intersects({minX, minY, maxX, maxY});
             },
             "minX"_a, "minY"_a, "maxX"_a, "maxY"_a)
-        .def("toVector", &NodeItem::toVector)
         .def("to_numpy",
              [](const NodeItem &self) {
                  return Eigen::Vector4d(self.minX, self.minY, //
