@@ -1,5 +1,11 @@
+import contextlib
+import io
+import os
+import sys
+import tempfile
 import time
 from collections import defaultdict
+from contextlib import contextmanager
 from typing import Dict, List
 
 import numpy as np
@@ -82,11 +88,13 @@ def test_cheap_ruler_k():
     tic = time.time()
     fmm.benchmarks.cheap_ruler_k(N)
     toc = time.time()
-    print(toc - tic, "secs")
+    delta = toc - tic
+    print(delta, "secs")
     tic = time.time()
     fmm.benchmarks.cheap_ruler_k_lookup_table(N)
     toc = time.time()
-    print(toc - tic, "secs (with lookup)")
+    delta2 = toc - tic
+    print(delta2, "secs (with lookup)", f"speed up x{delta/delta2:.3f}")
     print()
 
 
@@ -403,3 +411,63 @@ def test_random_stroke():
         rc = fmm.RandomColor()
         stroke = rc.next_hex()
         assert stroke != "#38b5e9"
+
+
+@contextmanager
+def capture_and_discard_output():
+    stdout_fileno = sys.stdout.fileno()
+    stderr_fileno = sys.stderr.fileno()
+    saved_stdout_fileno = os.dup(stdout_fileno)
+    saved_stderr_fileno = os.dup(stderr_fileno)
+
+    with tempfile.NamedTemporaryFile(mode="w+") as tempf:
+        try:
+            os.dup2(tempf.fileno(), stdout_fileno)
+            os.dup2(tempf.fileno(), stderr_fileno)
+            yield tempf
+        finally:
+            os.dup2(saved_stdout_fileno, stdout_fileno)
+            os.dup2(saved_stderr_fileno, stderr_fileno)
+            os.close(saved_stdout_fileno)
+            os.close(saved_stderr_fileno)
+
+
+def test_logging():
+    fmm.utils.logging("hello one")
+    fmm.utils.set_logging_level(4)
+    fmm.utils.logging("hello three")
+    with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+        fmm.utils.logging("hello four")
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        print("This will be captured")
+    output_string = buffer.getvalue()
+    assert output_string == "This will be captured\n"
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+            fmm.utils.logging("hello five")
+    output_string = buffer.getvalue()
+    assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
+
+    # fmm.utils.setup()
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        fmm.utils.flush()
+        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
+            fmm.utils.logging("hello six")
+            fmm.utils.flush()
+        fmm.utils.flush()
+    output_string = buffer.getvalue()
+    # assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
+
+    with capture_and_discard_output() as output:
+        print("hello world")
+        fmm.utils.logging("hello seven")
+        fmm.utils.flush()
+        output.seek(0)
+        output.read()
+    fmm.utils.logging("hello eight")
+    print(f"Captured: {output}")

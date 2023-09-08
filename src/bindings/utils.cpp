@@ -6,6 +6,9 @@
 
 #include "nano_fmm/utils.hpp"
 
+#include "spdlog/spdlog.h"
+#include <spdlog/sinks/stdout_sinks.h>
+
 namespace nano_fmm
 {
 namespace py = pybind11;
@@ -14,6 +17,38 @@ using rvp = py::return_value_policy;
 
 void bind_utils(py::module &m)
 {
+    py::add_ostream_redirect(m, "ostream_redirect");
+    m //
+        .def("flush", []() { spdlog::default_logger()->flush(); })
+        .def("logging",
+             [](const std::string &msg) {
+                 spdlog::trace("trace msg: {}", msg);
+                 spdlog::debug("debug msg: {}", msg);
+                 spdlog::info("info msg: {}", msg);
+                 spdlog::warn("warn msg: {}", msg);
+                 spdlog::error("error msg: {}", msg);
+                 spdlog::critical("critical msg: {}", msg);
+                 std::cout << "std::cout: " << msg << std::endl;
+                 std::cerr << "std::cerr: " << msg << std::endl;
+             })
+        .def("set_logging_level",
+             [](int level) {
+                 spdlog::set_level(
+                     static_cast<spdlog::level::level_enum>(level));
+             })
+        .def("get_logging_level",
+             []() { return static_cast<int>(spdlog::get_level()); })
+        .def("setup",
+             []() {
+                 auto console_sink =
+                     std::make_shared<spdlog::sinks::stdout_sink_st>();
+                 auto logger =
+                     std::make_shared<spdlog::logger>("logger", console_sink);
+                 spdlog::set_default_logger(logger);
+             })
+        //
+        ;
+
     m //
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
         .def("cheap_ruler_k_lookup_table", &utils::cheap_ruler_k_lookup_table,

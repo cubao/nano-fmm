@@ -104,17 +104,20 @@ void bind_network(py::module &m)
                                std::optional<int>,      //
                                std::optional<double>>(&Network::query,
                                                       py::const_),
-             "position"_a,         //
-             py::kw_only(),        //
-             "radius"_a,           //
-             "k"_a = std::nullopt, //
-             "z_max_offset"_a = std::nullopt)
+             "position"_a,                    //
+             py::kw_only(),                   //
+             "radius"_a,                      //
+             "k"_a = std::nullopt,            //
+             "z_max_offset"_a = std::nullopt, //
+             py::call_guard<py::gil_scoped_release>())
         .def("query",
              py::overload_cast<const Eigen::Vector4d &>(&Network::query,
                                                         py::const_),
-             "bbox"_a)
+             "bbox"_a, //
+             py::call_guard<py::gil_scoped_release>())
         //
-        .def("build", &Network::build)
+        .def("build", &Network::build, "execution_policy"_a = 2,
+             py::call_guard<py::gil_scoped_release>())
         //
         .def_static("load", &Network::load, "path"_a)
         .def("dump", &Network::dump, "path"_a, py::kw_only(),

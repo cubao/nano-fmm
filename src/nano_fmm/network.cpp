@@ -3,6 +3,8 @@
 #include "nano_fmm/heap.hpp"
 #include "spdlog/spdlog.h"
 
+#include <execution>
+
 namespace nano_fmm
 {
 bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
@@ -200,13 +202,22 @@ MatchResult Network::match(const RowVectors &trajectory) const
     return ret;
 }
 
-void Network::build() const
+void Network::build(int execution_polylicy) const
 {
-    for (auto &pair : roads_) {
-        pair.second.build();
+    if (execution_polylicy == 1) {
+        std::for_each(std::execution::par, roads_.begin(), roads_.end(),
+                      [](auto &pair) { pair.second.build(); });
+    } else if (execution_polylicy == 2) {
+        std::for_each(std::execution::par_unseq, roads_.begin(), roads_.end(),
+                      [](auto &pair) { pair.second.build(); });
+    } else {
+        std::for_each(std::execution::seq, roads_.begin(), roads_.end(),
+                      [](auto &pair) { pair.second.build(); });
     }
     rtree();
 }
+
+void Network::reset() const { rtree_.reset(); }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
