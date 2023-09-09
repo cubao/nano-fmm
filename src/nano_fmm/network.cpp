@@ -3,6 +3,8 @@
 #include "nano_fmm/heap.hpp"
 #include "spdlog/spdlog.h"
 
+#include "nano_fmm/rapidjson_helpers.hpp"
+
 #include <execution>
 
 namespace nano_fmm
@@ -221,13 +223,39 @@ void Network::reset() const { rtree_.reset(); }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
-    //
-    return {};
+    auto json = load_json(path);
+    if (!json.IsObject()) {
+        SPDLOG_ERROR("invalid network file: {}", path);
+        return {};
+    }
+    auto type = json.FindMember("type");
+    if (type != json.MemberEnd() && type->value.IsString() &&
+        std::string(type->value.GetString(), type->value.GetStringLength()) ==
+            "FeatureCollection") {
+        auto ret = std::make_unique<Network>(true);
+        ret->from_geojson(json);
+        return ret;
+    }
+
+    if (!json.HasMember("roads") || !json.HasMember("nexts") ||
+        !json.HasMember("prevs")) {
+        SPDLOG_ERROR("network file should at least have roads/nexts/prevs");
+        return {};
+    }
+
+    bool is_wgs84 = false;
+    auto itr = json.FindMember("is_wgs84");
+    if (itr != json.MemberEnd() && itr->value.IsBool()) {
+        is_wgs84 = itr->value.GetBool();
+    }
+    auto ret = std::make_unique<Network>(is_wgs84);
+    ret->from_rapidjson(json);
+    return ret;
 }
-bool Network::dump(const std::string &path, bool with_config) const
+
+bool Network::dump(const std::string &path, bool indent, bool as_geojson) const
 {
-    //
-    return false;
+    return dump_json(path, as_geojson ? to_geojson() : to_rapidjson(), indent);
 }
 
 std::vector<UbodtRecord>
@@ -317,18 +345,6 @@ Network Network::to_2d() const
         }
     }
     return net;
-}
-
-Network &Network::from_geojson(const RapidjsonValue &json) { return *this; }
-RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
-{
-    RapidjsonValue features(rapidjson::kArrayType);
-
-    RapidjsonValue geojson(rapidjson::kObjectType);
-    geojson.AddMember("type", "FeatureCollection", allocator);
-    geojson.AddMember("features", features, allocator);
-    geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
-    return geojson;
 }
 
 FlatGeobuf::PackedRTree &Network::rtree() const

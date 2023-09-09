@@ -21,7 +21,7 @@ namespace nano_fmm
 {
 struct Network
 {
-    Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
 
     // road network
     bool add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
@@ -63,7 +63,8 @@ struct Network
 
     // load&dump
     static std::unique_ptr<Network> load(const std::string &path);
-    bool dump(const std::string &path, bool with_config = true) const;
+    bool dump(const std::string &path, bool indent = true,
+              bool as_geojson = true) const;
     // ubodt
     std::vector<UbodtRecord>
     build_ubodt(std::optional<double> thresh = std::nullopt) const;

@@ -151,6 +151,26 @@ RapidjsonValue Config::to_rapidjson(RapidjsonAllocator &allocator) const
     return json;
 }
 
+Network &Network::from_geojson(const RapidjsonValue &json)
+{
+    auto json_end = json.MemberEnd();
+    auto config_itr = json.FindMember("config");
+    if (config_itr != json_end) {
+        // config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
+    }
+    return *this;
+}
+RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
+{
+    RapidjsonValue features(rapidjson::kArrayType);
+    // TODO
+    RapidjsonValue geojson(rapidjson::kObjectType);
+    geojson.AddMember("type", "FeatureCollection", allocator);
+    geojson.AddMember("features", features, allocator);
+    geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
+    return geojson;
+}
+
 Network &Network::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
