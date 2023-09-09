@@ -167,6 +167,13 @@ void bind_network(py::module &m)
         //
         .def("to_2d", &Network::to_2d)
         //
+        .def("from_geojson", &Network::from_geojson, "json"_a)
+        .def("to_geojson",
+             py::overload_cast<>(&Network::to_geojson, py::const_))
+        .def("from_rapidjson", &Network::from_rapidjson, "json"_a)
+        .def("to_rapidjson",
+             py::overload_cast<>(&Network::to_rapidjson, py::const_))
+        //
         ;
 
     py::class_<Indexer>(m, "Indexer", py::module_local()) //

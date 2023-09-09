@@ -98,7 +98,7 @@ struct Network
     }
 
   private:
-    const bool is_wgs84_{false};
+    const bool is_wgs84_{true};
     // roads (id -> geom)
     std::unordered_map<int64_t, Polyline> roads_;
     // links (id -> {nexts}, id -> {prevs})

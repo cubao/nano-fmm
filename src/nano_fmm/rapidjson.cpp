@@ -309,6 +309,7 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
     geojson.AddMember("type", "FeatureCollection", allocator);
     geojson.AddMember("features", features, allocator);
     geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
+    geojson.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
     return geojson;
 }
 
