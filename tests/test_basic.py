@@ -1,5 +1,6 @@
 import contextlib
 import io
+import json
 import os
 import sys
 import tempfile
@@ -9,9 +10,10 @@ from contextlib import contextmanager
 from typing import Dict, List
 
 import numpy as np
+import pytest
 
 import nano_fmm as fmm
-from nano_fmm import LineSegment, Network
+from nano_fmm import LineSegment, Network, rapidjson
 from nano_fmm import flatbush as fb
 
 
@@ -463,11 +465,112 @@ def test_logging():
     output_string = buffer.getvalue()
     # assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
 
-    with capture_and_discard_output() as output:
-        print("hello world")
-        fmm.utils.logging("hello seven")
-        fmm.utils.flush()
-        output.seek(0)
-        output.read()
-    fmm.utils.logging("hello eight")
-    print(f"Captured: {output}")
+    # with capture_and_discard_output() as output:
+    #     print("hello world")
+    #     fmm.utils.logging("hello seven")
+    #     fmm.utils.flush()
+    #     output.seek(0)
+    #     output.read()
+    # fmm.utils.logging("hello eight")
+    # print(f"Captured: {output}")
+
+
+def test_json():
+    j = rapidjson()
+    assert j.dumps() == "null"
+    assert json.dumps(None) == "null"
+    j = rapidjson({})
+    assert j.dumps() == "{}"
+    j = rapidjson([])
+    assert j.dumps() == "[]"
+    assert rapidjson(5).dumps() == "5"
+    assert rapidjson(3.14).dumps() == "3.14"
+    assert rapidjson("text").dumps() == '"text"'
+    for text in [
+        "3.14",
+        "5",
+        '"text"',
+        '{"key": "value"}',
+        '["list", "items"]',
+    ]:
+        assert rapidjson().loads(text)() == json.loads(text)
+
+
+def test_project_point_rapidjson():
+    pt = fmm.ProjectedPoint()
+    with pytest.raises(Exception) as excinfo:
+        pt.position[0] = 5
+    assert "read-only" in str(excinfo.value)
+    j = pt.to_rapidjson()
+    assert j() == {
+        "position": [0.0, 0.0, 0.0],
+        "direction": [0.0, 0.0, 1.0],
+        "distance": 0.0,
+        "road_id": 0,
+        "offset": 0.0,
+    }
+
+
+def test_ubodt_rapidjson():
+    rec = fmm.UbodtRecord()
+    j = rec.to_rapidjson()
+    assert j() == {
+        "source_road": 0,
+        "target_road": 0,
+        "source_next": 0,
+        "target_prev": 0,
+        "cost": 0.0,
+    }
+    j["source_road"] = 666
+    rec.from_rapidjson(j)
+    assert rec.source_road == 666
+
+
+def test_indexer():
+    indexer = fmm.Indexer()
+    assert "5" == indexer.id(5)
+    assert "10" == indexer.id(10)
+    assert "1000" == indexer.id(1000)
+    assert 1000 == indexer.id("1000")
+    assert indexer.to_rapidjson()() == {
+        "10": 10,
+        "1000": 1000,
+        "5": 5,
+    }
+
+    indexer = fmm.Indexer()
+    assert 1000000 == indexer.id("road1")
+    assert 1000001 == indexer.id("road2")
+    assert 1000002 == indexer.id("road3")
+    assert 1000001 == indexer.id("road2")
+    assert 13579 == indexer.id("13579")
+    assert "road3" == indexer.id(1000002)
+    assert 1000003 == indexer.id("1000002")
+    assert 1000005 == indexer.id("1000005")
+    assert indexer.to_rapidjson()() == {
+        "1000002": 1000003,
+        "1000005": 1000005,
+        "13579": 13579,
+        "road1": 1000000,
+        "road2": 1000001,
+        "road3": 1000002,
+    }
+
+    indexer2 = fmm.Indexer().from_rapidjson(indexer.to_rapidjson())
+    assert 1000000 == indexer2.id("road1")
+    assert 1000001 == indexer2.id("road2")
+    assert 1000002 == indexer2.id("road3")
+    assert 1000001 == indexer2.id("road2")
+    assert 13579 == indexer2.id("13579")
+    assert "road3" == indexer2.id(1000002)
+    assert 1000003 == indexer2.id("1000002")
+    assert 1000005 == indexer2.id("1000005")
+    assert indexer2.to_rapidjson() == indexer.to_rapidjson()
+    indexer2.id("add another road")
+    assert indexer2.to_rapidjson() != indexer.to_rapidjson()
+
+
+# fmm.utils.set_logging_level(0)  # trace
+# # fmm.utils.set_logging_level(6) # off
+# network = Network.load("build/remapped.geojson")
+# assert network.to_geojson()

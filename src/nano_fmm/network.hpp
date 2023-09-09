@@ -21,11 +21,12 @@ namespace nano_fmm
 {
 struct Network
 {
-    Network(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
 
     // road network
     bool add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
-    bool add_link(int64_t source_road, int64_t target_road);
+    bool add_link(int64_t source_road, int64_t target_road,
+                  bool check_road = false);
     bool remove_road(int64_t road_id);
     bool remove_link(int64_t source_road, int64_t target_road);
     std::unordered_set<int64_t> prev_roads(int64_t road_id) const;
@@ -63,7 +64,8 @@ struct Network
 
     // load&dump
     static std::unique_ptr<Network> load(const std::string &path);
-    bool dump(const std::string &path, bool with_config = true) const;
+    bool dump(const std::string &path, bool indent = true,
+              bool as_geojson = true) const;
     // ubodt
     std::vector<UbodtRecord>
     build_ubodt(std::optional<double> thresh = std::nullopt) const;
@@ -79,8 +81,24 @@ struct Network
     // to 2d, z will be set to zero
     Network to_2d() const;
 
+    Network &from_geojson(const RapidjsonValue &json);
+    RapidjsonValue to_geojson(RapidjsonAllocator &allocator) const;
+    RapidjsonValue to_geojson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_geojson(allocator);
+    }
+
+    Network &from_rapidjson(const RapidjsonValue &json);
+    RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const;
+    RapidjsonValue to_rapidjson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_rapidjson(allocator);
+    }
+
   private:
-    const bool is_wgs84_{false};
+    const bool is_wgs84_;
     // roads (id -> geom)
     std::unordered_map<int64_t, Polyline> roads_;
     // links (id -> {nexts}, id -> {prevs})

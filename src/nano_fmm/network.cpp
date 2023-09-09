@@ -3,6 +3,8 @@
 #include "nano_fmm/heap.hpp"
 #include "spdlog/spdlog.h"
 
+#include "nano_fmm/rapidjson_helpers.hpp"
+
 #include <execution>
 
 namespace nano_fmm
@@ -24,15 +26,18 @@ bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
     rtree_.reset();
     return true;
 }
-bool Network::add_link(int64_t source_road, int64_t target_road)
+bool Network::add_link(int64_t source_road, int64_t target_road,
+                       bool check_road)
 {
-    if (roads_.find(source_road) == roads_.end()) {
-        spdlog::error("source_road={} not in network", source_road);
-        return false;
-    }
-    if (roads_.find(target_road) == roads_.end()) {
-        spdlog::error("target_road={} not in network", target_road);
-        return false;
+    if (check_road) {
+        if (roads_.find(source_road) == roads_.end()) {
+            spdlog::error("source_road={} not in network", source_road);
+            return false;
+        }
+        if (roads_.find(target_road) == roads_.end()) {
+            spdlog::error("target_road={} not in network", target_road);
+            return false;
+        }
     }
     nexts_[source_road].insert(target_road);
     prevs_[target_road].insert(source_road);
@@ -140,7 +145,7 @@ Network::query(const Eigen::Vector3d &position, double radius,
                               pair.first, poly.range(s, t));
     }
     std::sort(nearests.begin(), nearests.end(),
-              [](auto &n1, auto &n2) { return n1.distance_ < n2.distance_; });
+              [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
     if (k && nearests.size() > *k) {
         nearests.resize(*k);
     }
@@ -221,13 +226,40 @@ void Network::reset() const { rtree_.reset(); }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
-    //
-    return {};
+    auto json = load_json(path);
+    if (!json.IsObject()) {
+        SPDLOG_ERROR("invalid network file: {}", path);
+        return {};
+    }
+    bool is_wgs84 = true;
+    auto itr = json.FindMember("is_wgs84");
+    if (itr != json.MemberEnd() && itr->value.IsBool()) {
+        is_wgs84 = itr->value.GetBool();
+    }
+    auto type = json.FindMember("type");
+    if (type != json.MemberEnd() && type->value.IsString() &&
+        std::string(type->value.GetString(), type->value.GetStringLength()) ==
+            "FeatureCollection") {
+        SPDLOG_CRITICAL("loading geojson {}", path);
+        auto ret = std::make_unique<Network>(is_wgs84);
+        ret->from_geojson(json);
+        return ret;
+    }
+
+    if (!json.HasMember("roads") || !json.HasMember("nexts") ||
+        !json.HasMember("prevs")) {
+        SPDLOG_ERROR("network file should at least have roads/nexts/prevs");
+        return {};
+    }
+
+    auto ret = std::make_unique<Network>(is_wgs84);
+    ret->from_rapidjson(json);
+    return ret;
 }
-bool Network::dump(const std::string &path, bool with_config) const
+
+bool Network::dump(const std::string &path, bool indent, bool as_geojson) const
 {
-    //
-    return false;
+    return dump_json(path, as_geojson ? to_geojson() : to_rapidjson(), indent);
 }
 
 std::vector<UbodtRecord>
@@ -246,7 +278,7 @@ Network::build_ubodt(const std::vector<int64_t> &roads,
                      std::optional<double> thresh) const
 {
     if (!thresh) {
-        thresh = config_.ubodt_thresh;
+        thresh = config_.ubodt_thresh();
     }
     auto records = std::vector<UbodtRecord>();
     for (auto s : roads) {
@@ -264,7 +296,7 @@ Network::build_ubodt(const std::vector<int64_t> &roads,
             while ((u = pmap[succ]) != s) {
                 succ = u;
             }
-            records.push_back({s, curr, succ, prev, dmap[curr], nullptr});
+            records.push_back({s, curr, succ, prev, dmap[curr]});
         }
     }
     return records;
@@ -282,7 +314,7 @@ size_t Network::load_ubodt(const std::vector<UbodtRecord> &rows)
     // ubodt_;
     size_t count = 0;
     for (auto &row : rows) {
-        if (ubodt_.emplace(IndexIJ(row.source_road_, row.target_road_), row)
+        if (ubodt_.emplace(IndexIJ(row.source_road(), row.target_road()), row)
                 .second) {
             ++count;
         }
