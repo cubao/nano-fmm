@@ -26,7 +26,8 @@ template <typename T> struct HAS_TO_RAPIDJSON
     static const bool Has = sizeof(Test<T>(0)) == sizeof(char);
 };
 
-template <typename T> T from_rapidjson(const RapidjsonValue &json);
+template <typename T, std::enable_if_t<!HAS_FROM_RAPIDJSON<T>::Has, int> = 0>
+T from_rapidjson(const RapidjsonValue &json);
 template <typename T> RapidjsonValue to_rapidjson(T &&t)
 {
     RapidjsonAllocator allocator;
@@ -79,6 +80,34 @@ inline RapidjsonValue to_rapidjson(const Eigen::Vector3d &value,
     arr.PushBack(RapidjsonValue(value[1]), allocator);
     arr.PushBack(RapidjsonValue(value[2]), allocator);
     return arr;
+}
+
+template <> RowVectors from_rapidjson(const RapidjsonValue &json)
+{
+    const int N = json.Size();
+    RowVectors xyzs(N, 3);
+    for (int i = 0; i < N; ++i) {
+        xyzs(i, 0) = json[i][0].GetDouble();
+        xyzs(i, 1) = json[i][1].GetDouble();
+        xyzs(i, 2) = json[i][2].GetDouble();
+    }
+    return xyzs;
+}
+inline RapidjsonValue to_rapidjson(const RowVectors &value,
+                                   RapidjsonAllocator &allocator)
+{
+    RapidjsonValue xyzs(rapidjson::kArrayType);
+    const int N = value.rows();
+    xyzs.Reserve(N, allocator);
+    for (int i = 0; i < N; ++i) {
+        RapidjsonValue xyz(rapidjson::kArrayType);
+        xyz.Reserve(3, allocator);
+        xyz.PushBack(RapidjsonValue(value(i, 0)), allocator);
+        xyz.PushBack(RapidjsonValue(value(i, 1)), allocator);
+        xyz.PushBack(RapidjsonValue(value(i, 2)), allocator);
+        xyzs.PushBack(xyz, allocator);
+    }
+    return xyzs;
 }
 
 // helper macros
@@ -156,14 +185,32 @@ Network &Network::from_geojson(const RapidjsonValue &json)
     auto json_end = json.MemberEnd();
     auto config_itr = json.FindMember("config");
     if (config_itr != json_end) {
-        // config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
+        config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
     }
     return *this;
 }
 RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue features(rapidjson::kArrayType);
-    // TODO
+    features.Reserve(roads_.size(), allocator);
+    for (auto &pair : roads_) {
+        auto index = pair.first;
+        auto &ruler = pair.second;
+        RapidjsonValue geometry(rapidjson::kObjectType);
+        geometry.AddMember("type", "LineString", allocator);
+        geometry.AddMember("coordinates",
+                           nano_fmm::to_rapidjson(ruler.polyline(), allocator),
+                           allocator);
+        RapidjsonValue feature(rapidjson::kObjectType);
+        feature.AddMember("type", "Feature", allocator);
+        feature.AddMember("geometry", geometry, allocator);
+        RapidjsonValue properties(rapidjson::kObjectType);
+        // properties.AddMember("type", "road", allocator);
+        // properties.AddMember("type", "road", allocator);
+        feature.AddMember("properties", properties, allocator);
+        features.PushBack(feature, allocator);
+    }
+
     RapidjsonValue geojson(rapidjson::kObjectType);
     geojson.AddMember("type", "FeatureCollection", allocator);
     geojson.AddMember("features", features, allocator);
