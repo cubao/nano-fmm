@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from typing import Dict, List
 
 import numpy as np
+import pytest
 
 import nano_fmm as fmm
 from nano_fmm import LineSegment, Network, rapidjson
@@ -497,6 +498,9 @@ def test_json():
 
 def test_project_point_rapidjson():
     pt = fmm.ProjectedPoint()
+    with pytest.raises(Exception) as excinfo:
+        pt.position[0] = 5
+    assert "read-only" in str(excinfo.value)
     j = pt.to_rapidjson()
     assert j() == {}
 

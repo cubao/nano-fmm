@@ -30,10 +30,14 @@ void bind_network(py::module &m)
         //
         .def_property_readonly(
             "position",
-            [](const ProjectedPoint &self) { return self.position(); })
+            [](const ProjectedPoint &self) -> const Eigen::Vector3d {
+                return self.position();
+            })
         .def_property_readonly(
             "direction",
-            [](const ProjectedPoint &self) { return self.direction(); })
+            [](const ProjectedPoint &self) -> const Eigen::Vector3d {
+                return self.direction();
+            })
         .def_property_readonly(
             "distance",
             [](const ProjectedPoint &self) { return self.distance(); })
