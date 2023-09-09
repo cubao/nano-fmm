@@ -4,12 +4,46 @@
 
 namespace nano_fmm
 {
+template <typename T> struct HAS_FROM_RAPIDJSON
+{
+    template <typename U, U &(U::*)(const RapidjsonValue &)> struct SFINAE
+    {
+    };
+    template <typename U> static char Test(SFINAE<U, &U::from_rapidjson> *);
+    template <typename U> static int Test(...);
+    static const bool Has = sizeof(Test<T>(0)) == sizeof(char);
+};
+
+template <typename T> struct HAS_TO_RAPIDJSON
+{
+    template <typename U, RapidjsonValue (U::*)(RapidjsonAllocator &) const>
+    struct SFINAE
+    {
+    };
+    template <typename U> static char Test(SFINAE<U, &U::to_rapidjson> *);
+    template <typename U> static int Test(...);
+    static const bool Has = sizeof(Test<T>(0)) == sizeof(char);
+};
 
 template <typename T> T from_rapidjson(const RapidjsonValue &json);
 template <typename T> RapidjsonValue to_rapidjson(T &&t)
 {
     RapidjsonAllocator allocator;
     return to_rapidjson(std::forward<T>(t), allocator);
+}
+
+template <typename T, std::enable_if_t<HAS_FROM_RAPIDJSON<T>::Has, int> = 0>
+T from_rapidjson(const RapidjsonValue &json)
+{
+    T t;
+    t.from_rapidjson(json);
+    return t;
+}
+
+template <typename T, std::enable_if_t<HAS_TO_RAPIDJSON<T>::Has, int> = 0>
+RapidjsonValue to_rapidjson(const T &t, RapidjsonAllocator &allocator)
+{
+    return t.to_rapidjson(allocator);
 }
 
 // serialization for each types
