@@ -43,7 +43,21 @@ void bind_network(py::module &m)
         .def_property_readonly(
             "offset", [](const ProjectedPoint &self) { return self.offset(); })
         //
-        ;
+        .def("from_rapidjson", &ProjectedPoint::from_rapidjson, "json"_a)
+        .def("to_rapidjson",
+             py::overload_cast<>(&ProjectedPoint::to_rapidjson, py::const_))
+        //
+        .def("__repr__", [](const ProjectedPoint &self) {
+            auto &p = self.position();
+            auto &d = self.direction();
+            return fmt::format("ProjectedPoint(pos=[{},{},{}],dir=[{},{},{}],"
+                               "dist={},road={},offset={})",
+                               p[0], p[1], p[2], //
+                               d[0], d[1], d[2], //
+                               self.distance(), self.road_id(), self.offset());
+        });
+    //
+    ;
 
     py::class_<UbodtRecord>(m, "UbodtRecord", py::module_local()) //
         .def(py::init<int64_t, int64_t, int64_t, int64_t, double>(),

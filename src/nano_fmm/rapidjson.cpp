@@ -65,6 +65,21 @@ inline RapidjsonValue to_rapidjson(double value, RapidjsonAllocator &allocator)
     return RapidjsonValue(value);
 }
 
+template <> Eigen::Vector3d from_rapidjson(const RapidjsonValue &json)
+{
+    return {json[0].GetDouble(), json[1].GetDouble(), json[2].GetDouble()};
+}
+inline RapidjsonValue to_rapidjson(const Eigen::Vector3d &value,
+                                   RapidjsonAllocator &allocator)
+{
+    RapidjsonValue arr(rapidjson::kArrayType);
+    arr.Reserve(3, allocator);
+    arr.PushBack(RapidjsonValue(value[0]), allocator);
+    arr.PushBack(RapidjsonValue(value[1]), allocator);
+    arr.PushBack(RapidjsonValue(value[2]), allocator);
+    return arr;
+}
+
 // helper macros
 #define TO_RAPIDJSON(var, json, allocator, key)                                \
     json.AddMember(#key, nano_fmm::to_rapidjson(var.key(), allocator),         \
@@ -84,12 +99,21 @@ inline RapidjsonValue to_rapidjson(double value, RapidjsonAllocator &allocator)
 ProjectedPoint &ProjectedPoint::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
-    // FROM_RAPIDJSON((*this), json, json_end, source_road)
+    FROM_RAPIDJSON((*this), json, json_end, position)
+    FROM_RAPIDJSON((*this), json, json_end, direction)
+    FROM_RAPIDJSON((*this), json, json_end, distance)
+    FROM_RAPIDJSON((*this), json, json_end, road_id)
+    FROM_RAPIDJSON((*this), json, json_end, offset)
     return *this;
 }
 RapidjsonValue ProjectedPoint::to_rapidjson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue json(rapidjson::kObjectType);
+    TO_RAPIDJSON((*this), json, allocator, position)
+    TO_RAPIDJSON((*this), json, allocator, direction)
+    TO_RAPIDJSON((*this), json, allocator, distance)
+    TO_RAPIDJSON((*this), json, allocator, road_id)
+    TO_RAPIDJSON((*this), json, allocator, offset)
     return json;
 }
 

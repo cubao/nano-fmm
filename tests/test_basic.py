@@ -495,6 +495,12 @@ def test_json():
         assert rapidjson().loads(text)() == json.loads(text)
 
 
+def test_project_point_rapidjson():
+    pt = fmm.ProjectedPoint()
+    j = pt.to_rapidjson()
+    assert j() == {}
+
+
 def test_ubodt_rapidjson():
     rec = fmm.UbodtRecord()
     j = rec.to_rapidjson()
@@ -508,3 +514,6 @@ def test_ubodt_rapidjson():
     j["source_road"] = 666
     rec.from_rapidjson(j)
     assert rec.source_road == 666
+
+
+test_project_point_rapidjson()
