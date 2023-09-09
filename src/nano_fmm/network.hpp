@@ -79,6 +79,22 @@ struct Network
     // to 2d, z will be set to zero
     Network to_2d() const;
 
+    Network &from_geojson(const RapidjsonValue &json);
+    RapidjsonValue to_geojson(RapidjsonAllocator &allocator) const;
+    RapidjsonValue to_geojson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_geojson(allocator);
+    }
+
+    Network &from_rapidjson(const RapidjsonValue &json);
+    RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const;
+    RapidjsonValue to_rapidjson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_rapidjson(allocator);
+    }
+
   private:
     const bool is_wgs84_{false};
     // roads (id -> geom)

@@ -246,7 +246,7 @@ Network::build_ubodt(const std::vector<int64_t> &roads,
                      std::optional<double> thresh) const
 {
     if (!thresh) {
-        thresh = config_.ubodt_thresh;
+        thresh = config_.ubodt_thresh();
     }
     auto records = std::vector<UbodtRecord>();
     for (auto s : roads) {
@@ -317,6 +317,18 @@ Network Network::to_2d() const
         }
     }
     return net;
+}
+
+Network &Network::from_geojson(const RapidjsonValue &json) { return *this; }
+RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
+{
+    RapidjsonValue features(rapidjson::kArrayType);
+
+    RapidjsonValue geojson(rapidjson::kObjectType);
+    geojson.AddMember("type", "FeatureCollection", allocator);
+    geojson.AddMember("features", features, allocator);
+    geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
+    return geojson;
 }
 
 FlatGeobuf::PackedRTree &Network::rtree() const

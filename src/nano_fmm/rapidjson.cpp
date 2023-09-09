@@ -1,6 +1,7 @@
 #include "nano_fmm/rapidjson_helpers.hpp"
 #include "nano_fmm/network/projected_point.hpp"
 #include "nano_fmm/network/ubodt.hpp"
+#include "nano_fmm/network.hpp"
 
 namespace nano_fmm
 {
@@ -138,4 +139,27 @@ RapidjsonValue UbodtRecord::to_rapidjson(RapidjsonAllocator &allocator) const
     TO_RAPIDJSON((*this), json, allocator, cost)
     return json;
 }
+
+Config &Config::from_rapidjson(const RapidjsonValue &json)
+{
+    auto json_end = json.MemberEnd();
+    return *this;
+}
+RapidjsonValue Config::to_rapidjson(RapidjsonAllocator &allocator) const
+{
+    RapidjsonValue json(rapidjson::kObjectType);
+    return json;
+}
+
+Network &Network::from_rapidjson(const RapidjsonValue &json)
+{
+    auto json_end = json.MemberEnd();
+    return *this;
+}
+RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
+{
+    RapidjsonValue json(rapidjson::kObjectType);
+    return json;
+}
+
 } // namespace nano_fmm
