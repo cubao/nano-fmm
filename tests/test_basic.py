@@ -524,3 +524,47 @@ def test_ubodt_rapidjson():
     j["source_road"] = 666
     rec.from_rapidjson(j)
     assert rec.source_road == 666
+
+
+def test_indexer():
+    indexer = fmm.Indexer()
+    assert "5" == indexer.id(5)
+    assert "10" == indexer.id(10)
+    assert "1000" == indexer.id(1000)
+    assert 1000 == indexer.id("1000")
+    assert indexer.to_rapidjson()() == {
+        "10": 10,
+        "1000": 1000,
+        "5": 5,
+    }
+
+    indexer = fmm.Indexer()
+    assert 1000000 == indexer.id("road1")
+    assert 1000001 == indexer.id("road2")
+    assert 1000002 == indexer.id("road3")
+    assert 1000001 == indexer.id("road2")
+    assert 13579 == indexer.id("13579")
+    assert "road3" == indexer.id(1000002)
+    assert 1000003 == indexer.id("1000002")
+    assert 1000005 == indexer.id("1000005")
+    assert indexer.to_rapidjson()() == {
+        "1000002": 1000003,
+        "1000005": 1000005,
+        "13579": 13579,
+        "road1": 1000000,
+        "road2": 1000001,
+        "road3": 1000002,
+    }
+
+    indexer2 = fmm.Indexer().from_rapidjson(indexer.to_rapidjson())
+    assert 1000000 == indexer2.id("road1")
+    assert 1000001 == indexer2.id("road2")
+    assert 1000002 == indexer2.id("road3")
+    assert 1000001 == indexer2.id("road2")
+    assert 13579 == indexer2.id("13579")
+    assert "road3" == indexer2.id(1000002)
+    assert 1000003 == indexer2.id("1000002")
+    assert 1000005 == indexer2.id("1000005")
+    assert indexer2.to_rapidjson() == indexer.to_rapidjson()
+    indexer2.id("add another road")
+    assert indexer2.to_rapidjson() != indexer.to_rapidjson()

@@ -170,9 +170,17 @@ void bind_network(py::module &m)
 
     py::class_<Indexer>(m, "Indexer", py::module_local()) //
         .def(py::init<>())
-        .def("index", &Indexer::index, "str_id"_a, "int_id"_a)
         .def("id", py::overload_cast<int64_t>(&Indexer::id), "id"_a)
         .def("id", py::overload_cast<const std::string &>(&Indexer::id), "id"_a)
+        .def("index",
+             py::overload_cast<const std::string &, int64_t>(&Indexer::index),
+             "str_id"_a, "int_id"_a)
+        .def("index", py::overload_cast<>(&Indexer::index, py::const_))
+        //
+        .def("from_rapidjson", &Indexer::from_rapidjson, "json"_a)
+        .def("to_rapidjson",
+             py::overload_cast<>(&Indexer::to_rapidjson, py::const_))
+        //
         //
         ;
 }

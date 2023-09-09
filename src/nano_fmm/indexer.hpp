@@ -3,48 +3,95 @@
 #include <unordered_map>
 #include <string>
 #include <iostream>
+#include "nano_fmm/types.hpp"
 
-namespace nano_fmm {
-    struct Indexer {
-        bool index(const std::string &str_id, int64_t int_id) {
-            if (str2int_.count(str_id) || int2str_.count(int_id)) {
-                return false;
-            }
-            str2int_.emplace(str_id, int_id);
-            int2str_.emplace(int_id, str_id);
-            return true;
+namespace nano_fmm
+{
+struct Indexer
+{
+    // get str id (with auto setup)
+    std::string id(int64_t id)
+    {
+        auto itr = int2str_.find(id);
+        if (itr != int2str_.end()) {
+            return itr->second;
         }
-        std::string id(int64_t id) {
-            auto itr = int2str_.find(id);
-            if (itr != int2str_.end()) {
-                return itr->second;
-            }
-            int round = 0;
-            auto id_str = std::to_string(id);
-            auto str_id = id_str;
-            while (str2int_.count(str_id)) {
-                ++round;
-                str_id = id_str + "/" + std::to_string(round);
-            }
-            index(str_id, id);
-            return str_id;
+        int round = 0;
+        auto id_str = std::to_string(id);
+        auto str_id = id_str;
+        while (str2int_.count(str_id)) {
+            ++round;
+            str_id = id_str + "/" + std::to_string(round);
         }
-        int64_t id(const std::string &id) {
-            auto itr = str2int_.find(id);
-            if (itr != str2int_.end()) {
-                return itr->second;
-            }
-            try {
-                int64_t value = std::stoll(id);
-            } catch (const std::invalid_argument& ia) {
-            } catch (const std::out_of_range& oor) {
-            }
-            return 0;
+        index(str_id, id);
+        return str_id;
+    }
+    // get int id (with auto setup)
+    int64_t id(const std::string &id)
+    {
+        auto itr = str2int_.find(id);
+        if (itr != str2int_.end()) {
+            return itr->second;
         }
+        try {
+            int64_t ii = std::stoll(id);
+            if (index(id, ii)) {
+                return ii;
+            }
+        } catch (...) {
+        }
+        while (!index(id, id_cursor_)) {
+            ++id_cursor_;
+        }
+        return id_cursor_++;
+    }
+    // setup str/int id, returns true (setup) or false (skip)
+    bool index(const std::string &str_id, int64_t int_id)
+    {
+        if (str2int_.count(str_id) || int2str_.count(int_id)) {
+            return false;
+        }
+        str2int_.emplace(str_id, int_id);
+        int2str_.emplace(int_id, str_id);
+        return true;
+    }
+    std::map<std::string, int64_t> index() const
+    {
+        return {str2int_.begin(), str2int_.end()};
+    }
 
-        private:
-        std::unordered_map<std::string, int64_t> str2int_;
-        std::unordered_map<int64_t, std::string> int2str_;
-        int64_t id_cursor_{1000000};
-    };
-}
+    Indexer &from_rapidjson(const RapidjsonValue &json)
+    {
+        // for (auto &m: json.GetMe)
+        for (auto &m : json.GetObject()) {
+            index(std::string(m.name.GetString(), m.name.GetStringLength()),
+                  m.value.GetInt64());
+        }
+        return *this;
+    }
+    RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const
+    {
+        RapidjsonValue json(rapidjson::kObjectType);
+        for (auto &pair : str2int_) {
+            auto &str = pair.first;
+            json.AddMember(RapidjsonValue(str.data(), str.size(), allocator),
+                           RapidjsonValue(pair.second), allocator);
+        }
+        std::sort(
+            json.MemberBegin(), json.MemberEnd(), [](auto &lhs, auto &rhs) {
+                return strcmp(lhs.name.GetString(), rhs.name.GetString()) < 0;
+            });
+        return json;
+    }
+    RapidjsonValue to_rapidjson() const
+    {
+        RapidjsonAllocator allocator;
+        return to_rapidjson(allocator);
+    }
+
+  private:
+    std::unordered_map<std::string, int64_t> str2int_;
+    std::unordered_map<int64_t, std::string> int2str_;
+    int64_t id_cursor_{1000000};
+};
+} // namespace nano_fmm
