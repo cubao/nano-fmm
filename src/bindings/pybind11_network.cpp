@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "nano_fmm/network.hpp"
+#include "nano_fmm/indexer.hpp"
 #include "spdlog/spdlog.h"
 
 namespace nano_fmm
@@ -164,6 +165,14 @@ void bind_network(py::module &m)
              "thresh"_a = std::nullopt)
         //
         .def("to_2d", &Network::to_2d)
+        //
+        ;
+
+    py::class_<Indexer>(m, "Indexer", py::module_local()) //
+        .def(py::init<>())
+        .def("index", &Indexer::index, "str_id"_a, "int_id"_a)
+        .def("id", py::overload_cast<int64_t>(&Indexer::id), "id"_a)
+        .def("id", py::overload_cast<const std::string &>(&Indexer::id), "id"_a)
         //
         ;
 }
