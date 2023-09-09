@@ -69,7 +69,8 @@ inline RapidjsonValue to_rapidjson(double value, RapidjsonAllocator &allocator)
 
 template <> Eigen::Vector3d from_rapidjson(const RapidjsonValue &json)
 {
-    return {json[0].GetDouble(), json[1].GetDouble(), json[2].GetDouble()};
+    return {json[0].GetDouble(), json[1].GetDouble(),
+            json.Size() > 2 ? json[2].GetDouble() : 0.0};
 }
 inline RapidjsonValue to_rapidjson(const Eigen::Vector3d &value,
                                    RapidjsonAllocator &allocator)
@@ -89,7 +90,7 @@ template <> RowVectors from_rapidjson(const RapidjsonValue &json)
     for (int i = 0; i < N; ++i) {
         xyzs(i, 0) = json[i][0].GetDouble();
         xyzs(i, 1) = json[i][1].GetDouble();
-        xyzs(i, 2) = json[i][2].GetDouble();
+        xyzs(i, 2) = json[i].Size() > 2 ? json[i][2].GetDouble() : 0.0;
     }
     return xyzs;
 }

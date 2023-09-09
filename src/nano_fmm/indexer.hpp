@@ -34,7 +34,10 @@ struct Indexer
             return itr->second;
         }
         try {
-            int64_t ii = std::stoll(id);
+            // '44324' -> 44324
+            // 'w44324' -> 44324
+            int64_t ii =
+                id[0] == 'w' ? std::stoll(id.substr(1)) : std::stoll(id);
             if (index(id, ii)) {
                 return ii;
             }
