@@ -485,3 +485,26 @@ def test_json():
     assert rapidjson(5).dumps() == "5"
     assert rapidjson(3.14).dumps() == "3.14"
     assert rapidjson("text").dumps() == '"text"'
+    for text in [
+        "3.14",
+        "5",
+        '"text"',
+        '{"key": "value"}',
+        '["list", "items"]',
+    ]:
+        assert rapidjson().loads(text)() == json.loads(text)
+
+
+def test_ubodt_rapidjson():
+    rec = fmm.UbodtRecord()
+    j = rec.to_rapidjson()
+    assert j() == {
+        "source_road": 0,
+        "target_road": 0,
+        "source_next": 0,
+        "target_prev": 0,
+        "cost": 0.0,
+    }
+    j["source_road"] = 666
+    rec.from_rapidjson(j)
+    assert rec.source_road == 666

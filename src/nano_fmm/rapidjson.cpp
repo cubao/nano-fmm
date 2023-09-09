@@ -56,6 +56,16 @@ inline RapidjsonValue to_rapidjson(int64_t value, RapidjsonAllocator &allocator)
     return RapidjsonValue(value);
 }
 
+template <> double from_rapidjson(const RapidjsonValue &json)
+{
+    return json.GetDouble();
+}
+inline RapidjsonValue to_rapidjson(double value, RapidjsonAllocator &allocator)
+{
+    return RapidjsonValue(value);
+}
+
+// helper macros
 #define TO_RAPIDJSON(var, json, allocator, key)                                \
     json.AddMember(#key, nano_fmm::to_rapidjson(var.key(), allocator),         \
                    allocator);
@@ -88,12 +98,20 @@ UbodtRecord &UbodtRecord::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
     FROM_RAPIDJSON((*this), json, json_end, source_road)
+    FROM_RAPIDJSON((*this), json, json_end, target_road)
+    FROM_RAPIDJSON((*this), json, json_end, source_next)
+    FROM_RAPIDJSON((*this), json, json_end, target_prev)
+    FROM_RAPIDJSON((*this), json, json_end, cost)
     return *this;
 }
 RapidjsonValue UbodtRecord::to_rapidjson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue json(rapidjson::kObjectType);
     TO_RAPIDJSON((*this), json, allocator, source_road)
+    TO_RAPIDJSON((*this), json, allocator, target_road)
+    TO_RAPIDJSON((*this), json, allocator, source_next)
+    TO_RAPIDJSON((*this), json, allocator, target_prev)
+    TO_RAPIDJSON((*this), json, allocator, cost)
     return json;
 }
 } // namespace nano_fmm

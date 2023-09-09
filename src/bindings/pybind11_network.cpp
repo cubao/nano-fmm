@@ -72,6 +72,10 @@ void bind_network(py::module &m)
         .def(py::self == py::self)
         .def(py::self < py::self)
         //
+        .def("from_rapidjson", &UbodtRecord::from_rapidjson, "json"_a)
+        .def("to_rapidjson",
+             py::overload_cast<>(&UbodtRecord::to_rapidjson, py::const_))
+        //
         .def("__repr__", [](const UbodtRecord &self) {
             return fmt::format(
                 "UbodtRecord(s->t=[{}->{}], cost:{}, sn:{},tp:{})",
