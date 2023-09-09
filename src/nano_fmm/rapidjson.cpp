@@ -110,6 +110,28 @@ inline RapidjsonValue to_rapidjson(const RowVectors &value,
     return xyzs;
 }
 
+template <> std::vector<int64_t> from_rapidjson(const RapidjsonValue &json)
+{
+    const int N = json.Size();
+    std::vector<int64_t> index;
+    index.reserve(N);
+    for (int i = 0; i < N; ++i) {
+        index.push_back(json[i].GetInt64());
+    }
+    return index;
+}
+inline RapidjsonValue to_rapidjson(const std::vector<int64_t> &value,
+                                   RapidjsonAllocator &allocator)
+{
+    RapidjsonValue xyzs(rapidjson::kArrayType);
+    const int N = value.size();
+    xyzs.Reserve(N, allocator);
+    for (int i = 0; i < N; ++i) {
+        xyzs.PushBack(RapidjsonValue(value[i]), allocator);
+    }
+    return xyzs;
+}
+
 // helper macros
 #define TO_RAPIDJSON(var, json, allocator, key)                                \
     json.AddMember(#key, nano_fmm::to_rapidjson(var.key(), allocator),         \
@@ -193,9 +215,14 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue features(rapidjson::kArrayType);
     features.Reserve(roads_.size(), allocator);
+
+    std::vector<int64_t> road_ids;
     for (auto &pair : roads_) {
-        auto index = pair.first;
-        auto &ruler = pair.second;
+        road_ids.push_back(pair.first);
+    }
+    std::sort(road_ids.begin(), road_ids.end());
+    for (auto id : road_ids) {
+        auto &ruler = roads_.at(id);
         RapidjsonValue geometry(rapidjson::kObjectType);
         geometry.AddMember("type", "LineString", allocator);
         geometry.AddMember("coordinates",
@@ -205,8 +232,34 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
         feature.AddMember("type", "Feature", allocator);
         feature.AddMember("geometry", geometry, allocator);
         RapidjsonValue properties(rapidjson::kObjectType);
-        // properties.AddMember("type", "road", allocator);
-        // properties.AddMember("type", "road", allocator);
+        properties.AddMember("type", "road", allocator);
+        properties.AddMember("id", RapidjsonValue(id), allocator);
+        auto nexts_itr = nexts_.find(id);
+        if (nexts_itr == nexts_.end()) {
+            properties.AddMember(
+                "nexts",
+                nano_fmm::to_rapidjson(std::vector<int64_t>{}, allocator),
+                allocator);
+        } else {
+            auto ids = std::vector<int64_t>(nexts_itr->second.begin(),
+                                            nexts_itr->second.end());
+            std::sort(ids.begin(), ids.end());
+            properties.AddMember(
+                "nexts", nano_fmm::to_rapidjson(ids, allocator), allocator);
+        }
+        auto prevs_itr = prevs_.find(id);
+        if (prevs_itr == prevs_.end()) {
+            properties.AddMember(
+                "prevs",
+                nano_fmm::to_rapidjson(std::vector<int64_t>{}, allocator),
+                allocator);
+        } else {
+            auto ids = std::vector<int64_t>(prevs_itr->second.begin(),
+                                            prevs_itr->second.end());
+            std::sort(ids.begin(), ids.end());
+            properties.AddMember(
+                "prevs", nano_fmm::to_rapidjson(ids, allocator), allocator);
+        }
         feature.AddMember("properties", properties, allocator);
         features.PushBack(feature, allocator);
     }
