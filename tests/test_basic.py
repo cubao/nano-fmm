@@ -502,7 +502,13 @@ def test_project_point_rapidjson():
         pt.position[0] = 5
     assert "read-only" in str(excinfo.value)
     j = pt.to_rapidjson()
-    assert j() == {}
+    assert j() == {
+        "position": [0.0, 0.0, 0.0],
+        "direction": [0.0, 0.0, 1.0],
+        "distance": 0.0,
+        "road_id": 0,
+        "offset": 0.0,
+    }
 
 
 def test_ubodt_rapidjson():
@@ -518,6 +524,3 @@ def test_ubodt_rapidjson():
     j["source_road"] = 666
     rec.from_rapidjson(j)
     assert rec.source_road == 666
-
-
-test_project_point_rapidjson()

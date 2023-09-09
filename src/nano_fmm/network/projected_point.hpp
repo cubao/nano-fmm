@@ -15,7 +15,7 @@ struct ProjectedPoint
           direction_(direction), //
           distance_(distance),   //
           road_id_(road_id),     //
-          offset_(offset_)
+          offset_(offset)
     {
     }
 
