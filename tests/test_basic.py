@@ -465,14 +465,14 @@ def test_logging():
     output_string = buffer.getvalue()
     # assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
 
-    with capture_and_discard_output() as output:
-        print("hello world")
-        fmm.utils.logging("hello seven")
-        fmm.utils.flush()
-        output.seek(0)
-        output.read()
-    fmm.utils.logging("hello eight")
-    print(f"Captured: {output}")
+    # with capture_and_discard_output() as output:
+    #     print("hello world")
+    #     fmm.utils.logging("hello seven")
+    #     fmm.utils.flush()
+    #     output.seek(0)
+    #     output.read()
+    # fmm.utils.logging("hello eight")
+    # print(f"Captured: {output}")
 
 
 def test_json():

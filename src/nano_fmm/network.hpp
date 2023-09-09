@@ -21,7 +21,7 @@ namespace nano_fmm
 {
 struct Network
 {
-    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
 
     // road network
     bool add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
@@ -98,7 +98,7 @@ struct Network
     }
 
   private:
-    const bool is_wgs84_{true};
+    const bool is_wgs84_;
     // roads (id -> geom)
     std::unordered_map<int64_t, Polyline> roads_;
     // links (id -> {nexts}, id -> {prevs})

@@ -107,7 +107,7 @@ void bind_network(py::module &m)
 
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
-        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = true)
+        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a)
         //
         .def("add_road", &Network::add_road, "geom"_a, py::kw_only(), "id"_a)
         .def("add_link", &Network::add_link, "source_road"_a, "target_road"_a,
