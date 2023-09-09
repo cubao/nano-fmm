@@ -3,6 +3,8 @@
 #include "nano_fmm/network/ubodt.hpp"
 #include "nano_fmm/network.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace nano_fmm
 {
 template <typename T> struct HAS_FROM_RAPIDJSON
@@ -210,6 +212,44 @@ Network &Network::from_geojson(const RapidjsonValue &json)
     if (config_itr != json_end) {
         config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
     }
+    int index = -1;
+    int num_fail = 0;
+    int num_succ = 0;
+    for (auto &f : json["features"].GetArray()) {
+        ++index;
+        if (!f["properties"].HasMember("type") ||
+            !f["properties"]["type"].IsString()) {
+            continue;
+        }
+        auto &type = f["properties"]["type"];
+        if ("road" != std::string(type.GetString(), type.GetStringLength())) {
+            continue;
+        }
+        try {
+            auto id = f["properties"]["id"].GetInt64();
+            auto coords = nano_fmm::from_rapidjson<RowVectors>(
+                f["geometry"]["coordinates"]);
+            add_road(coords, id);
+            auto nexts = nano_fmm::from_rapidjson<std::vector<int64_t>>(
+                f["properties"]["nexts"]);
+            auto prevs = nano_fmm::from_rapidjson<std::vector<int64_t>>(
+                f["properties"]["prevs"]);
+            for (auto n : nexts) {
+                add_link(id, n, false);
+            }
+            for (auto p : prevs) {
+                add_link(p, id, false);
+            }
+            ++num_succ;
+            continue;
+        } catch (...) {
+            ++num_fail;
+        }
+    }
+    SPDLOG_INFO("loading roads, #succ:{}, #fail:{}", num_succ, num_fail);
+    if (num_fail) {
+        SPDLOG_ERROR("failed at loading roads from {} features", num_fail);
+    }
     return *this;
 }
 RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
@@ -275,6 +315,10 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 Network &Network::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
+    auto config_itr = json.FindMember("config");
+    if (config_itr == json_end) {
+        config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
+    }
     return *this;
 }
 RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const

@@ -25,7 +25,8 @@ struct Network
 
     // road network
     bool add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
-    bool add_link(int64_t source_road, int64_t target_road);
+    bool add_link(int64_t source_road, int64_t target_road,
+                  bool check_road = false);
     bool remove_road(int64_t road_id);
     bool remove_link(int64_t source_road, int64_t target_road);
     std::unordered_set<int64_t> prev_roads(int64_t road_id) const;

@@ -26,15 +26,18 @@ bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
     rtree_.reset();
     return true;
 }
-bool Network::add_link(int64_t source_road, int64_t target_road)
+bool Network::add_link(int64_t source_road, int64_t target_road,
+                       bool check_road)
 {
-    if (roads_.find(source_road) == roads_.end()) {
-        spdlog::error("source_road={} not in network", source_road);
-        return false;
-    }
-    if (roads_.find(target_road) == roads_.end()) {
-        spdlog::error("target_road={} not in network", target_road);
-        return false;
+    if (check_road) {
+        if (roads_.find(source_road) == roads_.end()) {
+            spdlog::error("source_road={} not in network", source_road);
+            return false;
+        }
+        if (roads_.find(target_road) == roads_.end()) {
+            spdlog::error("target_road={} not in network", target_road);
+            return false;
+        }
     }
     nexts_[source_road].insert(target_road);
     prevs_[target_road].insert(source_road);
@@ -228,11 +231,17 @@ std::unique_ptr<Network> Network::load(const std::string &path)
         SPDLOG_ERROR("invalid network file: {}", path);
         return {};
     }
+    bool is_wgs84 = true;
+    auto itr = json.FindMember("is_wgs84");
+    if (itr != json.MemberEnd() && itr->value.IsBool()) {
+        is_wgs84 = itr->value.GetBool();
+    }
     auto type = json.FindMember("type");
     if (type != json.MemberEnd() && type->value.IsString() &&
         std::string(type->value.GetString(), type->value.GetStringLength()) ==
             "FeatureCollection") {
-        auto ret = std::make_unique<Network>(true);
+        SPDLOG_CRITICAL("loading geojson {}", path);
+        auto ret = std::make_unique<Network>(is_wgs84);
         ret->from_geojson(json);
         return ret;
     }
@@ -243,11 +252,6 @@ std::unique_ptr<Network> Network::load(const std::string &path)
         return {};
     }
 
-    bool is_wgs84 = false;
-    auto itr = json.FindMember("is_wgs84");
-    if (itr != json.MemberEnd() && itr->value.IsBool()) {
-        is_wgs84 = itr->value.GetBool();
-    }
     auto ret = std::make_unique<Network>(is_wgs84);
     ret->from_rapidjson(json);
     return ret;
