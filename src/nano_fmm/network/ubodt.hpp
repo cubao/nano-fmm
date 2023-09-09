@@ -38,7 +38,8 @@ struct UbodtRecord
             return cost_ < rhs.cost_;
         }
         return std::make_tuple(source_next_, target_prev_, target_road_) <
-               std::make_tuple(rhs.source_next_, rhs.target_prev_, rhs.target_road_);
+               std::make_tuple(rhs.source_next_, rhs.target_prev_,
+                               rhs.target_road_);
     }
     bool operator==(const UbodtRecord &rhs) const
     {
