@@ -11,3 +11,8 @@ site
 data/*
 !data/Makefile
 *.whl
+cache
+
+/*.json
+/*.pkl
+/*.svg

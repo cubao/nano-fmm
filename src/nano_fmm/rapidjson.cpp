@@ -319,7 +319,6 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 
 Network &Network::from_rapidjson(const RapidjsonValue &json)
 {
-    auto json_end = json.MemberEnd();
     for (auto &m : json["roads"].GetObject()) {
         add_road(nano_fmm::from_rapidjson<RowVectors>(m.value),
                  std::stoll(std::string(m.name.GetString(),
@@ -342,7 +341,7 @@ Network &Network::from_rapidjson(const RapidjsonValue &json)
         }
     }
     auto config_itr = json.FindMember("config");
-    if (config_itr == json_end) {
+    if (config_itr == json.MemberEnd()) {
         config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
     }
     return *this;
