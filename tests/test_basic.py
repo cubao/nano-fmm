@@ -576,13 +576,17 @@ def test_indexer():
 
 
 def test_network():
-    return
     network = Network.load("README.md")
     assert network is None
     network = Network.load("missing_file")
     assert network is None
 
-    network = Network.load("build/remapped.geojson")
+    from nano_fmm.converter import remap_network_with_string_id
+
+    geojson, _ = remap_network_with_string_id("data/suzhoubeizhan.json")
+    network = Network(is_wgs84=True)
+    network.from_geojson(geojson)
+    assert len(network.roads()) == 1016
     assert network.to_geojson().dump("build/network.geojson", indent=True)
     assert network.to_rapidjson().dump("build/network.json", indent=True)
 
@@ -596,3 +600,4 @@ def test_network():
 
     rows = network.build_ubodt()
     rows = sorted(rows)
+    print(rows[:5])
