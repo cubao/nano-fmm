@@ -197,11 +197,13 @@ RapidjsonValue UbodtRecord::to_rapidjson(RapidjsonAllocator &allocator) const
 Config &Config::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
+    FROM_RAPIDJSON((*this), json, json_end, ubodt_thresh)
     return *this;
 }
 RapidjsonValue Config::to_rapidjson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue json(rapidjson::kObjectType);
+    TO_RAPIDJSON((*this), json, allocator, ubodt_thresh)
     return json;
 }
 
@@ -257,13 +259,13 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
     RapidjsonValue features(rapidjson::kArrayType);
     features.Reserve(roads_.size(), allocator);
 
-    std::vector<int64_t> road_ids;
+    auto roads = std::map<int64_t, const Polyline *>();
     for (auto &pair : roads_) {
-        road_ids.push_back(pair.first);
+        roads.emplace(pair.first, &pair.second);
     }
-    std::sort(road_ids.begin(), road_ids.end());
-    for (auto id : road_ids) {
-        auto &ruler = roads_.at(id);
+    for (auto &pair : roads) {
+        auto id = pair.first;
+        auto &ruler = *pair.second;
         RapidjsonValue geometry(rapidjson::kObjectType);
         geometry.AddMember("type", "LineString", allocator);
         geometry.AddMember("coordinates",
@@ -307,24 +309,101 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 
     RapidjsonValue geojson(rapidjson::kObjectType);
     geojson.AddMember("type", "FeatureCollection", allocator);
+    if (!is_wgs84_) {
+        geojson.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
+    }
     geojson.AddMember("features", features, allocator);
     geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
-    geojson.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
     return geojson;
 }
 
 Network &Network::from_rapidjson(const RapidjsonValue &json)
 {
-    auto json_end = json.MemberEnd();
+    for (auto &m : json["roads"].GetObject()) {
+        add_road(nano_fmm::from_rapidjson<RowVectors>(m.value),
+                 std::stoll(std::string(m.name.GetString(),
+                                        m.name.GetStringLength())));
+    }
+    for (auto &m : json["nexts"].GetObject()) {
+        auto curr = std::stoll(
+            std::string(m.name.GetString(), m.name.GetStringLength()));
+        auto nexts = nano_fmm::from_rapidjson<std::vector<int64_t>>(m.value);
+        for (auto next : nexts) {
+            add_link(curr, next);
+        }
+    }
+    for (auto &m : json["prevs"].GetObject()) {
+        auto curr = std::stoll(
+            std::string(m.name.GetString(), m.name.GetStringLength()));
+        auto prevs = nano_fmm::from_rapidjson<std::vector<int64_t>>(m.value);
+        for (auto prev : prevs) {
+            add_link(prev, curr);
+        }
+    }
     auto config_itr = json.FindMember("config");
-    if (config_itr == json_end) {
+    if (config_itr == json.MemberEnd()) {
         config_ = nano_fmm::from_rapidjson<Config>(config_itr->value);
     }
     return *this;
 }
+
 RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue json(rapidjson::kObjectType);
+    json.AddMember("type", "RoadNetwork", allocator);
+    json.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
+    // roads
+    {
+        auto roads = std::map<int64_t, const Polyline *>();
+        for (auto &pair : roads_) {
+            roads.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _roads(rapidjson::kObjectType);
+        for (auto &pair : roads) {
+            auto rid = std::to_string(pair.first);
+            _roads.AddMember(
+                RapidjsonValue(rid.data(), rid.size(), allocator),
+                nano_fmm::to_rapidjson(pair.second->polyline(), allocator),
+                allocator);
+        }
+        json.AddMember("roads", _roads, allocator);
+    }
+    // nexts
+    {
+        auto nexts = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        for (auto &pair : nexts_) {
+            nexts.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _nexts(rapidjson::kObjectType);
+        for (auto &pair : nexts) {
+            auto roads =
+                std::vector<int64_t>(pair.second->begin(), pair.second->end());
+            std::sort(roads.begin(), roads.end());
+            auto rid = std::to_string(pair.first);
+            _nexts.AddMember(RapidjsonValue(rid.data(), rid.size(), allocator),
+                             nano_fmm::to_rapidjson(roads, allocator),
+                             allocator);
+        }
+        json.AddMember("nexts", _nexts, allocator);
+    }
+    {
+        auto prevs = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        for (auto &pair : prevs_) {
+            prevs.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _prevs(rapidjson::kObjectType);
+        for (auto &pair : prevs) {
+            auto roads =
+                std::vector<int64_t>(pair.second->begin(), pair.second->end());
+            std::sort(roads.begin(), roads.end());
+            auto rid = std::to_string(pair.first);
+            _prevs.AddMember(RapidjsonValue(rid.data(), rid.size(), allocator),
+                             nano_fmm::to_rapidjson(roads, allocator),
+                             allocator);
+        }
+        json.AddMember("prevs", _prevs, allocator);
+    }
+    json.AddMember("config", config_.to_rapidjson(allocator), allocator);
     return json;
 }
 

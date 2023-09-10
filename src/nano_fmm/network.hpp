@@ -24,7 +24,7 @@ struct Network
     Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
 
     // road network
-    bool add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id);
+    bool add_road(const Eigen::Ref<const RowVectors> &geom, int64_t road_id);
     bool add_link(int64_t source_road, int64_t target_road,
                   bool check_road = false);
     bool remove_road(int64_t road_id);

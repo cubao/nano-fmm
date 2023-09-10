@@ -9,7 +9,8 @@
 
 namespace nano_fmm
 {
-bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
+bool Network::add_road(const Eigen::Ref<const RowVectors> &geom,
+                       int64_t road_id)
 {
     if (roads_.find(road_id) != roads_.end()) {
         spdlog::error("duplicate road, id={}, should remove_road first",
@@ -226,9 +227,22 @@ void Network::reset() const { rtree_.reset(); }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
-    auto json = load_json(path);
+    RapidjsonValue json;
+    try {
+        json = load_json(path);
+    } catch (const std::exception &e) {
+        SPDLOG_ERROR("failed to load json from {}, error: {}", path, e.what());
+        return {};
+    }
     if (!json.IsObject()) {
         SPDLOG_ERROR("invalid network file: {}", path);
+        return {};
+    }
+    const auto type = json.FindMember("type");
+    if (type == json.MemberEnd() || !type->value.IsString()) {
+        SPDLOG_WARN("{} has no 'type', should be 'FeatureCollection' (geojson) "
+                    "or 'RoadNetwork' (json)",
+                    path);
         return {};
     }
     bool is_wgs84 = true;
@@ -236,24 +250,21 @@ std::unique_ptr<Network> Network::load(const std::string &path)
     if (itr != json.MemberEnd() && itr->value.IsBool()) {
         is_wgs84 = itr->value.GetBool();
     }
-    auto type = json.FindMember("type");
-    if (type != json.MemberEnd() && type->value.IsString() &&
-        std::string(type->value.GetString(), type->value.GetStringLength()) ==
-            "FeatureCollection") {
-        SPDLOG_CRITICAL("loading geojson {}", path);
-        auto ret = std::make_unique<Network>(is_wgs84);
-        ret->from_geojson(json);
-        return ret;
-    }
-
-    if (!json.HasMember("roads") || !json.HasMember("nexts") ||
-        !json.HasMember("prevs")) {
-        SPDLOG_ERROR("network file should at least have roads/nexts/prevs");
-        return {};
-    }
-
     auto ret = std::make_unique<Network>(is_wgs84);
-    ret->from_rapidjson(json);
+    const auto type_ =
+        std::string(type->value.GetString(), type->value.GetStringLength());
+    if (type_ == "FeatureCollection") {
+        SPDLOG_INFO("loading geojson {}", path);
+        ret->from_geojson(json);
+    } else if (type_ == "RoadNetwork") {
+        SPDLOG_INFO("loading json {}", path);
+        ret->from_rapidjson(json);
+    } else {
+        SPDLOG_WARN("{} has invalid type:{}, should be 'FeatureCollection' "
+                    "(geojson) or 'RoadNetwork' (json)",
+                    path, type_);
+        ret.reset();
+    }
     return ret;
 }
 

@@ -570,7 +570,34 @@ def test_indexer():
     assert indexer2.to_rapidjson() != indexer.to_rapidjson()
 
 
+# fmm.utils.get_logging_level()
 # fmm.utils.set_logging_level(0)  # trace
 # # fmm.utils.set_logging_level(6) # off
-# network = Network.load("build/remapped.geojson")
-# assert network.to_geojson()
+
+
+def test_network():
+    network = Network.load("README.md")
+    assert network is None
+    network = Network.load("missing_file")
+    assert network is None
+
+    from nano_fmm.converter import remap_network_with_string_id
+
+    geojson, _ = remap_network_with_string_id("data/suzhoubeizhan.json")
+    network = Network(is_wgs84=True)
+    network.from_geojson(geojson)
+    assert len(network.roads()) == 1016
+    assert network.to_geojson().dump("build/network.geojson", indent=True)
+    assert network.to_rapidjson().dump("build/network.json", indent=True)
+
+    network = Network.load("build/network.geojson")
+    network.to_geojson().dump("build/network2.geojson", indent=True)
+    network.to_rapidjson().dump("build/network2.json", indent=True)
+
+    network = Network.load("build/network.json")
+    network.to_geojson().dump("build/network3.geojson", indent=True)
+    network.to_rapidjson().dump("build/network3.json", indent=True)
+
+    rows = network.build_ubodt()
+    rows = sorted(rows)
+    print(rows[:5])
