@@ -309,7 +309,9 @@ RapidjsonValue Network::to_geojson(RapidjsonAllocator &allocator) const
 
     RapidjsonValue geojson(rapidjson::kObjectType);
     geojson.AddMember("type", "FeatureCollection", allocator);
-    geojson.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
+    if (!is_wgs84_) {
+        geojson.AddMember("is_wgs84", RapidjsonValue(is_wgs84_), allocator);
+    }
     geojson.AddMember("features", features, allocator);
     geojson.AddMember("config", config_.to_rapidjson(allocator), allocator);
     return geojson;
@@ -381,7 +383,7 @@ RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
                              nano_fmm::to_rapidjson(roads, allocator),
                              allocator);
         }
-        json.AddMember("nexts", _prevs, allocator);
+        json.AddMember("prevs", _prevs, allocator);
     }
     json.AddMember("config", config_.to_rapidjson(allocator), allocator);
     return json;
