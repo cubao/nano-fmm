@@ -570,8 +570,10 @@ def test_indexer():
     assert indexer2.to_rapidjson() != indexer.to_rapidjson()
 
 
+# fmm.utils.get_logging_level()
 # fmm.utils.set_logging_level(0)  # trace
 # # fmm.utils.set_logging_level(6) # off
 network = Network.load("build/remapped.geojson")
 assert network.to_geojson()
+network.to_rapidjson().dump('build/network.json', indent=True)
 print()
