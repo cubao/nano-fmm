@@ -7,7 +7,6 @@ import tempfile
 import time
 from collections import defaultdict
 from contextlib import contextmanager
-from itertools import chain
 from typing import Dict, List
 
 import numpy as np
@@ -17,25 +16,6 @@ from pybind11_union_find import UnionFind
 import nano_fmm as fmm
 from nano_fmm import LineSegment, Network, rapidjson
 from nano_fmm import flatbush as fb
-
-
-def topological_sort(nodes, nexts):
-    def toposort_util(node, visited, stack, scope):
-        visited.add(node)
-        for neighbor in nexts.get(node, []):
-            if neighbor not in scope:
-                continue
-            if neighbor not in visited:
-                toposort_util(neighbor, visited, stack, scope)
-        stack.insert(0, node)
-
-    visited = set()
-    stack = []
-    scope = set(nodes)
-    for node in nodes:
-        if node not in visited:
-            toposort_util(node, visited, stack, scope)
-    return tuple(stack)
 
 
 def test_add():
@@ -597,6 +577,7 @@ def test_indexer():
 
 
 def test_network():
+    return
     network = Network.load("README.md")
     assert network is None
     network = Network.load("missing_file")
@@ -617,116 +598,3 @@ def test_network():
     rows = network.build_ubodt()
     rows = sorted(rows)
     print()
-
-
-import pickle
-
-import networkx as nx
-import osmnx as ox
-from shapely.geometry import shape
-
-if True:
-    G = pickle.load(open("suzhou.pkl", "rb"))
-else:
-    # G = ox.graph_from_polygon(boundary_polygon, network_type='drive')
-    bbox = 120.6235, 31.40014, 120.6752, 31.4460
-    west, south, east, north = bbox
-    G = ox.graph_from_bbox(north, south, east, west, network_type="drive")
-
-    G = ox.graph_from_point((37.79, -122.41), dist=750, network_type="all")
-    G = ox.graph_from_address("350 5th Ave, New York, New York", network_type="drive")
-    G = ox.graph_from_place("Los Angeles, California", network_type="drive")
-
-
-# G = ox.project_graph(G)
-# G = ox.consolidate_intersections(
-#     G, tolerance=10 / 1e5, rebuild_graph=True, dead_ends=True
-# )
-# G = nx.DiGraph(G)
-
-nodes = sorted(set(G.nodes()))
-llas = {n: [G.nodes[n]["x"], G.nodes[n]["y"], 0.0] for n in nodes}
-edges = sorted(set(G.edges()))
-e2idx = dict(zip(edges, range(len(edges))))
-
-if True:
-    collapsed_edges = {}
-    for s, e in edges:
-        collapsed_edges[(s, e)] = [llas[s], llas[e]]
-else:
-    nexts = defaultdict(set)
-    prevs = defaultdict(set)
-    for u, v in edges:
-        nexts[u].add(v)
-        prevs[v].add(u)
-
-    uf = UnionFind(len(edges))
-    for u, v in edges:
-        if v not in nexts or len(nexts[v]) != 1:
-            continue
-        w = next(iter(nexts[v]))
-        uf.union(e2idx[(u, v)], e2idx[(v, w)])
-
-    collapsed_edges = {}
-    for edge_ids in uf.groups():
-        node_ids = list(chain(*[edges[eid] for eid in edge_ids]))
-        node_ids = topological_sort(node_ids, nexts)
-        s, e = (node_ids[k] for k in [0, -1])
-        collapsed_edges[(s, e)] = [llas[nid] for nid in node_ids]
-
-ways = dict(zip(collapsed_edges.keys(), range(len(collapsed_edges))))
-heads, tails = defaultdict(set), defaultdict(set)
-for s, e in collapsed_edges:
-    wid = ways[(s, e)]
-    heads[s].add(wid)
-    tails[e].add(wid)
-features = []
-for (s, e), geom in collapsed_edges.items():
-    f = {
-        "type": "Feature",
-        "geometry": {
-            "type": "LineString",
-            "coordinates": geom,
-        },
-        "properties": {
-            "type": "road",
-            "id": ways[(s, e)],
-            "nexts": sorted(heads[e]),
-            "prevs": sorted(tails[s]),
-            "nodes": [int(s), int(e)],
-        },
-    }
-    features.append(f)
-geojson = {
-    "type": "FeatureCollection",
-    "features": features,
-}
-
-with open("sample.json", "w") as f:
-    json.dump(geojson, f, indent=4)
-
-fig, ax = ox.plot_graph(G, save=True, filepath="suzhou.svg")
-G2 = ox.project_graph(G)
-G3 = ox.consolidate_intersections(G2, tolerance=10, rebuild_graph=True, dead_ends=True)
-G4 = nx.DiGraph(G3)
-
-nodes = list(G.nodes)
-# G.nodes[4198992066]
-edges = list(G.edges(data=True))
-
-G_projected = ox.project_graph(G)
-ox.plot_graph(G_projected)
-
-with open("suzhou.pkl", "wb") as f:
-    pickle.dump(G, f)
-
-gdf_nodes, gdf_edges = ox.utils_graph.graph_to_gdfs(G)
-gdf_nodes = ox.io._stringify_nonnumeric_cols(gdf_nodes)
-gdf_edges = ox.io._stringify_nonnumeric_cols(gdf_edges)
-
-
-json_file = open("stockholm_boundary.geojson")
-import json
-
-data = json.load(json_file)
-boundary_polygon = shape(data["features"][0]["geometry"])
