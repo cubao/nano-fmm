@@ -11,7 +11,6 @@ from typing import Dict, List
 
 import numpy as np
 import pytest
-from pybind11_union_find import UnionFind
 
 import nano_fmm as fmm
 from nano_fmm import LineSegment, Network, rapidjson

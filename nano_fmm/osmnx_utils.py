@@ -1,11 +1,10 @@
-from loguru import logger
-import osmnx as ox
-import numpy as np
-from typing import List
-from collections import defaultdict
 import json
 import os
-import sys
+from collections import defaultdict
+from typing import List
+
+import numpy as np
+import osmnx as ox
 
 
 def topological_sort(nodes, nexts):
@@ -36,10 +35,13 @@ def deduplicate_points(coords: np.ndarray) -> np.ndarray:
     return coords[indices]
 
 
-
-def pull_map(output: str, *, bbox: List[float] = None,
-center_dist: List[float] = None,
-             network_type: str = 'drive',):
+def pull_map(
+    output: str,
+    *,
+    bbox: List[float] = None,
+    center_dist: List[float] = None,
+    network_type: str = "drive",
+):
     if bbox is not None:
         bbox = 120.6235, 31.40014, 120.6752, 31.4460
         west, south, east, north = bbox
@@ -49,7 +51,9 @@ center_dist: List[float] = None,
         dist = center_dist[2] if len(center_dist) > 2 else 500.0
         G = ox.graph_from_point((lat, lon), dist=dist, network_type=network_type)
     else:
-        raise Exception('should specify --bbox=LEFT,BOTTOM,RIGHT,TOP or --center_dist=LON,LAT,DIST')
+        raise Exception(
+            "should specify --bbox=LEFT,BOTTOM,RIGHT,TOP or --center_dist=LON,LAT,DIST"
+        )
         # G = ox.graph_from_address("350 5th Ave, New York, New York", network_type="drive")
         # G = ox.graph_from_place("Los Angeles, California", network_type="drive")
 
@@ -62,7 +66,7 @@ center_dist: List[float] = None,
 
     edge2llas = {}
     for k, edge in edges.iterrows():
-        edge2llas[k[:2]] = np.array(edge['geometry'].coords)
+        edge2llas[k[:2]] = np.array(edge["geometry"].coords)
     ways = dict(zip(edge2llas.keys(), range(len(edge2llas))))
     heads, tails = defaultdict(set), defaultdict(set)
     for s, e in edge2llas:
@@ -100,9 +104,13 @@ center_dist: List[float] = None,
         json.dump(geojson, f, indent=4)
     return output
 
+
 if __name__ == "__main__":
     import fire
+
     fire.core.Display = lambda lines, out: print(*lines, file=out)
-    fire.Fire({
-        'pull_map': pull_map,
-    })
+    fire.Fire(
+        {
+            "pull_map": pull_map,
+        }
+    )
