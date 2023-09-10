@@ -572,5 +572,6 @@ def test_indexer():
 
 # fmm.utils.set_logging_level(0)  # trace
 # # fmm.utils.set_logging_level(6) # off
-# network = Network.load("build/remapped.geojson")
-# assert network.to_geojson()
+network = Network.load("build/remapped.geojson")
+assert network.to_geojson()
+print()

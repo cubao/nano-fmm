@@ -322,9 +322,59 @@ Network &Network::from_rapidjson(const RapidjsonValue &json)
     }
     return *this;
 }
+
 RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
 {
     RapidjsonValue json(rapidjson::kObjectType);
+    // roads
+    {
+        auto roads = std::map<int64_t, const Polyline *>();
+        for (auto &pair : roads_) {
+            roads.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _roads(rapidjson::kObjectType);
+        for (auto &pair : roads) {
+            _roads.AddMember(
+                RapidjsonValue(pair.first),
+                nano_fmm::to_rapidjson(pair.second->polyline(), allocator),
+                allocator);
+        }
+        json.AddMember("roads", _roads, allocator);
+    }
+    // nexts
+    {
+        auto nexts = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        for (auto &pair : nexts_) {
+            nexts.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _nexts(rapidjson::kObjectType);
+        for (auto &pair : nexts) {
+            auto roads =
+                std::vector<int64_t>(pair.second->begin(), pair.second->end());
+            std::sort(roads.begin(), roads.end());
+            _nexts.AddMember(RapidjsonValue(pair.first),
+                             nano_fmm::to_rapidjson(roads, allocator),
+                             allocator);
+        }
+        json.AddMember("nexts", _nexts, allocator);
+    }
+    {
+        auto prevs = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        for (auto &pair : prevs_) {
+            prevs.emplace(pair.first, &pair.second);
+        }
+        RapidjsonValue _prevs(rapidjson::kObjectType);
+        for (auto &pair : prevs) {
+            auto roads =
+                std::vector<int64_t>(pair.second->begin(), pair.second->end());
+            std::sort(roads.begin(), roads.end());
+            _prevs.AddMember(RapidjsonValue(pair.first),
+                             nano_fmm::to_rapidjson(roads, allocator),
+                             allocator);
+        }
+        json.AddMember("nexts", _prevs, allocator);
+    }
+    json.AddMember("config", config_.to_rapidjson(allocator), allocator);
     return json;
 }
 
