@@ -255,6 +255,7 @@ std::unique_ptr<Network> Network::load(const std::string &path)
         SPDLOG_INFO("loading json {}", path);
         auto ret = std::make_unique<Network>(is_wgs84);
         ret->from_rapidjson(json);
+        return ret;
     } else {
         SPDLOG_WARN("{} has invalid type:{}, should be 'FeatureCollection' "
                     "(geojson) or 'RoadNetwork' (json)",
