@@ -9,7 +9,8 @@
 
 namespace nano_fmm
 {
-bool Network::add_road(const Eigen::Ref<RowVectors> &geom, int64_t road_id)
+bool Network::add_road(const Eigen::Ref<const RowVectors> &geom,
+                       int64_t road_id)
 {
     if (roads_.find(road_id) != roads_.end()) {
         spdlog::error("duplicate road, id={}, should remove_road first",
@@ -251,6 +252,7 @@ std::unique_ptr<Network> Network::load(const std::string &path)
         ret->from_geojson(json);
         return ret;
     } else if (type_ == "RoadNetwork") {
+        SPDLOG_INFO("loading json {}", path);
         auto ret = std::make_unique<Network>(is_wgs84);
         ret->from_rapidjson(json);
     } else {

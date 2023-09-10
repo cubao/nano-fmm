@@ -321,6 +321,25 @@ Network &Network::from_rapidjson(const RapidjsonValue &json)
 {
     auto json_end = json.MemberEnd();
     for (auto &m : json["roads"].GetObject()) {
+        add_road(nano_fmm::from_rapidjson<RowVectors>(m.value),
+                 std::stoll(std::string(m.name.GetString(),
+                                        m.name.GetStringLength())));
+    }
+    for (auto &m : json["nexts"].GetObject()) {
+        auto curr = std::stoll(
+            std::string(m.name.GetString(), m.name.GetStringLength()));
+        auto nexts = nano_fmm::from_rapidjson<std::vector<int64_t>>(m.value);
+        for (auto next : nexts) {
+            add_link(curr, next);
+        }
+    }
+    for (auto &m : json["prevs"].GetObject()) {
+        auto curr = std::stoll(
+            std::string(m.name.GetString(), m.name.GetStringLength()));
+        auto prevs = nano_fmm::from_rapidjson<std::vector<int64_t>>(m.value);
+        for (auto prev : prevs) {
+            add_link(prev, curr);
+        }
     }
     auto config_itr = json.FindMember("config");
     if (config_itr == json_end) {
