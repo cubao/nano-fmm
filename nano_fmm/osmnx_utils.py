@@ -43,13 +43,24 @@ def pull_map(
     network_type: str = "drive",
 ):
     if bbox is not None:
-        bbox = 120.6235, 31.40014, 120.6752, 31.4460
         west, south, east, north = bbox
-        G = ox.graph_from_bbox(north, south, east, west, network_type=network_type)
+        G = ox.graph_from_bbox(
+            north,
+            south,
+            east,
+            west,
+            network_type=network_type,
+            simplify=False,
+        )
     elif center_dist is not None:
         lon, lat = center_dist[:2]
         dist = center_dist[2] if len(center_dist) > 2 else 500.0
-        G = ox.graph_from_point((lat, lon), dist=dist, network_type=network_type)
+        G = ox.graph_from_point(
+            (lat, lon),
+            dist=dist,
+            network_type=network_type,
+            simplify=False,
+        )
     else:
         raise Exception(
             "should specify --bbox=LEFT,BOTTOM,RIGHT,TOP or --center_dist=LON,LAT,DIST"
@@ -58,8 +69,8 @@ def pull_map(
         # G = ox.graph_from_place("Los Angeles, California", network_type="drive")
 
     nodes, edges = ox.graph_to_gdfs(G)
-    nodes = ox.io._stringify_nonnumeric_cols(nodes)
-    edges = ox.io._stringify_nonnumeric_cols(edges)
+    # nodes = ox.io._stringify_nonnumeric_cols(nodes)
+    # edges = ox.io._stringify_nonnumeric_cols(edges)
 
     # G = ox.project_graph(G)
     # G = ox.consolidate_intersections(G, tolerance=10 / 1e5, rebuild_graph=True, dead_ends=True)

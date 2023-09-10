@@ -596,4 +596,3 @@ def test_network():
 
     rows = network.build_ubodt()
     rows = sorted(rows)
-    print()
