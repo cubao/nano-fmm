@@ -227,15 +227,16 @@ void Network::reset() const { rtree_.reset(); }
 
 std::unique_ptr<Network> Network::load(const std::string &path)
 {
-    auto json = load_json(path);
+    RapidjsonValue json;
+    try {
+        json = load_json(path);
+    } catch (const std::exception &e) {
+        SPDLOG_ERROR("failed to load json from {}, error: {}", path, e.what());
+        return {};
+    }
     if (!json.IsObject()) {
         SPDLOG_ERROR("invalid network file: {}", path);
         return {};
-    }
-    bool is_wgs84 = true;
-    auto itr = json.FindMember("is_wgs84");
-    if (itr != json.MemberEnd() && itr->value.IsBool()) {
-        is_wgs84 = itr->value.GetBool();
     }
     const auto type = json.FindMember("type");
     if (type == json.MemberEnd() || !type->value.IsString()) {
@@ -244,24 +245,27 @@ std::unique_ptr<Network> Network::load(const std::string &path)
                     path);
         return {};
     }
+    bool is_wgs84 = true;
+    auto itr = json.FindMember("is_wgs84");
+    if (itr != json.MemberEnd() && itr->value.IsBool()) {
+        is_wgs84 = itr->value.GetBool();
+    }
+    auto ret = std::make_unique<Network>(is_wgs84);
     const auto type_ =
         std::string(type->value.GetString(), type->value.GetStringLength());
     if (type_ == "FeatureCollection") {
         SPDLOG_INFO("loading geojson {}", path);
-        auto ret = std::make_unique<Network>(is_wgs84);
         ret->from_geojson(json);
-        return ret;
     } else if (type_ == "RoadNetwork") {
         SPDLOG_INFO("loading json {}", path);
-        auto ret = std::make_unique<Network>(is_wgs84);
         ret->from_rapidjson(json);
-        return ret;
     } else {
         SPDLOG_WARN("{} has invalid type:{}, should be 'FeatureCollection' "
                     "(geojson) or 'RoadNetwork' (json)",
                     path, type_);
-        return {};
+        ret.reset();
     }
+    return ret;
 }
 
 bool Network::dump(const std::string &path, bool indent, bool as_geojson) const

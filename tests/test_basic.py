@@ -574,6 +574,11 @@ def test_indexer():
 # fmm.utils.set_logging_level(0)  # trace
 # # fmm.utils.set_logging_level(6) # off
 
+network = Network.load("README.md")
+assert network is None
+network = Network.load("missing_file")
+assert network is None
+
 network = Network.load("build/remapped.geojson")
 assert network.to_geojson().dump("build/network.geojson", indent=True)
 assert network.to_rapidjson().dump("build/network.json", indent=True)
@@ -585,3 +590,5 @@ network.to_rapidjson().dump("build/network2.json", indent=True)
 network = Network.load("build/network.json")
 network.to_geojson().dump("build/network3.geojson", indent=True)
 network.to_rapidjson().dump("build/network3.json", indent=True)
+
+print()
