@@ -37,6 +37,16 @@ endif()
 
 include_directories(3rdparty src)
 
+option(BUILD_EXAMPLES "Build examples" ON)
+if(BUILD_EXAMPLES)
+  file(GLOB SRCS examples/*.cpp)
+  foreach(src ${SRCS})
+    string(REGEX REPLACE "(^.*/|.cpp$)" "" exe ${src})
+    add_executable(${exe} ${src})
+    install(TARGETS ${exe} RUNTIME DESTINATION bin)
+  endforeach(src)
+endif()
+
 set(PYBIND11_CPP_STANDARD -std=c++17)
 add_subdirectory(pybind11)
 file(GLOB_RECURSE SRCS src/*.cpp)
