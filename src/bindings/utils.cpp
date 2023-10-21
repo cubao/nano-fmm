@@ -53,6 +53,7 @@ void bind_utils(py::module &m)
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
         .def("cheap_ruler_k_lookup_table", &utils::cheap_ruler_k_lookup_table,
              "latitude"_a)
+        .def("offset", &utils::offset, "lla_src"_a, "lla_dst"_a)
         .def("bbox",
              py::overload_cast<const Eigen::Vector2d &, double, double>(
                  &utils::bbox),

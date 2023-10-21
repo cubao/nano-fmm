@@ -47,10 +47,17 @@ inline Eigen::Vector3d cheap_ruler_k_lookup_table(double latitude)
     return Ks[idx];
 }
 
+inline Eigen::Vector3d offset(const Eigen::Vector3d &lla_src,
+                              const Eigen::Vector3d &lla_dst)
+{
+    return (lla_dst - lla_src).array() *
+           cheap_ruler_k_lookup_table(lla_src[1]).array();
+}
+
 inline Eigen::Vector4d bbox(const Eigen::Vector2d &lon_lat, //
                             double width, double height)
 {
-    auto k = cheap_ruler_k(lon_lat[1]);
+    auto k = cheap_ruler_k_lookup_table(lon_lat[1]);
     double dlon = 1.0 / k[0] * width / 2.0;
     double dlat = 1.0 / k[1] * height / 2.0;
     return Eigen::Vector4d(lon_lat[0] - dlon, lon_lat[1] - dlat,
@@ -72,7 +79,7 @@ inline RowVectors lla2enu(const Eigen::Ref<const RowVectors> &llas,
         anchor_lla = llas.row(0);
     }
     if (!k) {
-        k = cheap_ruler_k((*anchor_lla)[1]);
+        k = cheap_ruler_k_lookup_table((*anchor_lla)[1]);
     }
     RowVectors enus = llas;
     for (int i = 0; i < 3; ++i) {
@@ -89,7 +96,7 @@ inline RowVectors enu2lla(const Eigen::Ref<const RowVectors> &enus,
         return RowVectors(0, 3);
     }
     if (!k) {
-        k = cheap_ruler_k(anchor_lla[1]);
+        k = cheap_ruler_k_lookup_table(anchor_lla[1]);
     }
     RowVectors llas = enus;
     for (int i = 0; i < 3; ++i) {
