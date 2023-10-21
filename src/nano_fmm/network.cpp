@@ -145,10 +145,16 @@ Network::query(const Eigen::Vector3d &position, double radius,
         nearests.emplace_back(P, poly.segment(s).dir(), d, //
                               pair.first, poly.range(s, t));
     }
-    std::sort(nearests.begin(), nearests.end(),
-              [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
-    if (k && nearests.size() > *k) {
+
+    if (k && *k < nearests.size()) {
+        std::partial_sort(
+            nearests.begin(), nearests.begin() + *k, nearests.end(),
+            [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
         nearests.resize(*k);
+    } else {
+        std::sort(nearests.begin(), nearests.end(), [](auto &n1, auto &n2) {
+            return n1.distance() < n2.distance();
+        });
     }
     return nearests;
 }
