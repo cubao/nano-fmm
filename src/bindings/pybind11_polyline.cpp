@@ -61,7 +61,8 @@ void bind_polyline(py::module &m)
                       const Eigen::Vector3d>(),
              "coords"_a, py::kw_only(), "k"_a)
         //
-        .def("polyline", &Polyline::polyline, rvp::reference_internal)
+        .def("as_numpy", &Polyline::polyline, rvp::reference_internal)
+        .def("N", &Polyline::N)
         .def("k", &Polyline::k)
         .def("is_wgs84", &Polyline::is_wgs84)
         //

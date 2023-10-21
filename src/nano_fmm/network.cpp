@@ -373,6 +373,13 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     using namespace FlatGeobuf;
 
     auto nodes = std::vector<NodeItem>{};
+    int N = 0;
+    for (auto &pair : roads_) {
+        N += pair.second.N() - 1;
+    }
+    nodes.reserve(N);
+    segs_.reserve(N);
+
     uint64_t ii = 0;
     for (auto &pair : roads_) {
         int64_t poly_idx = pair.first;
@@ -397,7 +404,7 @@ FlatGeobuf::PackedRTree &Network::rtree() const
         }
     }
     auto extent = calcExtent(nodes);
-    hilbertSort(nodes);
+    hilbertSort(nodes, extent);
     rtree_ = FlatGeobuf::PackedRTree(nodes, extent);
     return *rtree_;
 }

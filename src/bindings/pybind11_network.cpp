@@ -55,8 +55,9 @@ void bind_network(py::module &m)
         .def("__repr__", [](const ProjectedPoint &self) {
             auto &p = self.position();
             auto &d = self.direction();
-            return fmt::format("ProjectedPoint(pos=[{},{},{}],dir=[{},{},{}],"
-                               "dist={},road={},offset={})",
+            return fmt::format("ProjectedPoint(pos=[{:.7f},{:.7f},{:.2f}],"
+                               "dir=[{:.2f},{:.2f},{:.1f}],"
+                               "dist={:.2f},road={},offset={:.2f})",
                                p[0], p[1], p[2], //
                                d[0], d[1], d[2], //
                                self.distance(), self.road_id(), self.offset());
@@ -108,6 +109,7 @@ void bind_network(py::module &m)
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
         .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a)
+        .def("is_wgs84", &Network::is_wgs84)
         //
         .def("add_road", &Network::add_road, "geom"_a, py::kw_only(), "id"_a)
         .def("add_link", &Network::add_link, "source_road"_a, "target_road"_a,

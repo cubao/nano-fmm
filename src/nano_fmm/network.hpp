@@ -22,6 +22,7 @@ namespace nano_fmm
 struct Network
 {
     Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
+    bool is_wgs84() const { return is_wgs84_; }
 
     // road network
     bool add_road(const Eigen::Ref<const RowVectors> &geom, int64_t road_id);

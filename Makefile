@@ -62,7 +62,6 @@ python_sdist:
 python_sdist_wheel:
 	$(PYTHON) -m pip wheel dist/nano_fmm-*.tar.gz --no-deps
 python_test:
-	$(PYTHON) -c 'from pybind11_rdp import rdp; print(rdp([[1, 1], [2, 2], [3, 3], [4, 4]]))'
 	$(PYTHON) -c 'import nano_fmm; print(nano_fmm.add(1, 2))'
 	$(PYTHON) -m nano_fmm add 1 2
 	$(PYTHON) -m nano_fmm pure_python_func --arg1=43234

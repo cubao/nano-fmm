@@ -26,6 +26,7 @@ struct Polyline
     }
 
     const RowVectors &polyline() const { return polyline_; }
+    int N() const { return N_; }
     Eigen::Vector3d k() const { return k_; }
     bool is_wgs84() const { return is_wgs84_; }
 
