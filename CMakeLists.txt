@@ -37,7 +37,7 @@ endif()
 
 include_directories(3rdparty src)
 
-option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_EXAMPLES "Build examples" OFF)
 if(BUILD_EXAMPLES)
   file(GLOB SRCS examples/*.cpp)
   foreach(src ${SRCS})
