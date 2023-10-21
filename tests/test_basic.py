@@ -575,7 +575,7 @@ def test_indexer():
 # # fmm.utils.set_logging_level(6) # off
 
 
-def test_network():
+def test_network_read_write():
     network = Network.load("README.md")
     assert network is None
     network = Network.load("missing_file")
@@ -601,3 +601,32 @@ def test_network():
     rows = network.build_ubodt()
     rows = sorted(rows)
     print(rows[:5])
+
+
+def test_network_query():
+    network = Network.load("build/network.geojson")
+    assert network.is_wgs84()
+    assert len(network.roads()) == 1016
+    assert network.next_roads(1293) == {1297, 1298}
+    assert network.prev_roads(1297) == {1293}
+
+    polyline = network.road(1293)
+    assert polyline.is_wgs84()
+    assert len(polyline.as_numpy()) == polyline.N() == 6
+    assert round(polyline.length(), 3) == 225.543
+    assert round(polyline.range(0, t=0.3), 3) == 10.236
+    assert polyline.k().round(2).tolist() == [95504.26, 110869.46, 1.0]
+    seed_lla = [120.663031, 31.40531, 0]
+    lla, dist, seg_idx, t = polyline.nearest(seed_lla)
+    assert round(dist, 2) == 105.71
+    assert seg_idx == 4 and t == 1.0
+    # 0---1---2---3---4---5
+    #                     ^
+    #                   t=1.0
+    assert np.fabs(polyline.range(4, t=1.0) - polyline.length()) < 1e-15
+
+    network.query(seed_lla, radius=4000.0)
+    print()
+
+
+test_network_query()
