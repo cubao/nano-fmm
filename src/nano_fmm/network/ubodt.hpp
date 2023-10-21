@@ -46,7 +46,7 @@ struct UbodtRecord
         return source_road_ == rhs.source_road_ &&
                target_road_ == rhs.target_road_ &&
                source_next_ == rhs.source_next_ &&
-               target_prev_ == rhs.target_prev_;
+               target_prev_ == rhs.target_prev_ && cost_ == rhs.cost_;
     }
 
   private:

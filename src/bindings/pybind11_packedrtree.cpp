@@ -34,11 +34,6 @@ void bind_packedrtree(py::module &m)
                 return new NodeItem{bbox[0], bbox[1], bbox[2], bbox[3], offset};
             }),
             "bbox"_a, "offset"_a = 0)
-        .def(py::init([](const Eigen::Vector2d &min, const Eigen::Vector2d &max,
-                         uint64_t offset) {
-                 return new NodeItem{min[0], min[1], max[0], max[1], offset};
-             }),
-             "min"_a, "max"_a, "offset"_a = 0)
         .def_readwrite("minX", &NodeItem::minX)
         .def_readwrite("minY", &NodeItem::minY)
         .def_readwrite("maxX", &NodeItem::maxX)
