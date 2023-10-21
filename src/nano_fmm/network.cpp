@@ -4,6 +4,7 @@
 #include "spdlog/spdlog.h"
 
 #include "nano_fmm/rapidjson_helpers.hpp"
+#include "dbg.h"
 
 #include <execution>
 
@@ -105,13 +106,16 @@ Network::query(const Eigen::Vector3d &position, double radius,
 {
     double x = position[0], y = position[1];
     double dx = radius, dy = radius;
+    dbg(x, y);
     if (is_wgs84_) {
         auto kk = utils::cheap_ruler_k_lookup_table(position[1]);
         dx /= kk[0];
         dy /= kk[1];
     }
+    dbg(dx, dy);
     auto &tree = this->rtree();
     auto hits = tree.search(x - dx, y - dy, x + dx, y + dy);
+    dbg(hits.size());
     auto poly2seg_minmax =
         std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
     for (auto &hit : hits) {
@@ -134,6 +138,8 @@ Network::query(const Eigen::Vector3d &position, double radius,
     nearests.reserve(poly2seg_minmax.size());
     for (auto &pair : poly2seg_minmax) {
         auto &poly = roads_.at(pair.first);
+        dbg(pair.first);
+        dbg(pair.second);
         auto [P, d, s, t] =
             poly.nearest(position, pair.second.first, pair.second.second);
         if (z_max_offset && std::fabs(P[2] - position[2]) > *z_max_offset) {
@@ -373,6 +379,14 @@ FlatGeobuf::PackedRTree &Network::rtree() const
     using namespace FlatGeobuf;
 
     auto nodes = std::vector<NodeItem>{};
+    int N = 0;
+    for (auto &pair : roads_) {
+        N += pair.second.N() - 1;
+    }
+    dbg(N);
+    nodes.reserve(N);
+    segs_.reserve(N);
+
     uint64_t ii = 0;
     for (auto &pair : roads_) {
         int64_t poly_idx = pair.first;
@@ -396,8 +410,13 @@ FlatGeobuf::PackedRTree &Network::rtree() const
             ++ii;
         }
     }
+    dbg(nodes.size());
     auto extent = calcExtent(nodes);
-    hilbertSort(nodes);
+    hilbertSort(nodes, extent);
+    dbg(extent.minX);
+    dbg(extent.minY);
+    dbg(extent.maxX);
+    dbg(extent.maxY);
     rtree_ = FlatGeobuf::PackedRTree(nodes, extent);
     return *rtree_;
 }

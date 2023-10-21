@@ -625,7 +625,7 @@ def test_network_query():
     #                   t=1.0
     assert np.fabs(polyline.range(4, t=1.0) - polyline.length()) < 1e-15
 
-    network.query(seed_lla, radius=4000.0)
+    hits = network.query(seed_lla, radius=4000.0)
     print()
 
 
