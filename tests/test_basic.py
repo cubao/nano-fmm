@@ -629,4 +629,20 @@ def test_network_query():
     print()
 
 
-test_network_query()
+def test_network_query_enu():
+    network = Network(is_wgs84=False)
+    """
+    r0 o-------------o
+                     |
+    r1 o-------------o
+                     |
+    r2               o
+    """
+    network.add_road([[0, 5, 0], [10, 5, 0]], id=0)
+    network.add_road([[0, 0, 0], [10, 0, 0]], id=1)
+    network.add_road([[10, -5, 0], [10, 5, 0]], id=2)
+    network.query([5, 0, 0], radius=3)
+    print()
+
+
+test_network_query_enu()
