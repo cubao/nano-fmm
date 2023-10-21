@@ -55,8 +55,9 @@ void bind_network(py::module &m)
         .def("__repr__", [](const ProjectedPoint &self) {
             auto &p = self.position();
             auto &d = self.direction();
-            return fmt::format("ProjectedPoint(pos=[{},{},{}],dir=[{},{},{}],"
-                               "dist={},road={},offset={})",
+            return fmt::format("ProjectedPoint(pos=[{:.7f},{:.7f},{:.2f}],dir=["
+                               "{:.2f},{:.2f},{:.1f}],"
+                               "dist={:.2f},road={},offset={:.2f})",
                                p[0], p[1], p[2], //
                                d[0], d[1], d[2], //
                                self.distance(), self.road_id(), self.offset());

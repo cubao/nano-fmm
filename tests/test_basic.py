@@ -625,8 +625,8 @@ def test_network_query():
     #                   t=1.0
     assert np.fabs(polyline.range(4, t=1.0) - polyline.length()) < 1e-15
 
-    network.query(seed_lla, radius=4000.0)
-    print()
+    hits = network.query(seed_lla, radius=40.0)
+    assert len(hits) == 4
 
 
 def test_network_query_enu():
@@ -641,8 +641,40 @@ def test_network_query_enu():
     network.add_road([[0, 5, 0], [10, 5, 0]], id=0)
     network.add_road([[0, 0, 0], [10, 0, 0]], id=1)
     network.add_road([[10, -5, 0], [10, 5, 0]], id=2)
-    network.query([5, 0, 0], radius=3)
-    print()
+    hits = network.query([5, 0, 0], radius=3)
+    hits = [h.to_rapidjson()() for h in hits]
+    assert hits == [
+        {
+            "position": [5.0, 0.0, 0.0],
+            "direction": [1.0, 0.0, 0.0],
+            "distance": 0.0,
+            "road_id": 1,
+            "offset": 5.0,
+        },
+    ]
 
-
-test_network_query_enu()
+    hits = network.query([5, 0, 0], radius=5)
+    hits = [h.to_rapidjson()() for h in hits]
+    assert hits == [
+        {
+            "position": [5.0, 0.0, 0.0],
+            "direction": [1.0, 0.0, 0.0],
+            "distance": 0.0,
+            "road_id": 1,
+            "offset": 5.0,
+        },
+        {
+            "position": [5.0, 5.0, 0.0],
+            "direction": [1.0, 0.0, 0.0],
+            "distance": 5.0,
+            "road_id": 0,
+            "offset": 5.0,
+        },
+        {
+            "position": [10.0, 0.0, 0.0],
+            "direction": [0.0, 1.0, 0.0],
+            "distance": 5.0,
+            "road_id": 2,
+            "offset": 5.0,
+        },
+    ]
