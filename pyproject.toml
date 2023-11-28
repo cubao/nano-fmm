@@ -63,6 +63,13 @@ MACOSX_DEPLOYMENT_TARGET = "10.14"
 
 [tool.ruff]
 src = ["src"]
+extend-ignore = [
+  "UP007",
+   "PTH100", # TODO, use Pathlib
+   "PTH103", # TODO, use Pathlib
+   "PTH120", # TODO, use Pathlib
+   "PTH123", # TODO, use Pathlib
+]
 
 [tool.ruff.lint]
 extend-select = [

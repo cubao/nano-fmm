@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
+from typing import Optional
 
 import numpy as np
 import osmnx as ox
@@ -39,8 +40,8 @@ def deduplicate_points(coords: np.ndarray) -> np.ndarray:
 def pull_map(
     output: str,
     *,
-    bbox: list[float] = None,
-    center_dist: list[float] = None,
+    bbox: Optional[list[float]] = None,
+    center_dist: Optional[list[float]] = None,
     network_type: str = "drive",
 ):
     if bbox is not None:
@@ -63,9 +64,10 @@ def pull_map(
             simplify=False,
         )
     else:
-        raise Exception(
+        err = (
             "should specify --bbox=LEFT,BOTTOM,RIGHT,TOP or --center_dist=LON,LAT,DIST"
         )
+        raise Exception(err)
         # G = ox.graph_from_address("350 5th Ave, New York, New York", network_type="drive")
         # G = ox.graph_from_place("Los Angeles, California", network_type="drive")
 

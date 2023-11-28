@@ -52,7 +52,9 @@ def test_segment():
     assert seg.length2 == 0.0
     assert seg.distance([0, 1, 0]) == 1.0
     pt, d, t = seg.nearest([1, 0, 0])
-    assert np.all(pt == [0, 0, 0]) and d == 1.0 and t == 0.0
+    assert np.all(pt == [0, 0, 0])
+    assert d == 1.0
+    assert t == 0.0
 
 
 def test_utils():
@@ -175,7 +177,7 @@ def test_cpp_migrated_2():
     tree = fb.PackedRTree(nodes, extent)
     data = tree.to_bytes()
     assert len(data) == 120
-    assert type(data) == bytes
+    assert isinstance(data, bytes)
 
     hits = tree.search(0, 0, 1, 1)
     assert len(hits) == 1
@@ -247,22 +249,26 @@ def test_polyline_nearest_slice():
     pt, dist, seg_idx, t = polyline.nearest([1.5, 0, 0])
     assert np.all(pt == [1.5, 0, 0])
     assert dist == 0.0
-    assert seg_idx == 0 and t == 0.5
+    assert seg_idx == 0
+    assert t == 0.5
 
     pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0])
     assert np.all(pt == [1.5, 0, 0])
     assert dist == 3.0
-    assert seg_idx == 0 and t == 0.5
+    assert seg_idx == 0
+    assert t == 0.5
 
     pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0], seg_min=1)
     assert np.all(pt == [3, 0, 0])
     assert np.fabs(dist - np.linalg.norm(pt - [1.5, 3, 0])) < 1e-9
-    assert seg_idx == 1 and t == 0.0
+    assert seg_idx == 1
+    assert t == 0.0
 
     pt, dist, seg_idx, t = polyline.nearest([5, 0, 0], seg_max=0)
     assert np.all(pt == [3, 0, 0])
     assert dist == 2.0
-    assert seg_idx == 0 and t == 1.0
+    assert seg_idx == 0
+    assert t == 1.0
 
     assert np.all(polyline.slice(min=15) == [enus[-1], enus[-1]])
     assert len(polyline.slice(min=16)) == 0
@@ -273,12 +279,14 @@ def test_polyline_nearest_slice():
     pt, dist, seg_idx, t = polyline.nearest(llas[-1])
     assert np.fabs(pt - (llas[0] + llas[1]) / 2.0).max() < 1e-18
     assert np.fabs(dist - 3.0) < 1e-9
-    assert seg_idx == 0 and t == 0.5
+    assert seg_idx == 0
+    assert t == 0.5
 
     pt, dist, seg_idx, t = polyline.nearest(llas[-1], seg_min=1)
     assert np.all(pt == llas[1])
     assert dist
-    assert seg_idx == 1 and t == 0.0
+    assert seg_idx == 1
+    assert t == 0.0
 
 
 def build_network(
@@ -448,9 +456,10 @@ def test_logging():
     assert output_string == "This will be captured\n"
 
     buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
-        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
-            fmm.utils.logging("hello five")
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(
+        buffer
+    ), fmm.utils.ostream_redirect(stdout=True, stderr=True):
+        fmm.utils.logging("hello five")
     output_string = buffer.getvalue()
     assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
 
@@ -499,7 +508,7 @@ def test_json():
 
 def test_project_point_rapidjson():
     pt = fmm.ProjectedPoint()
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(Exception) as excinfo:  # noqa: PT011
         pt.position[0] = 5
     assert "read-only" in str(excinfo.value)
     j = pt.to_rapidjson()
@@ -620,7 +629,8 @@ def test_network_query():
     seed_lla = [120.663031, 31.40531, 0]
     lla, dist, seg_idx, t = polyline.nearest(seed_lla)
     assert round(dist, 2) == 105.71
-    assert seg_idx == 4 and t == 1.0
+    assert seg_idx == 4
+    assert t == 1.0
     # 0---1---2---3---4---5
     #                     ^
     #                   t=1.0

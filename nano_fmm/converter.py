@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Union
+from typing import Optional, Union
 
 from loguru import logger
 
@@ -11,7 +11,7 @@ from nano_fmm import Indexer, rapidjson
 def remap_network_with_string_id(
     network: Union[str, rapidjson],
     *,
-    export: str = None,
+    export: Optional[str] = None,
 ):
     """
     network.json normally has:
@@ -57,14 +57,13 @@ def remap_network_with_string_id(
         network.dump(export, indent=True)
         logger.info(f"wrote to {export}")
         return export
-    else:
-        return network, indexer
+    return network, indexer
 
 
 def remap_network_to_string_id(
     network: Union[str, rapidjson],
     *,
-    export: str = None,
+    export: Optional[str] = None,
 ):
     if isinstance(network, str):
         path = network
@@ -85,8 +84,7 @@ def remap_network_to_string_id(
         network.dump(export, indent=True)
         logger.info(f"wrote to {export}")
         return export
-    else:
-        return network
+    return network
 
 
 if __name__ == "__main__":
