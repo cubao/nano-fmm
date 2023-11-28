@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import io
 import json
@@ -7,7 +9,6 @@ import tempfile
 import time
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Dict, List
 
 import numpy as np
 import pytest
@@ -23,28 +24,28 @@ def test_add():
 
 def test_segment():
     seg = LineSegment([0, 0, 0], [10, 0, 0])
-    assert 4.0 == seg.distance([5.0, 4.0, 0.0])
-    assert 5.0 == seg.distance([-4.0, 3.0, 0.0])
-    assert 5.0 == seg.distance([14.0, 3.0, 0.0])
-    assert 25.0 == seg.distance2([14.0, 3.0, 0.0])
+    assert seg.distance([5.0, 4.0, 0.0]) == 4.0
+    assert seg.distance([-4.0, 3.0, 0.0]) == 5.0
+    assert seg.distance([14.0, 3.0, 0.0]) == 5.0
+    assert seg.distance2([14.0, 3.0, 0.0]) == 25.0
 
     assert seg.length == 10.0
     assert seg.length2 == 100.0
-    assert np.all(seg.A == [0, 0, 0])
-    assert np.all(seg.B == [10, 0, 0])
-    assert np.all(seg.AB == [10, 0, 0])
+    assert np.all([0, 0, 0] == seg.A)
+    assert np.all([10, 0, 0] == seg.B)
+    assert np.all([10, 0, 0] == seg.AB)
     assert np.all(seg.dir == [1, 0, 0])
     assert np.all(seg.interpolate(0.4) == [4, 0, 0])
     assert seg.t([4, 0, 0]) == 0.4
     PP, dist, t = seg.nearest([4, 1, 0])
-    assert np.all(PP == [4, 0, 0])
+    assert np.all([4, 0, 0] == PP)
     assert dist == 1.0
     assert t == 0.4
 
     seg = LineSegment([0, 0, 0], [0, 0, 0])
-    assert 5.0 == seg.distance([3.0, 4.0, 0.0])
-    assert 5.0 == seg.distance([-4.0, 3.0, 0.0])
-    assert 13.0 == seg.distance([5.0, 12.0, 0.0])
+    assert seg.distance([3.0, 4.0, 0.0]) == 5.0
+    assert seg.distance([-4.0, 3.0, 0.0]) == 5.0
+    assert seg.distance([5.0, 12.0, 0.0]) == 13.0
 
     seg = LineSegment([0, 0, 0], [0, 0, 0])
     assert seg.length == 0.0
@@ -282,8 +283,8 @@ def test_polyline_nearest_slice():
 
 def build_network(
     *,
-    nodes: Dict[str, np.ndarray],
-    ways: Dict[str, List[str]],
+    nodes: dict[str, np.ndarray],
+    ways: dict[str, list[str]],
     is_wgs84: bool = False,
 ):
     node2nexts = defaultdict(list)
@@ -314,7 +315,7 @@ def build_network(
     }
 
 
-def two_way_streets(ways: Dict[str, List[str]]):
+def two_way_streets(ways: dict[str, list[str]]):
     return {
         **ways,
         **({w[::-1]: nn[::-1] for w, nn in ways.items()}),
@@ -528,10 +529,10 @@ def test_ubodt_rapidjson():
 
 def test_indexer():
     indexer = fmm.Indexer()
-    assert "5" == indexer.id(5)
-    assert "10" == indexer.id(10)
-    assert "1000" == indexer.id(1000)
-    assert 1000 == indexer.id("1000")
+    assert indexer.id(5) == "5"
+    assert indexer.id(10) == "10"
+    assert indexer.id(1000) == "1000"
+    assert indexer.id("1000") == 1000
     assert indexer.to_rapidjson()() == {
         "10": 10,
         "1000": 1000,
@@ -539,14 +540,14 @@ def test_indexer():
     }
 
     indexer = fmm.Indexer()
-    assert 1000000 == indexer.id("road1")
-    assert 1000001 == indexer.id("road2")
-    assert 1000002 == indexer.id("road3")
-    assert 1000001 == indexer.id("road2")
-    assert 13579 == indexer.id("13579")
-    assert "road3" == indexer.id(1000002)
-    assert 1000003 == indexer.id("1000002")
-    assert 1000005 == indexer.id("1000005")
+    assert indexer.id("road1") == 1000000
+    assert indexer.id("road2") == 1000001
+    assert indexer.id("road3") == 1000002
+    assert indexer.id("road2") == 1000001
+    assert indexer.id("13579") == 13579
+    assert indexer.id(1000002) == "road3"
+    assert indexer.id("1000002") == 1000003
+    assert indexer.id("1000005") == 1000005
     assert indexer.to_rapidjson()() == {
         "1000002": 1000003,
         "1000005": 1000005,
@@ -557,14 +558,14 @@ def test_indexer():
     }
 
     indexer2 = fmm.Indexer().from_rapidjson(indexer.to_rapidjson())
-    assert 1000000 == indexer2.id("road1")
-    assert 1000001 == indexer2.id("road2")
-    assert 1000002 == indexer2.id("road3")
-    assert 1000001 == indexer2.id("road2")
-    assert 13579 == indexer2.id("13579")
-    assert "road3" == indexer2.id(1000002)
-    assert 1000003 == indexer2.id("1000002")
-    assert 1000005 == indexer2.id("1000005")
+    assert indexer2.id("road1") == 1000000
+    assert indexer2.id("road2") == 1000001
+    assert indexer2.id("road3") == 1000002
+    assert indexer2.id("road2") == 1000001
+    assert indexer2.id("13579") == 13579
+    assert indexer2.id(1000002) == "road3"
+    assert indexer2.id("1000002") == 1000003
+    assert indexer2.id("1000005") == 1000005
     assert indexer2.to_rapidjson() == indexer.to_rapidjson()
     indexer2.id("add another road")
     assert indexer2.to_rapidjson() != indexer.to_rapidjson()

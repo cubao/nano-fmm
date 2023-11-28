@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from nano_fmm import *  # noqa: F403
 
 if __name__ == "__main__":

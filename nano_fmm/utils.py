@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from _nano_fmm.utils import *  # noqa: F403
 

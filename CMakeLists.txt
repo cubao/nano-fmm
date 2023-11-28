@@ -51,7 +51,6 @@ python_add_library(_core MODULE ${SRCS} WITH_SOABI)
 target_link_libraries(_core PRIVATE pybind11::headers)
 target_include_directories(_core PRIVATE src)
 
-
 option(BUILD_EXAMPLES "Build examples" OFF)
 if(BUILD_EXAMPLES)
   file(GLOB SRCS examples/*.cpp)

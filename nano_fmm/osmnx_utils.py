@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import json
 import os
 from collections import defaultdict
-from typing import List
 
 import numpy as np
 import osmnx as ox
@@ -38,8 +39,8 @@ def deduplicate_points(coords: np.ndarray) -> np.ndarray:
 def pull_map(
     output: str,
     *,
-    bbox: List[float] = None,
-    center_dist: List[float] = None,
+    bbox: list[float] = None,
+    center_dist: list[float] = None,
     network_type: str = "drive",
 ):
     if bbox is not None:
