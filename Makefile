@@ -49,6 +49,7 @@ test_in_dev_container:
 
 PYTHON ?= python3
 build:
+	$(PYTHON) -m pip install scikit_build_core pyproject_metadata pathspec pybind11
 	# CMAKE_BUILD_PARALLEL_LEVEL=8
 	$(PYTHON) -m pip install --no-build-isolation -Ceditable.rebuild=true -Cbuild-dir=build -ve.
 python_install:
