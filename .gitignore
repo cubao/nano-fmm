@@ -5,7 +5,6 @@ _generate/
 *.so
 *.py[cod]
 *.egg-info
-*env*
 wheelhouse
 site
 data/*
