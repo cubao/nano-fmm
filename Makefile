@@ -20,11 +20,6 @@ lint:
 lint_install:
 	pre-commit install
 
-build:
-	mkdir -p build && cd build && \
-	cmake .. && make
-.PHONY: build
-
 docs_build:
 	python3 -m pip install -r docs/requirements.txt
 	mkdocs build
@@ -53,20 +48,22 @@ test_in_dev_container:
 			-v `pwd`:`pwd` -w `pwd` -it $(DEV_CONTAINER_IMAG) bash
 
 PYTHON ?= python3
+build:
+	# CMAKE_BUILD_PARALLEL_LEVEL=8
+	$(PYTHON) -m pip install --no-build-isolation -Ceditable.rebuild=true -Cbuild-dir=build -ve.
 python_install:
-	$(PYTHON) setup.py install --force
-python_build:
-	$(PYTHON) setup.py bdist_wheel
+	$(PYTHON) -m pip install . --verbose
+python_wheel:
+	$(PYTHON) -m pip wheel . --verbose
 python_sdist:
-	$(PYTHON) setup.py sdist
-python_sdist_wheel:
-	$(PYTHON) -m pip wheel dist/nano_fmm-*.tar.gz --no-deps
-python_test:
+	$(PYTHON) -m pip sdist . --verbose
+python_test: pytest
 	$(PYTHON) -c 'import nano_fmm; print(nano_fmm.add(1, 2))'
 	$(PYTHON) -m nano_fmm add 1 2
 	$(PYTHON) -m nano_fmm pure_python_func --arg1=43234
 	python3 -m pip install pytest
 	pytest tests
+.PHONY: build
 
 # conda create -y -n py36 python=3.6
 # conda create -y -n py37 python=3.7
@@ -90,6 +87,7 @@ python_build_py311:
 python_build_all: python_build_py36 python_build_py37 python_build_py38 python_build_py39 python_build_py310 python_build_py311
 python_build_all_in_linux:
 	docker run --rm -w `pwd` -v `pwd`:`pwd` -v `pwd`/build/linux:`pwd`/build -it $(DOCKER_TAG_LINUX) make python_build_all repair_wheels
+	make repair_wheels && rm -rf dist/*.whl && mv wheelhouse/*.whl dist && rm -rf wheelhouse
 python_build_all_in_macos: python_build_py38 python_build_py39 python_build_py310 python_build_py311
 python_build_all_in_windows: python_build_all
 
