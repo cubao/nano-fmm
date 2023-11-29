@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "nano_fmm"
-version = "0.1.1"
+version = "0.1.2"
 description="c++/python version of coordtransform"
 readme = "README.md"
 authors = [
