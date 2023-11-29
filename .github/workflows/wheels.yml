@@ -54,12 +54,17 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: universal2
         CIBW_ARCHS_WINDOWS: auto ARM64
+        CIBW_BEFORE_BUILD: pip install fire loguru numpy --prefer-binary
+        # https://cibuildwheel.readthedocs.io/en/stable/options/#build-skip
+        CIBW_SKIP: pp* *i686 *musllinux*
+        CIBW_TEST_SKIP: "*macosx* *-win_arm64"
 
     - name: Verify clean directory
       run: git diff --exit-code
       shell: bash
 
-    - uses: actions/upload-artifact@v3
+    - name: Upload wheels
+      uses: actions/upload-artifact@v3
       with:
         path: wheelhouse/*.whl
 
