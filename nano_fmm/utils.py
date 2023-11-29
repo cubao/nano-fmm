@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-from _nano_fmm.utils import *  # noqa: F403
+
+from ._core.utils import *  # noqa: F403
 
 
 def bbox2llas(bbox: np.ndarray, *, alt: float = 0.0):

@@ -38,11 +38,13 @@ test = ["pytest"]
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
 # cmake.build-type = "Debug"
-# build-dir = "build/{wheel_tag}"
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 
 [tool.scikit-build.cmake.define]
 # SOME_DEFINE = "ON"
-
 
 [tool.pytest.ini_options]
 minversion = "6.0"

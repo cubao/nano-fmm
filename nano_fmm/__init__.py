@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from _nano_fmm import *  # noqa: F403
-from _nano_fmm import __version__  # noqa: F401
+from ._core import *  # noqa: F403
+from ._core import __version__  # noqa: F401
 
 
 def pure_python_func(
