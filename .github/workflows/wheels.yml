@@ -58,6 +58,7 @@ jobs:
         # https://cibuildwheel.readthedocs.io/en/stable/options/#build-skip
         CIBW_SKIP: pp* *i686 *musllinux*
         CIBW_TEST_SKIP: "*macosx* *-win_arm64"
+        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.14
 
     - name: Verify clean directory
       run: git diff --exit-code
