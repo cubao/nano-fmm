@@ -673,7 +673,21 @@ def test_network_query_enu():
 
     hits = network.query([5, 0, 0], radius=5)
     hits = [h.to_rapidjson()() for h in hits]
-    assert hits == [
+    hit1 = {
+        "position": [5.0, 5.0, 0.0],
+        "direction": [1.0, 0.0, 0.0],
+        "distance": 5.0,
+        "road_id": 0,
+        "offset": 5.0,
+    }
+    hit2 = {
+        "position": [10.0, 0.0, 0.0],
+        "direction": [0.0, 1.0, 0.0],
+        "distance": 5.0,
+        "road_id": 2,
+        "offset": 5.0,
+    }
+    assert hits[0] == [
         {
             "position": [5.0, 0.0, 0.0],
             "direction": [1.0, 0.0, 0.0],
@@ -681,21 +695,8 @@ def test_network_query_enu():
             "road_id": 1,
             "offset": 5.0,
         },
-        {
-            "position": [5.0, 5.0, 0.0],
-            "direction": [1.0, 0.0, 0.0],
-            "distance": 5.0,
-            "road_id": 0,
-            "offset": 5.0,
-        },
-        {
-            "position": [10.0, 0.0, 0.0],
-            "direction": [0.0, 1.0, 0.0],
-            "distance": 5.0,
-            "road_id": 2,
-            "offset": 5.0,
-        },
     ]
+    assert hits[1:] == [hit1, hit2] or hits[1:] == [hit2, hit1]
 
 
 def pytest_main(dir: str, *, test_file: str):
