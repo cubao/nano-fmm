@@ -687,15 +687,13 @@ def test_network_query_enu():
         "road_id": 2,
         "offset": 5.0,
     }
-    assert hits[0] == [
-        {
-            "position": [5.0, 0.0, 0.0],
-            "direction": [1.0, 0.0, 0.0],
-            "distance": 0.0,
-            "road_id": 1,
-            "offset": 5.0,
-        },
-    ]
+    assert hits[0] == {
+        "position": [5.0, 0.0, 0.0],
+        "direction": [1.0, 0.0, 0.0],
+        "distance": 0.0,
+        "road_id": 1,
+        "offset": 5.0,
+    }
     assert hits[1:] == [hit1, hit2] or hits[1:] == [hit2, hit1]
 
 
