@@ -590,7 +590,7 @@ def test_indexer():
 
 
 def test_network_read_write():
-    network = Network.load("README.md")
+    network = Network.load(f"{__PWD}/README.md")
     assert network is None
     network = Network.load("missing_file")
     assert network is None
@@ -618,7 +618,10 @@ def test_network_read_write():
 
 
 def test_network_query():
-    network = Network.load(f"{__BUILD}/network.geojson")
+    path = f"{__BUILD}/network.geojson"
+    if not os.path.isfile(path):  # noqa: PTH113
+        test_network_read_write()
+    network = Network.load(path)
     assert network.is_wgs84()
     assert len(network.roads()) == 1016
     assert network.next_roads(1293) == {1297, 1298}

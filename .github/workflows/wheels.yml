@@ -54,7 +54,7 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: universal2
         CIBW_ARCHS_WINDOWS: auto ARM64
-        CIBW_BEFORE_BUILD: pip install fire loguru numpy --prefer-binary
+        CIBW_BEFORE_BUILD: pip install fire loguru numpy --prefer-binary && make pull_data
         # https://cibuildwheel.readthedocs.io/en/stable/options/#build-skip
         CIBW_SKIP: pp* *i686 *musllinux*
         CIBW_TEST_SKIP: "*macosx* *-win_arm64"
