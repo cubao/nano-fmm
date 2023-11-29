@@ -5,7 +5,14 @@
 #include <pybind11/stl_bind.h>
 
 #include "packedrtree.hpp"
+
 #include "spdlog/spdlog.h"
+// fix exposed macro 'GetObject' from wingdi.h (included by spdlog.h) under
+// windows, see https://github.com/Tencent/rapidjson/issues/1448
+#ifdef GetObject
+#undef GetObject
+#endif
+
 #include "nano_fmm/types.hpp"
 
 namespace nano_fmm
