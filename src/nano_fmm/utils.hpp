@@ -3,6 +3,9 @@
 #include "nano_fmm/types.hpp"
 #include <optional>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 namespace nano_fmm
 {
 namespace utils
