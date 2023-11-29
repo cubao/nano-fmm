@@ -55,7 +55,7 @@ build:
 python_install:
 	$(PYTHON) -m pip install . --verbose
 python_wheel:
-	$(PYTHON) -m pip wheel . --verbose
+	$(PYTHON) -m pip wheel . -w build --verbose
 python_sdist:
 	$(PYTHON) -m pip sdist . --verbose
 python_test:
