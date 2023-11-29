@@ -58,7 +58,7 @@ python_wheel:
 	$(PYTHON) -m pip wheel . --verbose
 python_sdist:
 	$(PYTHON) -m pip sdist . --verbose
-python_test: pytest
+python_test:
 	$(PYTHON) -c 'import nano_fmm; print(nano_fmm.add(1, 2))'
 	$(PYTHON) -m nano_fmm add 1 2
 	$(PYTHON) -m nano_fmm pure_python_func --arg1=43234
