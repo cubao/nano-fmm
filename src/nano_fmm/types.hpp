@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <optional>
+#include <vector>
 #include <rapidjson/document.h>
 
 namespace nano_fmm
@@ -46,6 +47,7 @@ using RapidjsonValue =
 struct LineSegment
 {
     // LineSegment(A -> B)
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     const Eigen::Vector3d A, B, AB;
     const double len2, inv_len2;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
