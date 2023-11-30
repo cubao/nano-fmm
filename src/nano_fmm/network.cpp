@@ -11,7 +11,7 @@
 
 #include "nano_fmm/rapidjson_helpers.hpp"
 
-#include <execution>
+// #include <execution>
 
 namespace nano_fmm
 {
@@ -222,6 +222,9 @@ MatchResult Network::match(const RowVectors &trajectory) const
 
 void Network::build(int execution_polylicy) const
 {
+    std::for_each(roads_.begin(), roads_.end(),
+                  [](auto &pair) { pair.second.build(); });
+    /*
     if (execution_polylicy == 1) {
         std::for_each(std::execution::par, roads_.begin(), roads_.end(),
                       [](auto &pair) { pair.second.build(); });
@@ -232,6 +235,7 @@ void Network::build(int execution_polylicy) const
         std::for_each(std::execution::seq, roads_.begin(), roads_.end(),
                       [](auto &pair) { pair.second.build(); });
     }
+    */
     rtree();
 }
 
