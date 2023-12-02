@@ -2,7 +2,13 @@
 
 #include <random>
 #include <algorithm>
+
 #include "spdlog/spdlog.h"
+// fix exposed macro 'GetObject' from wingdi.h (included by spdlog.h) under
+// windows, see https://github.com/Tencent/rapidjson/issues/1448
+#ifdef GetObject
+#undef GetObject
+#endif
 
 namespace nano_fmm
 {

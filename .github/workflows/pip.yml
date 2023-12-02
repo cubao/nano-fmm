@@ -9,28 +9,28 @@ on:
 
 jobs:
   build:
+    name: Build with Pip
+    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-20.04, windows-2019, macos-11]
-        python-version: ["3.8", "3.9", "3.10"]
-
-    runs-on: ${{ matrix.platform }}
+        platform: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ["3.7", "3.11"]
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
+    - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Add requirements
-      run: python -m pip install --upgrade wheel setuptools
+    - name: Set min macOS version
+      if: runner.os == 'macOS'
+      run: |
+        echo "MACOS_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV
 
     - name: Build and install
-      run: pip install --verbose .[test]
+      run: pip install --verbose .[test] && make data_pull
 
     - name: Test
       run: python -m pytest

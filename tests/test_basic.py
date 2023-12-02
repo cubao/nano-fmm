@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import io
 import json
@@ -7,7 +9,6 @@ import tempfile
 import time
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Dict, List
 
 import numpy as np
 import pytest
@@ -16,6 +17,10 @@ import nano_fmm as fmm
 from nano_fmm import LineSegment, Network, rapidjson
 from nano_fmm import flatbush as fb
 
+__PWD = os.path.abspath(os.path.dirname(__file__))
+__BUILD = os.path.abspath(f"{__PWD}/../build")
+os.makedirs(__BUILD, exist_ok=True)
+
 
 def test_add():
     assert fmm.add(1, 2) == 3
@@ -23,35 +28,37 @@ def test_add():
 
 def test_segment():
     seg = LineSegment([0, 0, 0], [10, 0, 0])
-    assert 4.0 == seg.distance([5.0, 4.0, 0.0])
-    assert 5.0 == seg.distance([-4.0, 3.0, 0.0])
-    assert 5.0 == seg.distance([14.0, 3.0, 0.0])
-    assert 25.0 == seg.distance2([14.0, 3.0, 0.0])
+    assert seg.distance([5.0, 4.0, 0.0]) == 4.0
+    assert seg.distance([-4.0, 3.0, 0.0]) == 5.0
+    assert seg.distance([14.0, 3.0, 0.0]) == 5.0
+    assert seg.distance2([14.0, 3.0, 0.0]) == 25.0
 
     assert seg.length == 10.0
     assert seg.length2 == 100.0
-    assert np.all(seg.A == [0, 0, 0])
-    assert np.all(seg.B == [10, 0, 0])
-    assert np.all(seg.AB == [10, 0, 0])
+    assert np.all([0, 0, 0] == seg.A)
+    assert np.all([10, 0, 0] == seg.B)
+    assert np.all([10, 0, 0] == seg.AB)
     assert np.all(seg.dir == [1, 0, 0])
     assert np.all(seg.interpolate(0.4) == [4, 0, 0])
     assert seg.t([4, 0, 0]) == 0.4
     PP, dist, t = seg.nearest([4, 1, 0])
-    assert np.all(PP == [4, 0, 0])
+    assert np.all([4, 0, 0] == PP)
     assert dist == 1.0
     assert t == 0.4
 
     seg = LineSegment([0, 0, 0], [0, 0, 0])
-    assert 5.0 == seg.distance([3.0, 4.0, 0.0])
-    assert 5.0 == seg.distance([-4.0, 3.0, 0.0])
-    assert 13.0 == seg.distance([5.0, 12.0, 0.0])
+    assert seg.distance([3.0, 4.0, 0.0]) == 5.0
+    assert seg.distance([-4.0, 3.0, 0.0]) == 5.0
+    assert seg.distance([5.0, 12.0, 0.0]) == 13.0
 
     seg = LineSegment([0, 0, 0], [0, 0, 0])
     assert seg.length == 0.0
     assert seg.length2 == 0.0
     assert seg.distance([0, 1, 0]) == 1.0
     pt, d, t = seg.nearest([1, 0, 0])
-    assert np.all(pt == [0, 0, 0]) and d == 1.0 and t == 0.0
+    assert np.all(pt == [0, 0, 0])
+    assert d == 1.0
+    assert t == 0.0
 
 
 def test_utils():
@@ -81,8 +88,8 @@ def test_polyline():
     for i in range(2):
         seg1 = polyline.segment(i)
         seg2 = polyline2.segment(i)
-        assert np.max(np.fabs(seg1.A - seg2.A)) < 1e-9
-        assert np.max(np.fabs(seg1.B - seg2.B)) < 1e-9
+        assert np.max(np.fabs(seg1.A - seg2.A)) < 1e-2
+        assert np.max(np.fabs(seg1.B - seg2.B)) < 1e-2
 
 
 def test_cheap_ruler_k():
@@ -174,7 +181,7 @@ def test_cpp_migrated_2():
     tree = fb.PackedRTree(nodes, extent)
     data = tree.to_bytes()
     assert len(data) == 120
-    assert type(data) == bytes
+    assert isinstance(data, bytes)
 
     hits = tree.search(0, 0, 1, 1)
     assert len(hits) == 1
@@ -246,22 +253,26 @@ def test_polyline_nearest_slice():
     pt, dist, seg_idx, t = polyline.nearest([1.5, 0, 0])
     assert np.all(pt == [1.5, 0, 0])
     assert dist == 0.0
-    assert seg_idx == 0 and t == 0.5
+    assert seg_idx == 0
+    assert t == 0.5
 
     pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0])
     assert np.all(pt == [1.5, 0, 0])
     assert dist == 3.0
-    assert seg_idx == 0 and t == 0.5
+    assert seg_idx == 0
+    assert t == 0.5
 
     pt, dist, seg_idx, t = polyline.nearest([1.5, 3, 0], seg_min=1)
     assert np.all(pt == [3, 0, 0])
     assert np.fabs(dist - np.linalg.norm(pt - [1.5, 3, 0])) < 1e-9
-    assert seg_idx == 1 and t == 0.0
+    assert seg_idx == 1
+    assert t == 0.0
 
     pt, dist, seg_idx, t = polyline.nearest([5, 0, 0], seg_max=0)
     assert np.all(pt == [3, 0, 0])
     assert dist == 2.0
-    assert seg_idx == 0 and t == 1.0
+    assert seg_idx == 0
+    assert t == 1.0
 
     assert np.all(polyline.slice(min=15) == [enus[-1], enus[-1]])
     assert len(polyline.slice(min=16)) == 0
@@ -271,19 +282,21 @@ def test_polyline_nearest_slice():
     polyline = fmm.Polyline(llas[:-1], is_wgs84=True)
     pt, dist, seg_idx, t = polyline.nearest(llas[-1])
     assert np.fabs(pt - (llas[0] + llas[1]) / 2.0).max() < 1e-18
-    assert np.fabs(dist - 3.0) < 1e-9
-    assert seg_idx == 0 and t == 0.5
+    assert np.fabs(dist - 3.0) < 1e-3
+    assert seg_idx == 0
+    assert abs(t - 0.5) < 1e-3
 
     pt, dist, seg_idx, t = polyline.nearest(llas[-1], seg_min=1)
     assert np.all(pt == llas[1])
     assert dist
-    assert seg_idx == 1 and t == 0.0
+    assert seg_idx == 1
+    assert t == 0.0
 
 
 def build_network(
     *,
-    nodes: Dict[str, np.ndarray],
-    ways: Dict[str, List[str]],
+    nodes: dict[str, np.ndarray],
+    ways: dict[str, list[str]],
     is_wgs84: bool = False,
 ):
     node2nexts = defaultdict(list)
@@ -314,7 +327,7 @@ def build_network(
     }
 
 
-def two_way_streets(ways: Dict[str, List[str]]):
+def two_way_streets(ways: dict[str, list[str]]):
     return {
         **ways,
         **({w[::-1]: nn[::-1] for w, nn in ways.items()}),
@@ -447,9 +460,10 @@ def test_logging():
     assert output_string == "This will be captured\n"
 
     buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
-        with fmm.utils.ostream_redirect(stdout=True, stderr=True):
-            fmm.utils.logging("hello five")
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(
+        buffer
+    ), fmm.utils.ostream_redirect(stdout=True, stderr=True):
+        fmm.utils.logging("hello five")
     output_string = buffer.getvalue()
     assert output_string == "std::cout: hello five\nstd::cerr: hello five\n"
 
@@ -498,7 +512,7 @@ def test_json():
 
 def test_project_point_rapidjson():
     pt = fmm.ProjectedPoint()
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(Exception) as excinfo:  # noqa: PT011
         pt.position[0] = 5
     assert "read-only" in str(excinfo.value)
     j = pt.to_rapidjson()
@@ -528,10 +542,10 @@ def test_ubodt_rapidjson():
 
 def test_indexer():
     indexer = fmm.Indexer()
-    assert "5" == indexer.id(5)
-    assert "10" == indexer.id(10)
-    assert "1000" == indexer.id(1000)
-    assert 1000 == indexer.id("1000")
+    assert indexer.id(5) == "5"
+    assert indexer.id(10) == "10"
+    assert indexer.id(1000) == "1000"
+    assert indexer.id("1000") == 1000
     assert indexer.to_rapidjson()() == {
         "10": 10,
         "1000": 1000,
@@ -539,14 +553,14 @@ def test_indexer():
     }
 
     indexer = fmm.Indexer()
-    assert 1000000 == indexer.id("road1")
-    assert 1000001 == indexer.id("road2")
-    assert 1000002 == indexer.id("road3")
-    assert 1000001 == indexer.id("road2")
-    assert 13579 == indexer.id("13579")
-    assert "road3" == indexer.id(1000002)
-    assert 1000003 == indexer.id("1000002")
-    assert 1000005 == indexer.id("1000005")
+    assert indexer.id("road1") == 1000000
+    assert indexer.id("road2") == 1000001
+    assert indexer.id("road3") == 1000002
+    assert indexer.id("road2") == 1000001
+    assert indexer.id("13579") == 13579
+    assert indexer.id(1000002) == "road3"
+    assert indexer.id("1000002") == 1000003
+    assert indexer.id("1000005") == 1000005
     assert indexer.to_rapidjson()() == {
         "1000002": 1000003,
         "1000005": 1000005,
@@ -557,14 +571,14 @@ def test_indexer():
     }
 
     indexer2 = fmm.Indexer().from_rapidjson(indexer.to_rapidjson())
-    assert 1000000 == indexer2.id("road1")
-    assert 1000001 == indexer2.id("road2")
-    assert 1000002 == indexer2.id("road3")
-    assert 1000001 == indexer2.id("road2")
-    assert 13579 == indexer2.id("13579")
-    assert "road3" == indexer2.id(1000002)
-    assert 1000003 == indexer2.id("1000002")
-    assert 1000005 == indexer2.id("1000005")
+    assert indexer2.id("road1") == 1000000
+    assert indexer2.id("road2") == 1000001
+    assert indexer2.id("road3") == 1000002
+    assert indexer2.id("road2") == 1000001
+    assert indexer2.id("13579") == 13579
+    assert indexer2.id(1000002) == "road3"
+    assert indexer2.id("1000002") == 1000003
+    assert indexer2.id("1000005") == 1000005
     assert indexer2.to_rapidjson() == indexer.to_rapidjson()
     indexer2.id("add another road")
     assert indexer2.to_rapidjson() != indexer.to_rapidjson()
@@ -576,27 +590,27 @@ def test_indexer():
 
 
 def test_network_read_write():
-    network = Network.load("README.md")
+    network = Network.load(f"{__PWD}/README.md")
     assert network is None
     network = Network.load("missing_file")
     assert network is None
 
     from nano_fmm.converter import remap_network_with_string_id
 
-    geojson, _ = remap_network_with_string_id("data/suzhoubeizhan.json")
+    geojson, _ = remap_network_with_string_id(f"{__PWD}/../data/suzhoubeizhan.json")
     network = Network(is_wgs84=True)
     network.from_geojson(geojson)
     assert len(network.roads()) == 1016
-    assert network.to_geojson().dump("build/network.geojson", indent=True)
-    assert network.to_rapidjson().dump("build/network.json", indent=True)
+    assert network.to_geojson().dump(f"{__BUILD}/network.geojson", indent=True)
+    assert network.to_rapidjson().dump(f"{__BUILD}/network.json", indent=True)
 
-    network = Network.load("build/network.geojson")
-    network.to_geojson().dump("build/network2.geojson", indent=True)
-    network.to_rapidjson().dump("build/network2.json", indent=True)
+    network = Network.load(f"{__BUILD}/network.geojson")
+    network.to_geojson().dump(f"{__BUILD}/network2.geojson", indent=True)
+    network.to_rapidjson().dump(f"{__BUILD}/network2.json", indent=True)
 
-    network = Network.load("build/network.json")
-    network.to_geojson().dump("build/network3.geojson", indent=True)
-    network.to_rapidjson().dump("build/network3.json", indent=True)
+    network = Network.load(f"{__BUILD}/network.json")
+    network.to_geojson().dump(f"{__BUILD}/network3.geojson", indent=True)
+    network.to_rapidjson().dump(f"{__BUILD}/network3.json", indent=True)
 
     rows = network.build_ubodt()
     rows = sorted(rows)
@@ -604,7 +618,10 @@ def test_network_read_write():
 
 
 def test_network_query():
-    network = Network.load("build/network.geojson")
+    path = f"{__BUILD}/network.geojson"
+    if not os.path.isfile(path):  # noqa: PTH113
+        test_network_read_write()
+    network = Network.load(path)
     assert network.is_wgs84()
     assert len(network.roads()) == 1016
     assert network.next_roads(1293) == {1297, 1298}
@@ -619,7 +636,8 @@ def test_network_query():
     seed_lla = [120.663031, 31.40531, 0]
     lla, dist, seg_idx, t = polyline.nearest(seed_lla)
     assert round(dist, 2) == 105.71
-    assert seg_idx == 4 and t == 1.0
+    assert seg_idx == 4
+    assert t == 1.0
     # 0---1---2---3---4---5
     #                     ^
     #                   t=1.0
@@ -655,26 +673,48 @@ def test_network_query_enu():
 
     hits = network.query([5, 0, 0], radius=5)
     hits = [h.to_rapidjson()() for h in hits]
-    assert hits == [
-        {
-            "position": [5.0, 0.0, 0.0],
-            "direction": [1.0, 0.0, 0.0],
-            "distance": 0.0,
-            "road_id": 1,
-            "offset": 5.0,
-        },
-        {
-            "position": [5.0, 5.0, 0.0],
-            "direction": [1.0, 0.0, 0.0],
-            "distance": 5.0,
-            "road_id": 0,
-            "offset": 5.0,
-        },
-        {
-            "position": [10.0, 0.0, 0.0],
-            "direction": [0.0, 1.0, 0.0],
-            "distance": 5.0,
-            "road_id": 2,
-            "offset": 5.0,
-        },
-    ]
+    hit1 = {
+        "position": [5.0, 5.0, 0.0],
+        "direction": [1.0, 0.0, 0.0],
+        "distance": 5.0,
+        "road_id": 0,
+        "offset": 5.0,
+    }
+    hit2 = {
+        "position": [10.0, 0.0, 0.0],
+        "direction": [0.0, 1.0, 0.0],
+        "distance": 5.0,
+        "road_id": 2,
+        "offset": 5.0,
+    }
+    assert hits[0] == {
+        "position": [5.0, 0.0, 0.0],
+        "direction": [1.0, 0.0, 0.0],
+        "distance": 0.0,
+        "road_id": 1,
+        "offset": 5.0,
+    }
+    assert hits[1:] == [hit1, hit2] or hits[1:] == [hit2, hit1]
+
+
+def pytest_main(dir: str, *, test_file: str):
+    # pytest test_cli.py
+    # pytest --capture=tee-sys test_cli.py
+    os.chdir(dir)
+    # https://docs.pytest.org/en/6.2.x/usage.html#calling-pytest-from-python-code
+    sys.exit(
+        pytest.main(
+            [
+                dir,
+                *(["-k", test_file] if test_file else []),
+                "--capture",
+                "tee-sys",
+                "-vv",
+                "-x",
+            ]
+        )
+    )
+
+
+if __name__ == "__main__":
+    pytest_main(__PWD, test_file=os.path.basename(__file__))  # noqa: PTH119

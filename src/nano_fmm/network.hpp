@@ -44,7 +44,7 @@ struct Network
         return *this;
     }
 
-    // query
+    // query: Candidate search (CS)
     std::vector<ProjectedPoint>
     query(const Eigen::Vector3d &position, double radius,
           std::optional<int> k = std::nullopt,

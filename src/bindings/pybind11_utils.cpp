@@ -7,7 +7,12 @@
 #include "nano_fmm/utils.hpp"
 
 #include "spdlog/spdlog.h"
-#include <spdlog/sinks/stdout_sinks.h>
+#include "spdlog/sinks/stdout_sinks.h"
+// fix exposed macro 'GetObject' from wingdi.h (included by spdlog.h) under
+// windows, see https://github.com/Tencent/rapidjson/issues/1448
+#ifdef GetObject
+#undef GetObject
+#endif
 
 namespace nano_fmm
 {
@@ -53,6 +58,7 @@ void bind_utils(py::module &m)
         .def("cheap_ruler_k", &utils::cheap_ruler_k, "latitude"_a)
         .def("cheap_ruler_k_lookup_table", &utils::cheap_ruler_k_lookup_table,
              "latitude"_a)
+        .def("offset", &utils::offset, "lla_src"_a, "lla_dst"_a)
         .def("bbox",
              py::overload_cast<const Eigen::Vector2d &, double, double>(
                  &utils::bbox),

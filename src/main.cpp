@@ -18,7 +18,7 @@ void bind_rapidjson(py::module &m);
 void bind_utils(py::module &m);
 } // namespace nano_fmm
 
-PYBIND11_MODULE(_nano_fmm, m)
+PYBIND11_MODULE(_core, m)
 {
     m.def("add", &add, R"pbdoc(
         Add two numbers

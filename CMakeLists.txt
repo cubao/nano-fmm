@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.5...3.18)
-project(nano_fmm)
+cmake_minimum_required(VERSION 3.15...3.26)
+
+# https://scikit-build-core.readthedocs.io/en/latest/cmakelists.html#accessing-information
+project(
+  ${SKBUILD_PROJECT_NAME}
+  VERSION ${SKBUILD_PROJECT_VERSION}
+  LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -35,7 +40,16 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
+# TODO, use set(PYBIND11_NEWPYTHON ON)?
+# https://scikit-build-core.readthedocs.io/en/latest/getting_started.html
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+find_package(pybind11 CONFIG REQUIRED)
+
 include_directories(3rdparty src)
+file(GLOB_RECURSE SRCS src/*.cpp)
+python_add_library(_core MODULE ${SRCS} WITH_SOABI)
+target_link_libraries(_core PRIVATE pybind11::headers)
+target_include_directories(_core PRIVATE src)
 
 option(BUILD_EXAMPLES "Build examples" OFF)
 if(BUILD_EXAMPLES)
@@ -47,10 +61,5 @@ if(BUILD_EXAMPLES)
   endforeach(src)
 endif()
 
-set(PYBIND11_CPP_STANDARD -std=c++17)
-add_subdirectory(pybind11)
-file(GLOB_RECURSE SRCS src/*.cpp)
-pybind11_add_module(_nano_fmm ${SRCS})
-
-target_compile_definitions(_nano_fmm
-                           PRIVATE VERSION_INFO=${NANO_FMM_VERSION_INFO})
+target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
+install(TARGETS _core DESTINATION nano_fmm)

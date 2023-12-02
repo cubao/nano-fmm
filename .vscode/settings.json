@@ -98,7 +98,8 @@
         "concepts": "cpp",
         "memory_resource": "cpp",
         "ranges": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "core": "cpp"
     },
     "workbench.colorCustomizations": {
         // "activityBar.background": "#b80ae3",

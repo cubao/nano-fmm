@@ -2,6 +2,11 @@
 
 #include "nano_fmm/types.hpp"
 #include <optional>
+#include <vector>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace nano_fmm
 {

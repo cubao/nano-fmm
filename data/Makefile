@@ -14,13 +14,13 @@ clean:
 
 # https://github.com/cubao/fmm/wiki/Sample-data
 pull: network.json
-network.json: network.zip
-	unzip $<
+network.json: | network.zip
+	unzip network.zip
 network.zip:
 	curl -LO https://github.com/cubao/fmm/files/11698908/network.zip
 
 pull: suzhoubeizhan.json
-suzhoubeizhan.json: suzhoubeizhan.zip
-	unzip $<
+suzhoubeizhan.json: | suzhoubeizhan.zip
+	unzip suzhoubeizhan.zip
 suzhoubeizhan.zip:
 	curl -LO https://github.com/cubao/fmm/files/12568463/suzhoubeizhan.zip

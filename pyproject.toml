@@ -1,48 +1,112 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "ninja",
-    "cmake>=3.12",
+requires = ["scikit-build-core>=0.3.3", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+
+[project]
+name = "nano_fmm"
+version = "0.1.2"
+description="c++/python version of coordtransform"
+readme = "README.md"
+authors = [
+  { name = "tzx", email = "dvorak4tzx@gmail.com" },
 ]
-build-backend = "setuptools.build_meta"
+requires-python = ">=3.7"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+  "fire",
+  "loguru",
+  "numpy",
+]
 
-[tool.mypy]
-files = "setup.py"
-python_version = "3.7"
-strict = true
-show_error_codes = true
-enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-warn_unreachable = true
+[project.urls]
+Homepage = "https://nano-fmm.readthedocs.io"
 
-[[tool.mypy.overrides]]
-module = ["ninja"]
-ignore_missing_imports = true
+[project.optional-dependencies]
+test = ["pytest"]
+
+
+# docs: https://scikit-build-core.readthedocs.io/en/latest/configuration.html
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
+# cmake.build-type = "Debug"
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
+
+[tool.scikit-build.cmake.define]
+# SOME_DEFINE = "ON"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
 xfail_strict = true
-filterwarnings = ["error"]
+filterwarnings = [
+  "error",
+  "ignore:(ast.Str|Attribute s|ast.NameConstant|ast.Num) is deprecated:DeprecationWarning:_pytest",  # Python 3.12
+]
 testpaths = ["tests"]
+
 
 [tool.cibuildwheel]
 test-command = "pytest {project}/tests"
 test-extras = ["test"]
 test-skip = ["*universal2:arm64"]
-# Setuptools bug causes collision between pypy and cpython artifacts
-before-build = "rm -rf {project}/build"
+build-verbosity = 1
+
+# Needed for full C++17 support
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "10.14"
 
 [tool.ruff]
-extend-select = [
-  "B",    # flake8-bugbear
-  "B904",
-  "I",    # isort
-  "PGH",  # pygrep-hooks
-  "RUF",  # Ruff-specific
-  "UP",   # pyupgrade
-]
+src = ["src"]
 extend-ignore = [
-  "E501",   # Line too long
+  "UP007",
+   "PTH100", # TODO, use Pathlib
+   "PTH103", # TODO, use Pathlib
+   "PTH120", # TODO, use Pathlib
+   "PTH123", # TODO, use Pathlib
 ]
-target-version = "py37"
+
+[tool.ruff.lint]
+extend-select = [
+  "B",           # flake8-bugbear
+  "I",           # isort
+  "ARG",         # flake8-unused-arguments
+  "C4",          # flake8-comprehensions
+  "EM",          # flake8-errmsg
+  "ICN",         # flake8-import-conventions
+  "G",           # flake8-logging-format
+  "PGH",         # pygrep-hooks
+  "PIE",         # flake8-pie
+  "PL",          # pylint
+  "PT",          # flake8-pytest-style
+  "PTH",         # flake8-use-pathlib
+  "RET",         # flake8-return
+  "RUF",         # Ruff-specific
+  "SIM",         # flake8-simplify
+  "T20",         # flake8-print
+  "UP",          # pyupgrade
+  "YTT",         # flake8-2020
+  "EXE",         # flake8-executable
+  "NPY",         # NumPy specific rules
+  "PD",          # pandas-vet
+]
+ignore = [
+  "PLR",    # Design related pylint codes
+]
+isort.required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.per-file-ignores]
+"tests/**" = ["T20"]

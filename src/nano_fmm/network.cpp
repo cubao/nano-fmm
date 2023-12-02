@@ -1,11 +1,17 @@
 #include "nano_fmm/network.hpp"
 #include "nano_fmm/utils.hpp"
 #include "nano_fmm/heap.hpp"
+
 #include "spdlog/spdlog.h"
+// fix exposed macro 'GetObject' from wingdi.h (included by spdlog.h) under
+// windows, see https://github.com/Tencent/rapidjson/issues/1448
+#ifdef GetObject
+#undef GetObject
+#endif
 
 #include "nano_fmm/rapidjson_helpers.hpp"
 
-#include <execution>
+// #include <execution>
 
 namespace nano_fmm
 {
@@ -145,10 +151,16 @@ Network::query(const Eigen::Vector3d &position, double radius,
         nearests.emplace_back(P, poly.segment(s).dir(), d, //
                               pair.first, poly.range(s, t));
     }
-    std::sort(nearests.begin(), nearests.end(),
-              [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
-    if (k && nearests.size() > *k) {
+
+    if (k && *k < nearests.size()) {
+        std::partial_sort(
+            nearests.begin(), nearests.begin() + *k, nearests.end(),
+            [](auto &n1, auto &n2) { return n1.distance() < n2.distance(); });
         nearests.resize(*k);
+    } else {
+        std::sort(nearests.begin(), nearests.end(), [](auto &n1, auto &n2) {
+            return n1.distance() < n2.distance();
+        });
     }
     return nearests;
 }
@@ -210,6 +222,9 @@ MatchResult Network::match(const RowVectors &trajectory) const
 
 void Network::build(int execution_polylicy) const
 {
+    std::for_each(roads_.begin(), roads_.end(),
+                  [](auto &pair) { pair.second.build(); });
+    /*
     if (execution_polylicy == 1) {
         std::for_each(std::execution::par, roads_.begin(), roads_.end(),
                       [](auto &pair) { pair.second.build(); });
@@ -220,6 +235,7 @@ void Network::build(int execution_polylicy) const
         std::for_each(std::execution::seq, roads_.begin(), roads_.end(),
                       [](auto &pair) { pair.second.build(); });
     }
+    */
     rtree();
 }
 
