@@ -12,6 +12,13 @@
 #include <vector>
 #include <rapidjson/document.h>
 
+#if NANO_FMM_DISABLE_UNORDERED_DENSE
+#include <unordered_map>
+#include <unordered_set>
+#else
+#include "ankerl/unordered_dense.h"
+#endif
+
 namespace nano_fmm
 {
 // Nx3 vectors (row major, just like numpy ndarray)
@@ -135,4 +142,17 @@ template <typename T> struct hash_eigen
         return hash_seed;
     }
 };
+
+#if NANO_FMM_DISABLE_UNORDERED_DENSE
+template <typename Key, typename Value>
+using unordered_map = std::unordered_map<Key, Value>;
+
+template <typename Value> using unordered_set = std::unordered_set<Value>;
+#else
+template <typename Key, typename Value>
+using unordered_map = ankerl::unordered_dense::map<Key, Value>;
+
+template <typename Value>
+using unordered_set = ankerl::unordered_dense::set<Value>;
+#endif
 } // namespace nano_fmm

@@ -119,7 +119,7 @@ Network::query(const Eigen::Vector3d &position, double radius,
     auto &tree = this->rtree();
     auto hits = tree.search(x - dx, y - dy, x + dx, y + dy);
     auto poly2seg_minmax =
-        std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
+        unordered_map<int64_t, std::pair<int64_t, int64_t>>();
     for (auto &hit : hits) {
         auto poly_seg = segs_[hit.offset];
         auto poly_idx = poly_seg[0];

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
-#include <iostream>
 #include "nano_fmm/types.hpp"
 
 namespace nano_fmm
@@ -93,8 +91,8 @@ struct Indexer
     }
 
   private:
-    std::unordered_map<std::string, int64_t> str2int_;
-    std::unordered_map<int64_t, std::string> int2str_;
+    unordered_map<std::string, int64_t> str2int_;
+    unordered_map<int64_t, std::string> int2str_;
     int64_t id_cursor_{1000000};
 };
 } // namespace nano_fmm
