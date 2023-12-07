@@ -78,7 +78,7 @@ struct Network
                     std::optional<double> thresh) const;
 
     // to 2d, z will be set to zero
-    Network to_2d() const;
+    std::unique_ptr<Network> to_2d() const;
 
     Network &from_geojson(const RapidjsonValue &json);
     RapidjsonValue to_geojson(RapidjsonAllocator &allocator) const;

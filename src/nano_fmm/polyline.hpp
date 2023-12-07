@@ -30,18 +30,6 @@ struct Polyline
     {
     }
 
-    Polyline() = delete;
-    Polyline(const Polyline &other) = delete;
-    Polyline &operator=(const Polyline &other) = delete;
-    Polyline(Polyline &&other)
-        : polyline_(std::move(other.polyline_)), N_(other.N_),
-          is_wgs84_(other.is_wgs84_), k_(other.k_),
-          segments_(std::move(other.segments_)),
-          ranges_(std::move(other.ranges_))
-    {
-    }
-    Polyline &operator=(Polyline &&other) = delete;
-
     const RowVectors &polyline() const { return polyline_; }
     int N() const { return N_; }
     Eigen::Vector3d k() const { return k_; }

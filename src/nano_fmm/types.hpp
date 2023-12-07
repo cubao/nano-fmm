@@ -18,10 +18,96 @@
 #include <unordered_set>
 #else
 #include "ankerl/unordered_dense.h"
+
+template <class T> void hash_combine(size_t &seed, T const &v)
+{
+    // from
+    // https://stackoverflow.com/questions/5889238/why-is-xor-the-default-way-to-combine-hashes
+    if constexpr (sizeof(size_t) >= 8u) {
+        seed ^= v + 0x517cc1b727220a95 + (seed << 6u) + (seed >> 2u);
+    } else {
+        seed ^= v + 0x9e3779b9 + (seed << 6u) + (seed >> 2u);
+    }
+}
+
+template <typename T1, typename T2>
+struct ankerl::unordered_dense::hash<std::pair<T1, T2>>
+{
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(std::pair<T1, T2> const &x) const noexcept
+        -> uint64_t
+    {
+        size_t seed = 0;
+        hash_combine(
+            seed, ankerl::unordered_dense::hash<std::decay_t<T1>>{}(x.first));
+        hash_combine(
+            seed, ankerl::unordered_dense::hash<std::decay_t<T2>>{}(x.second));
+        return seed;
+    }
+};
+
+template <typename... Ts>
+struct ankerl::unordered_dense::hash<std::tuple<Ts...>>
+{
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(std::tuple<Ts...> const &x) const noexcept
+        -> uint64_t
+    {
+        size_t seed = 0;
+        std::apply(
+            [&seed](Ts const &...elem) {
+                (hash_combine(seed, ankerl::unordered_dense::hash<
+                                        std::decay_t<decltype(elem)>>{}(elem)),
+                 ...);
+            },
+            x);
+        return seed;
+    }
+};
 #endif
 
 namespace nano_fmm
 {
+// https://github.com/isl-org/Open3D/blob/179886dfd57797b2b0d379062387c60313a58b2b/cpp/open3d/utility/Helper.h#L71
+template <typename T> struct hash_eigen
+{
+    using is_avalanching = void;
+    std::size_t operator()(T const &matrix) const
+    {
+        size_t hash_seed = 0;
+        for (int i = 0; i < (int)matrix.size(); i++) {
+            auto elem = *(matrix.data() + i);
+            hash_seed ^=
+#if NANO_FMM_DISABLE_UNORDERED_DENSE
+                std::hash<typename T::Scalar>()(elem)
+#else
+                ankerl::unordered_dense::detail::wyhash::hash(elem)
+#endif
+                + 0x9e3779b9 + (hash_seed << 6) + (hash_seed >> 2);
+        }
+        return hash_seed;
+    }
+};
+
+#if NANO_FMM_DISABLE_UNORDERED_DENSE
+template <typename Key, typename Value, typename Hash = std::hash<Key>,
+          typename Equal = std::equal_to<Key>>
+using unordered_map = std::unordered_map<Key, Value, Hash, Equal>;
+template <typename Value, typename Hash = std::hash<Value>,
+          typename Equal = std::equal_to<Value>>
+using unordered_set = std::unordered_set<Value, Hash>;
+#else
+template <typename Key, typename Value,
+          typename Hash = ankerl::unordered_dense::hash<Key>,
+          typename Equal = std::equal_to<Key>>
+using unordered_map = ankerl::unordered_dense::map<Key, Value, Hash, Equal>;
+template <typename Value, typename Hash = ankerl::unordered_dense::hash<Value>,
+          typename Equal = std::equal_to<Value>>
+using unordered_set = ankerl::unordered_dense::set<Value, Hash, Equal>;
+#endif
+
 // Nx3 vectors (row major, just like numpy ndarray)
 using RowVectors = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
 using RowVectorsNx3 = RowVectors;
@@ -124,57 +210,9 @@ struct LineSegment
         return *dir_;
     }
 
-    LineSegment() = delete;
-    LineSegment(const LineSegment &other) = delete;
-    LineSegment &operator=(const LineSegment &other) = delete;
-    LineSegment(LineSegment &&other)
-        : A(other.A), B(other.B), AB(other.AB),       //
-          len2(other.len2), inv_len2(other.inv_len2), //
-          dir_(std::move(other.dir_)), length_(std::move(other.length_))
-    {
-    }
-    LineSegment &operator=(LineSegment &&other) = delete;
-
   private:
     mutable std::optional<Eigen::Vector3d> dir_;
     mutable std::optional<double> length_;
 };
 
-// https://github.com/isl-org/Open3D/blob/179886dfd57797b2b0d379062387c60313a58b2b/cpp/open3d/utility/Helper.h#L71
-template <typename T> struct hash_eigen
-{
-    using is_avalanching = void;
-    std::size_t operator()(T const &matrix) const
-    {
-        size_t hash_seed = 0;
-        for (int i = 0; i < (int)matrix.size(); i++) {
-            auto elem = *(matrix.data() + i);
-            hash_seed ^=
-#if NANO_FMM_DISABLE_UNORDERED_DENSE
-                std::hash<typename T::Scalar>()(elem)
-#else
-                ankerl::unordered_dense::detail::wyhash::hash(elem)
-#endif
-                + 0x9e3779b9 + (hash_seed << 6) + (hash_seed >> 2);
-        }
-        return hash_seed;
-    }
-};
-
-#if NANO_FMM_DISABLE_UNORDERED_DENSE
-template <typename Key, typename Value, typename Hash = std::hash<Key>,
-          typename Equal = std::equal_to<Key>>
-using unordered_map = std::unordered_map<Key, Value, Hash, Equal>;
-template <typename Value, typename Hash = std::hash<Value>,
-          typename Equal = std::equal_to<Value>>
-using unordered_set = std::unordered_set<Value, Hash>;
-#else
-template <typename Key, typename Value,
-          typename Hash = ankerl::unordered_dense::hash<Key>,
-          typename Equal = std::equal_to<Key>>
-using unordered_map = ankerl::unordered_dense::map<Key, Value, Hash, Equal>;
-template <typename Value, typename Hash = ankerl::unordered_dense::hash<Value>,
-          typename Equal = std::equal_to<Value>>
-using unordered_set = ankerl::unordered_dense::set<Value, Hash, Equal>;
-#endif
 } // namespace nano_fmm
