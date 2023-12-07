@@ -18,54 +18,6 @@
 #include <unordered_set>
 #else
 #include "ankerl/unordered_dense.h"
-
-template <class T> void hash_combine(size_t &seed, T const &v)
-{
-    // from
-    // https://stackoverflow.com/questions/5889238/why-is-xor-the-default-way-to-combine-hashes
-    if constexpr (sizeof(size_t) >= 8u) {
-        seed ^= v + 0x517cc1b727220a95 + (seed << 6u) + (seed >> 2u);
-    } else {
-        seed ^= v + 0x9e3779b9 + (seed << 6u) + (seed >> 2u);
-    }
-}
-
-template <typename T1, typename T2>
-struct ankerl::unordered_dense::hash<std::pair<T1, T2>>
-{
-    using is_avalanching = void;
-
-    [[nodiscard]] auto operator()(std::pair<T1, T2> const &x) const noexcept
-        -> uint64_t
-    {
-        size_t seed = 0;
-        hash_combine(
-            seed, ankerl::unordered_dense::hash<std::decay_t<T1>>{}(x.first));
-        hash_combine(
-            seed, ankerl::unordered_dense::hash<std::decay_t<T2>>{}(x.second));
-        return seed;
-    }
-};
-
-template <typename... Ts>
-struct ankerl::unordered_dense::hash<std::tuple<Ts...>>
-{
-    using is_avalanching = void;
-
-    [[nodiscard]] auto operator()(std::tuple<Ts...> const &x) const noexcept
-        -> uint64_t
-    {
-        size_t seed = 0;
-        std::apply(
-            [&seed](Ts const &...elem) {
-                (hash_combine(seed, ankerl::unordered_dense::hash<
-                                        std::decay_t<decltype(elem)>>{}(elem)),
-                 ...);
-            },
-            x);
-        return seed;
-    }
-};
 #endif
 
 namespace nano_fmm
