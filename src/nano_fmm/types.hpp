@@ -12,6 +12,7 @@
 #include <vector>
 #include <rapidjson/document.h>
 
+#define NANO_FMM_DISABLE_UNORDERED_DENSE 1
 #if NANO_FMM_DISABLE_UNORDERED_DENSE
 #include <unordered_map>
 #include <unordered_set>
@@ -131,28 +132,37 @@ struct LineSegment
 // https://github.com/isl-org/Open3D/blob/179886dfd57797b2b0d379062387c60313a58b2b/cpp/open3d/utility/Helper.h#L71
 template <typename T> struct hash_eigen
 {
+    using is_avalanching = void;
     std::size_t operator()(T const &matrix) const
     {
         size_t hash_seed = 0;
         for (int i = 0; i < (int)matrix.size(); i++) {
             auto elem = *(matrix.data() + i);
-            hash_seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 +
-                         (hash_seed << 6) + (hash_seed >> 2);
+            hash_seed ^=
+#if NANO_FMM_DISABLE_UNORDERED_DENSE
+                std::hash<typename T::Scalar>()(elem)
+#else
+                ankerl::unordered_dense::detail::wyhash::hash(elem)
+#endif
+                + 0x9e3779b9 + (hash_seed << 6) + (hash_seed >> 2);
         }
         return hash_seed;
     }
 };
 
 #if NANO_FMM_DISABLE_UNORDERED_DENSE
-template <typename Key, typename Value>
-using unordered_map = std::unordered_map<Key, Value>;
-
-template <typename Value> using unordered_set = std::unordered_set<Value>;
+template <typename Key, typename Value, typename Hash = std::hash<Key>,
+          typename Equal = std::equal_to<Key>>
+using unordered_map = std::unordered_map<Key, Value, Hash, Equal>;
+template <typename Value, typename Hash = std::hash<Value>,
+          typename Equal = std::equal_to<Value>>
+using unordered_set = std::unordered_set<Value, Hash>;
 #else
-template <typename Key, typename Value>
-using unordered_map = ankerl::unordered_dense::map<Key, Value>;
-
-template <typename Value>
-using unordered_set = ankerl::unordered_dense::set<Value>;
+template <typename Key, typename Value, typename Hash = std::hash<Key>,
+          typename Equal = std::equal_to<Key>>
+using unordered_map = ankerl::unordered_dense::map<Key, Value, Hash, Equal>;
+template <typename Value, typename Hash = std::hash<Value>,
+          typename Equal = std::equal_to<Value>>
+using unordered_set = ankerl::unordered_dense::set<Value, Hash, Equal>;
 #endif
 } // namespace nano_fmm
