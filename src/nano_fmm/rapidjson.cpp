@@ -375,7 +375,7 @@ RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
     }
     // nexts
     {
-        auto nexts = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        auto nexts = std::map<int64_t, const unordered_set<int64_t> *>();
         for (auto &pair : nexts_) {
             nexts.emplace(pair.first, &pair.second);
         }
@@ -392,7 +392,7 @@ RapidjsonValue Network::to_rapidjson(RapidjsonAllocator &allocator) const
         json.AddMember("nexts", _nexts, allocator);
     }
     {
-        auto prevs = std::map<int64_t, const std::unordered_set<int64_t> *>();
+        auto prevs = std::map<int64_t, const unordered_set<int64_t> *>();
         for (auto &pair : prevs_) {
             prevs.emplace(pair.first, &pair.second);
         }

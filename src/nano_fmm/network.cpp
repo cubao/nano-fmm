@@ -53,10 +53,10 @@ bool Network::add_link(int64_t source_road, int64_t target_road,
 
 bool Network::remove_road(int64_t road_id)
 {
-    if (roads_.erase(road_id)) {
-        rtree_.reset();
-        return true;
-    }
+    // if (roads_.erase(road_id)) {
+    //     rtree_.reset();
+    //     return true;
+    // }
     return false;
 }
 bool Network::remove_link(int64_t source_road, int64_t target_road)
@@ -71,7 +71,7 @@ bool Network::remove_link(int64_t source_road, int64_t target_road)
     }
     return false;
 }
-std::unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
+unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
 {
     auto itr = prevs_.find(road_id);
     if (itr == prevs_.end()) {
@@ -79,7 +79,7 @@ std::unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
     }
     return itr->second;
 }
-std::unordered_set<int64_t> Network::next_roads(int64_t road_id) const
+unordered_set<int64_t> Network::next_roads(int64_t road_id) const
 {
     auto itr = nexts_.find(road_id);
     if (itr == nexts_.end()) {
@@ -87,9 +87,9 @@ std::unordered_set<int64_t> Network::next_roads(int64_t road_id) const
     }
     return itr->second;
 }
-std::unordered_set<int64_t> Network::roads() const
+unordered_set<int64_t> Network::roads() const
 {
-    auto ret = std::unordered_set<int64_t>{};
+    auto ret = unordered_set<int64_t>{};
     for (auto &pair : roads_) {
         ret.insert(pair.first);
     }

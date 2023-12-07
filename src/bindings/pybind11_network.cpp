@@ -173,14 +173,14 @@ void bind_network(py::module &m)
         .def("dump_ubodt", &Network::dump_ubodt, "path"_a, py::kw_only(),
              "thresh"_a = std::nullopt)
         //
-        .def("to_2d", &Network::to_2d)
+        //    .def("to_2d", &Network::to_2d)
         //
-        .def("from_geojson", &Network::from_geojson, "json"_a)
+        //    .def("from_geojson", &Network::from_geojson, "json"_a)
         .def("to_geojson",
              py::overload_cast<>(&Network::to_geojson, py::const_))
-        .def("from_rapidjson", &Network::from_rapidjson, "json"_a)
-        .def("to_rapidjson",
-             py::overload_cast<>(&Network::to_rapidjson, py::const_))
+        //    .def("from_rapidjson", &Network::from_rapidjson, "json"_a)
+        //    .def("to_rapidjson", py::overload_cast<>(&Network::to_rapidjson,
+        //    py::const_))
         //
         ;
 

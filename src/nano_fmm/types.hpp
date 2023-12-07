@@ -12,7 +12,7 @@
 #include <vector>
 #include <rapidjson/document.h>
 
-#define NANO_FMM_DISABLE_UNORDERED_DENSE 1
+#define NANO_FMM_DISABLE_UNORDERED_DENSE 0
 #if NANO_FMM_DISABLE_UNORDERED_DENSE
 #include <unordered_map>
 #include <unordered_set>
@@ -124,6 +124,17 @@ struct LineSegment
         return *dir_;
     }
 
+    LineSegment() = delete;
+    LineSegment(const LineSegment &other) = delete;
+    LineSegment &operator=(const LineSegment &other) = delete;
+    LineSegment(LineSegment &&other)
+        : A(other.A), B(other.B), AB(other.AB),       //
+          len2(other.len2), inv_len2(other.inv_len2), //
+          dir_(std::move(other.dir_)), length_(std::move(other.length_))
+    {
+    }
+    LineSegment &operator=(LineSegment &&other) = delete;
+
   private:
     mutable std::optional<Eigen::Vector3d> dir_;
     mutable std::optional<double> length_;
@@ -158,10 +169,11 @@ template <typename Value, typename Hash = std::hash<Value>,
           typename Equal = std::equal_to<Value>>
 using unordered_set = std::unordered_set<Value, Hash>;
 #else
-template <typename Key, typename Value, typename Hash = std::hash<Key>,
+template <typename Key, typename Value,
+          typename Hash = ankerl::unordered_dense::hash<Key>,
           typename Equal = std::equal_to<Key>>
 using unordered_map = ankerl::unordered_dense::map<Key, Value, Hash, Equal>;
-template <typename Value, typename Hash = std::hash<Value>,
+template <typename Value, typename Hash = ankerl::unordered_dense::hash<Value>,
           typename Equal = std::equal_to<Value>>
 using unordered_set = ankerl::unordered_dense::set<Value, Hash, Equal>;
 #endif
