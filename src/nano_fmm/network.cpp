@@ -53,10 +53,10 @@ bool Network::add_link(int64_t source_road, int64_t target_road,
 
 bool Network::remove_road(int64_t road_id)
 {
-    // if (roads_.erase(road_id)) {
-    //     rtree_.reset();
-    //     return true;
-    // }
+    if (roads_.erase(road_id)) {
+        rtree_.reset();
+        return true;
+    }
     return false;
 }
 bool Network::remove_link(int64_t source_road, int64_t target_road)
@@ -361,18 +361,18 @@ bool Network::dump_ubodt(const std::string &path,
     return false;
 }
 
-std::unique_ptr<Network> Network::to_2d() const
+Network Network::to_2d() const
 {
-    auto net = std::make_unique<Network>(is_wgs84_);
-    net->config(config_);
+    auto net = Network(is_wgs84_);
+    net.config(config_);
     for (auto &pair : roads_) {
         auto xy0 = utils::to_Nx3(pair.second.polyline().leftCols(2));
-        net->add_road(xy0, pair.first);
+        net.add_road(xy0, pair.first);
     }
     for (auto &pair : nexts_) {
         auto curr = pair.first;
         for (auto next : pair.second) {
-            net->add_link(curr, next);
+            net.add_link(curr, next);
         }
     }
     return net;

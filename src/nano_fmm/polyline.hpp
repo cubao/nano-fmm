@@ -14,6 +14,7 @@ namespace nano_fmm
 struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Polyline() = default;
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
              bool is_wgs84 = false)
         : polyline_(polyline), //
@@ -203,10 +204,10 @@ struct Polyline
     }
 
   private:
-    const RowVectors polyline_;
-    const int N_;
-    const bool is_wgs84_;
-    const Eigen::Vector3d k_;
+    RowVectors polyline_;
+    int N_;
+    bool is_wgs84_;
+    Eigen::Vector3d k_;
 
     mutable std::optional<std::vector<LineSegment>> segments_;
     mutable std::optional<Eigen::VectorXd> ranges_;

@@ -19,7 +19,7 @@ namespace nano_fmm
 {
 struct Network
 {
-    Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
     bool is_wgs84() const { return is_wgs84_; }
 
     // road network
@@ -78,7 +78,7 @@ struct Network
                     std::optional<double> thresh) const;
 
     // to 2d, z will be set to zero
-    std::unique_ptr<Network> to_2d() const;
+    Network to_2d() const;
 
     Network &from_geojson(const RapidjsonValue &json);
     RapidjsonValue to_geojson(RapidjsonAllocator &allocator) const;
@@ -97,7 +97,7 @@ struct Network
     }
 
   private:
-    const bool is_wgs84_;
+    bool is_wgs84_ = true;
     // roads (id -> geom)
     unordered_map<int64_t, Polyline> roads_;
     // links (id -> {nexts}, id -> {prevs})

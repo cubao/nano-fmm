@@ -94,8 +94,9 @@ struct LineSegment
 {
     // LineSegment(A -> B)
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    const Eigen::Vector3d A, B, AB;
-    const double len2, inv_len2;
+    Eigen::Vector3d A, B, AB;
+    double len2, inv_len2;
+    LineSegment() = default;
     LineSegment(const Eigen::Vector3d &a, const Eigen::Vector3d &b)
         : A(a), B(b), AB(b - a), //
           len2(AB.squaredNorm()),
