@@ -3,6 +3,7 @@
 #include "nano_fmm/types.hpp"
 #include "nano_fmm/config.hpp"
 #include "nano_fmm/polyline.hpp"
+#include "nano_fmm/indexer.hpp"
 
 #include "nano_fmm/network/projected_point.hpp"
 #include "nano_fmm/network/ubodt.hpp"
@@ -23,15 +24,19 @@ struct Network
     bool is_wgs84() const { return is_wgs84_; }
 
     // road network
-    bool add_road(const Eigen::Ref<const RowVectors> &geom, int64_t road_id);
-    bool add_link(int64_t source_road, int64_t target_road,
-                  bool check_road = false);
-    bool remove_road(int64_t road_id);
-    bool remove_link(int64_t source_road, int64_t target_road);
-    unordered_set<int64_t> prev_roads(int64_t road_id) const;
-    unordered_set<int64_t> next_roads(int64_t road_id) const;
-    unordered_set<int64_t> roads() const;
-    const Polyline *road(int64_t road_id) const;
+    bool add_road(const Eigen::Ref<const RowVectors> &geom,
+                  const std::string &road_id);
+    bool add_link(const std::string &source_road,
+                  const std::string &target_road, bool check_road = false);
+    bool remove_road(const std::string &road_id);
+    bool remove_link(const std::string &source_road,
+                     const std::string &target_road);
+
+    std::vector<std::string> prev_roads(const std::string &road_id) const;
+    std::vector<std::string> next_roads(const std::string &road_id) const;
+    std::vector<std::string> roads() const;
+
+    const Polyline *road(const std::string &road_id) const;
 
     // config
     const Config &config() const { return config_; }
@@ -105,6 +110,7 @@ struct Network
     // config
     Config config_;
 
+    mutable Indexer id_index_;
     // spatial index
     mutable std::vector<IndexIJ> segs_;
     mutable unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;

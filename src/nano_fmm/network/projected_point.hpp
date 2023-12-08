@@ -9,7 +9,7 @@ struct ProjectedPoint
     ProjectedPoint() {}
     ProjectedPoint(const Eigen::Vector3d &position,
                    const Eigen::Vector3d &direction, //
-                   double distance, int64_t road_id,
+                   double distance, const std::string &road_id,
                    double offset)
         : position_(position),   //
           direction_(direction), //
@@ -22,7 +22,7 @@ struct ProjectedPoint
     SETUP_FLUENT_API(ProjectedPoint, Eigen::Vector3d, position)
     SETUP_FLUENT_API(ProjectedPoint, Eigen::Vector3d, direction)
     SETUP_FLUENT_API(ProjectedPoint, double, distance)
-    SETUP_FLUENT_API(ProjectedPoint, int64_t, road_id)
+    SETUP_FLUENT_API(ProjectedPoint, std::string, road_id)
     SETUP_FLUENT_API(ProjectedPoint, double, offset)
     ProjectedPoint &from_rapidjson(const RapidjsonValue &json);
     RapidjsonValue to_rapidjson(RapidjsonAllocator &allocator) const;
@@ -36,7 +36,7 @@ struct ProjectedPoint
     Eigen::Vector3d position_{0.0, 0.0, 0.0};
     Eigen::Vector3d direction_{0.0, 0.0, 1.0};
     double distance_{0.0};
-    int64_t road_id_{0};
+    std::string road_id_;
     double offset_{0.0};
 };
 } // namespace nano_fmm
