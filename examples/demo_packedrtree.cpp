@@ -5,7 +5,6 @@
 #include <iostream>
 #include <random>
 #include <set>
-#include <unordered_set>
 
 #include "naive_svg.hpp"
 #include "packedrtree.hpp"

@@ -53,11 +53,17 @@ bool Network::add_link(int64_t source_road, int64_t target_road,
 
 bool Network::remove_road(int64_t road_id)
 {
-    if (roads_.erase(road_id)) {
-        rtree_.reset();
-        return true;
+    if (!roads_.erase(road_id)) {
+        return false;
     }
-    return false;
+    for (auto prev : prevs_[road_id]) {
+        nexts_[prev].erase(road_id);
+    }
+    for (auto next : nexts_[road_id]) {
+        prevs_[next].erase(road_id);
+    }
+    rtree_.reset();
+    return true;
 }
 bool Network::remove_link(int64_t source_road, int64_t target_road)
 {
@@ -71,29 +77,44 @@ bool Network::remove_link(int64_t source_road, int64_t target_road)
     }
     return false;
 }
-std::unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
+
+bool Network::has_road(int64_t road_id) const
+{
+    return roads_.find(road_id) != roads_.end();
+}
+bool Network::has_link(int64_t source_road, int64_t target_road) const
+{
+    auto itr = nexts_.find(source_road);
+    if (itr == nexts_.end()) {
+        return false;
+    }
+    return itr->second.find(target_road) != itr->second.end();
+}
+
+std::vector<int64_t> Network::prev_roads(int64_t road_id) const
 {
     auto itr = prevs_.find(road_id);
     if (itr == prevs_.end()) {
         return {};
     }
-    return itr->second;
+    return {itr->second.begin(), itr->second.end()};
 }
-std::unordered_set<int64_t> Network::next_roads(int64_t road_id) const
+std::vector<int64_t> Network::next_roads(int64_t road_id) const
 {
     auto itr = nexts_.find(road_id);
     if (itr == nexts_.end()) {
         return {};
     }
-    return itr->second;
+    return {itr->second.begin(), itr->second.end()};
 }
-std::unordered_set<int64_t> Network::roads() const
+std::vector<int64_t> Network::roads() const
 {
-    auto ret = std::unordered_set<int64_t>{};
+    std::vector<int64_t> roads;
+    roads.reserve(roads_.size());
     for (auto &pair : roads_) {
-        ret.insert(pair.first);
+        roads.push_back(pair.first);
     }
-    return ret;
+    return roads;
 }
 
 const Polyline *Network::road(int64_t road_id) const
@@ -119,7 +140,7 @@ Network::query(const Eigen::Vector3d &position, double radius,
     auto &tree = this->rtree();
     auto hits = tree.search(x - dx, y - dy, x + dx, y + dy);
     auto poly2seg_minmax =
-        std::unordered_map<int64_t, std::pair<int64_t, int64_t>>();
+        unordered_map<int64_t, std::pair<int64_t, int64_t>>();
     for (auto &hit : hits) {
         auto poly_seg = segs_[hit.offset];
         auto poly_idx = poly_seg[0];

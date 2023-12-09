@@ -1,14 +1,45 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
-#include <iostream>
+#include <optional>
 #include "nano_fmm/types.hpp"
+
+#include "spdlog/spdlog.h"
+// fix exposed macro 'GetObject' from wingdi.h (included by spdlog.h) under
+// windows, see https://github.com/Tencent/rapidjson/issues/1448
+#ifdef GetObject
+#undef GetObject
+#endif
 
 namespace nano_fmm
 {
 struct Indexer
 {
+    bool contains(const std::string &id) const
+    {
+        return str2int_.find(id) != str2int_.end();
+    }
+    bool contains(int64_t id) const
+    {
+        return int2str_.find(id) != int2str_.end();
+    }
+    std::optional<std::string> get_id(int64_t id) const
+    {
+        auto itr = int2str_.find(id);
+        if (itr == int2str_.end()) {
+            return {};
+        }
+        return itr->second;
+    }
+    std::optional<int64_t> get_id(const std::string &id) const
+    {
+        auto itr = str2int_.find(id);
+        if (itr == str2int_.end()) {
+            return {};
+        }
+        return itr->second;
+    }
+
     // get str id (with auto setup)
     std::string id(int64_t id)
     {
@@ -17,11 +48,11 @@ struct Indexer
             return itr->second;
         }
         int round = 0;
-        auto id_str = std::to_string(id);
+        auto id_str = fmt::format("{}", id);
         auto str_id = id_str;
         while (str2int_.count(str_id)) {
             ++round;
-            str_id = id_str + "/" + std::to_string(round);
+            str_id = fmt::format("{}/{}", id_str, round);
         }
         index(str_id, id);
         return str_id;
@@ -65,7 +96,6 @@ struct Indexer
 
     Indexer &from_rapidjson(const RapidjsonValue &json)
     {
-        // for (auto &m: json.GetMe)
         for (auto &m : json.GetObject()) {
             index(std::string(m.name.GetString(), m.name.GetStringLength()),
                   m.value.GetInt64());
@@ -93,8 +123,8 @@ struct Indexer
     }
 
   private:
-    std::unordered_map<std::string, int64_t> str2int_;
-    std::unordered_map<int64_t, std::string> int2str_;
+    unordered_map<std::string, int64_t> str2int_;
+    unordered_map<int64_t, std::string> int2str_;
     int64_t id_cursor_{1000000};
 };
 } // namespace nano_fmm

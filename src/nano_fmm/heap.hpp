@@ -44,6 +44,7 @@
 #include <math.h>
 #include <limits>
 #include <iostream>
+#include "types.hpp"
 
 namespace nano_fmm
 {
@@ -588,6 +589,6 @@ struct Heap
   private:
     FibHeap<HeapNode> heap;
     typedef FibHeap<HeapNode>::FibNode *HeapNodeHandle;
-    std::unordered_map<int64_t, HeapNodeHandle> handle_data;
+    unordered_map<int64_t, HeapNodeHandle> handle_data;
 };
 } // namespace nano_fmm

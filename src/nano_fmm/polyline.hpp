@@ -14,6 +14,7 @@ namespace nano_fmm
 struct Polyline
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Polyline() = default;
     Polyline(const Eigen::Ref<const RowVectors> &polyline,
              bool is_wgs84 = false)
         : polyline_(polyline), //
@@ -182,31 +183,11 @@ struct Polyline
         return *ranges_;
     }
 
-    const Polyline remove_backwards() const
-    {
-        std::vector<int> selected;
-        selected.reserve(N_);
-        selected.push_back(0);
-        auto &segs = segments();
-        for (int i = 1; i < N_ - 1; ++i) {
-            if (segs[i].dir().dot(segs[selected.back()].dir()) > 0) {
-                selected.push_back(i);
-            }
-        }
-        // just like utils.hpp/select_by_index
-        RowVectors coords(selected.size(), 3);
-        int j = -1;
-        for (auto idx : selected) {
-            coords.row(++j) = polyline_.row(idx);
-        }
-        return is_wgs84_ ? Polyline(coords, k_) : Polyline(coords);
-    }
-
   private:
-    const RowVectors polyline_;
-    const int N_;
-    const bool is_wgs84_;
-    const Eigen::Vector3d k_;
+    RowVectors polyline_;
+    int N_;
+    bool is_wgs84_;
+    Eigen::Vector3d k_;
 
     mutable std::optional<std::vector<LineSegment>> segments_;
     mutable std::optional<Eigen::VectorXd> ranges_;

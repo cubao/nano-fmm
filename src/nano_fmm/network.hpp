@@ -14,14 +14,12 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace nano_fmm
 {
 struct Network
 {
-    Network(bool is_wgs84) : is_wgs84_(is_wgs84) {}
+    Network(bool is_wgs84 = true) : is_wgs84_(is_wgs84) {}
     bool is_wgs84() const { return is_wgs84_; }
 
     // road network
@@ -30,9 +28,13 @@ struct Network
                   bool check_road = false);
     bool remove_road(int64_t road_id);
     bool remove_link(int64_t source_road, int64_t target_road);
-    std::unordered_set<int64_t> prev_roads(int64_t road_id) const;
-    std::unordered_set<int64_t> next_roads(int64_t road_id) const;
-    std::unordered_set<int64_t> roads() const;
+
+    bool has_road(int64_t road_id) const;
+    bool has_link(int64_t source_road, int64_t target_road) const;
+
+    std::vector<int64_t> prev_roads(int64_t road_id) const;
+    std::vector<int64_t> next_roads(int64_t road_id) const;
+    std::vector<int64_t> roads() const;
     const Polyline *road(int64_t road_id) const;
 
     // config
@@ -99,25 +101,25 @@ struct Network
     }
 
   private:
-    const bool is_wgs84_;
+    bool is_wgs84_ = true;
     // roads (id -> geom)
-    std::unordered_map<int64_t, Polyline> roads_;
+    unordered_map<int64_t, Polyline> roads_;
     // links (id -> {nexts}, id -> {prevs})
-    std::unordered_map<int64_t, std::unordered_set<int64_t>> nexts_, prevs_;
+    unordered_map<int64_t, unordered_set<int64_t>> nexts_, prevs_;
     // config
     Config config_;
 
     // spatial index
     mutable std::vector<IndexIJ> segs_;
-    mutable std::unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;
+    mutable unordered_map<IndexIJ, size_t, hash_eigen<IndexIJ>> seg2idx_;
     mutable std::optional<FlatGeobuf::PackedRTree> rtree_;
     FlatGeobuf::PackedRTree &rtree() const;
 
-    using IndexMap = std::unordered_map<int64_t, int64_t>;
-    using DistanceMap = std::unordered_map<int64_t, double>;
+    using IndexMap = unordered_map<int64_t, int64_t>;
+    using DistanceMap = unordered_map<int64_t, double>;
     void single_source_upperbound_dijkstra(int64_t source, double distance, //
                                            IndexMap &predecessor_map,
                                            DistanceMap &distance_map) const;
-    std::unordered_map<IndexIJ, UbodtRecord, hash_eigen<IndexIJ>> ubodt_;
+    unordered_map<IndexIJ, UbodtRecord, hash_eigen<IndexIJ>> ubodt_;
 };
 } // namespace nano_fmm
