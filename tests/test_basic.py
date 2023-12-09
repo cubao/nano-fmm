@@ -637,7 +637,7 @@ def test_network_query():
     assert network.is_wgs84()
     assert len(network.roads()) == 1016
     assert isinstance(network.roads(), list)
-    assert network.next_roads(1293) == [1297, 1298]
+    assert sorted(network.next_roads(1293)) == [1297, 1298]
     assert isinstance(network.next_roads(1293), list)
     assert network.prev_roads(1297) == [1293]
 

@@ -114,7 +114,7 @@ void bind_network(py::module &m)
 
     py::class_<Network>(m, "Network", py::module_local()) //
                                                           //
-        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a)
+        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = true)
         .def("is_wgs84", &Network::is_wgs84)
         //
         .def("add_road", &Network::add_road, "geom"_a, py::kw_only(), "id"_a)
@@ -189,6 +189,19 @@ void bind_network(py::module &m)
 
     py::class_<Indexer>(m, "Indexer", py::module_local()) //
         .def(py::init<>())
+        .def("contains",
+             py::overload_cast<int64_t>(&Indexer::contains, py::const_), "id"_a)
+        .def("contains",
+             py::overload_cast<const std::string &>(&Indexer::contains,
+                                                    py::const_),
+             "id"_a)
+        .def("get_id", py::overload_cast<int64_t>(&Indexer::get_id, py::const_),
+             "id"_a)
+        .def("get_id",
+             py::overload_cast<const std::string &>(&Indexer::get_id,
+                                                    py::const_),
+             "id"_a)
+        //
         .def("id", py::overload_cast<int64_t>(&Indexer::id), "id"_a)
         .def("id", py::overload_cast<const std::string &>(&Indexer::id), "id"_a)
         .def("index",
