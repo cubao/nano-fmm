@@ -135,14 +135,10 @@ void bind_packedrtree(py::module &m)
                      nodes[i].minY = bbox_min(i, 1);
                      nodes[i].maxX = bbox_max(i, 0);
                      nodes[i].maxY = bbox_max(i, 1);
+                     nodes[i].offset = i;
                      extent.expand(nodes[i]);
                  }
                  hilbertSort(nodes, extent);
-                 uint64_t offset = 0;
-                 for (auto &node : nodes) {
-                     node.offset = offset;
-                     offset += sizeof(NodeItem);
-                 }
                  return new PackedRTree(nodes, extent, node_size);
              }),
              "min"_a, "max"_a, "nodeSize"_a = 16)
@@ -175,10 +171,13 @@ void bind_packedrtree(py::module &m)
                     "numItems"_a, "nodeSize"_a)
         .def("size", py::overload_cast<>(&PackedRTree::size, py::const_))
         .def("getExtent", &PackedRTree::getExtent)
+        .def("getNumItems", &PackedRTree::getNumItems)
+        .def("getNumNodes", &PackedRTree::getNumNodes)
+        .def("getNodeSize", &PackedRTree::getNodeSize)
         .def("to_bytes",
              [](PackedRTree &self) {
                  std::vector<uint8_t> bytes;
-                 self.streamWrite([&bytes](uint8_t *buf, size_t size) {
+                 self.streamWrite([&bytes](const uint8_t *buf, size_t size) {
                      std::copy(buf, buf + size, std::back_inserter(bytes));
                  });
                  return py::bytes((const char *)bytes.data(), bytes.size());

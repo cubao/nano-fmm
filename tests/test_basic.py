@@ -119,7 +119,7 @@ def test_geobuf_rtree():
         [fb.NodeItem(1, 1, 9, 9, 0), fb.NodeItem(5, 5, 8, 8, 0)],
         extent=fb.NodeItem(0, 0, 10, 10, 0),
     )
-    assert len(tree.to_bytes())
+    assert len(tree.to_bytes()) == 120
 
     bboxes = [
         [0, 0, 10, 10],
@@ -128,11 +128,22 @@ def test_geobuf_rtree():
         [2, 2, 9, 3],
     ]
     bboxes = np.array(bboxes, dtype=np.float64)
-    tree = fb.PackedRTree(bboxes[:, :2], bboxes[:, 2:])
-
-    tree.search(0, 0, 3, 3)
-    tree.searchIndex(0, 0, 1, 1)
-    print()
+    tree1 = fb.PackedRTree(bboxes[:, :2], bboxes[:, 2:])
+    tree2 = fb.PackedRTree(
+        fb.hilbertSort([fb.NodeItem(*bbox, idx) for idx, bbox in enumerate(bboxes)]),
+        extent=fb.NodeItem(0, 0, 10, 10),
+    )
+    for tree in [tree1, tree2]:
+        assert tree.getExtent().to_numpy().tolist() == [0, 0, 10, 10]
+        assert tree.getNumItems() == 4
+        assert tree.getNumNodes() == 5
+        assert tree.getNodeSize() == 16
+        data = tree.to_bytes()
+        assert isinstance(data, bytes)
+        assert tree.size() == len(data) == 200
+        assert len(tree.search(0, 0, 3, 3)) == 4
+        assert tree.searchIndex(0, 0, 1, 1).tolist() == [0, 1]
+        assert tree.searchIndex(0, 0, 0.1, 0.1).tolist() == [0]
 
 
 def test_cpp_migrated_1():
@@ -152,6 +163,7 @@ def test_cpp_migrated_1():
     for node in nodes:
         node.offset = offset
         offset += fb.NodeItem._size_()
+    assert nodes[0].intersects(fb.NodeItem(0, 0, 0, 0))
     tree = fb.PackedRTree(nodes, extent)
     hits = tree.search(0, 0, 0, 0)
     assert len(hits) == 2
