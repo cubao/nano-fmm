@@ -600,7 +600,7 @@ def test_network_read_write():
     geojson, _ = remap_network_with_string_id(f"{__PWD}/../data/suzhoubeizhan.json")
     network = Network(is_wgs84=True)
     network.from_geojson(geojson)
-    # assert len(network.roads()) == 1016
+    assert len(network.roads()) == 1016
     assert network.to_geojson().dump(f"{__BUILD}/network.geojson", indent=True)
     assert network.to_rapidjson().dump(f"{__BUILD}/network.json", indent=True)
 
@@ -623,9 +623,9 @@ def test_network_query():
         test_network_read_write()
     network = Network.load(path)
     assert network.is_wgs84()
-    # assert len(network.roads()) == 1016
-    # assert network.next_roads(1293) == {1297, 1298}
-    # assert network.prev_roads(1297) == {1293}
+    assert len(network.roads()) == 1016
+    assert network.next_roads(1293) == [1297, 1298]
+    assert network.prev_roads(1297) == [1293]
 
     polyline = network.road(1293)
     assert polyline.is_wgs84()
