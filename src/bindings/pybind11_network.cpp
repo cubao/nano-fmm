@@ -123,6 +123,9 @@ void bind_network(py::module &m)
         .def("remove_road", &Network::remove_road, "id"_a)
         .def("remove_link", &Network::remove_link, //
              "source_road"_a, "target_road"_a)
+        .def("has_road", &Network::has_road, "id"_a)
+        .def("has_link", &Network::has_link, "source_road"_a, "target_road"_a)
+        //
         .def("prev_roads", &Network::prev_roads, "id"_a)
         .def("next_roads", &Network::next_roads, "id"_a)
         .def("roads", &Network::roads)

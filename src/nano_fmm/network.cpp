@@ -71,29 +71,37 @@ bool Network::remove_link(int64_t source_road, int64_t target_road)
     }
     return false;
 }
-unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
+
+bool Network::has_road(int64_t road_id) const
+{
+    return roads_.find(road_id) != roads_.end();
+}
+bool Network::has_link(int64_t source_road, int64_t target_road) const {}
+
+std::vector<int64_t> Network::prev_roads(int64_t road_id) const
 {
     auto itr = prevs_.find(road_id);
     if (itr == prevs_.end()) {
         return {};
     }
-    return itr->second;
+    return {itr->second.begin(), itr->second.end()};
 }
-unordered_set<int64_t> Network::next_roads(int64_t road_id) const
+std::vector<int64_t> Network::next_roads(int64_t road_id) const
 {
     auto itr = nexts_.find(road_id);
     if (itr == nexts_.end()) {
         return {};
     }
-    return itr->second;
+    return {itr->second.begin(), itr->second.end()};
 }
-unordered_set<int64_t> Network::roads() const
+std::vector<int64_t> Network::roads() const
 {
-    auto ret = unordered_set<int64_t>{};
+    std::vector<int64_t> roads;
+    roads.reserve(roads_.size());
     for (auto &pair : roads_) {
-        ret.insert(pair.first);
+        roads.push_back(pair.first);
     }
-    return ret;
+    return roads;
 }
 
 const Polyline *Network::road(int64_t road_id) const

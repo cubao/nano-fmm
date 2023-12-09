@@ -28,9 +28,13 @@ struct Network
                   bool check_road = false);
     bool remove_road(int64_t road_id);
     bool remove_link(int64_t source_road, int64_t target_road);
-    unordered_set<int64_t> prev_roads(int64_t road_id) const;
-    unordered_set<int64_t> next_roads(int64_t road_id) const;
-    unordered_set<int64_t> roads() const;
+
+    bool has_road(int64_t road_id) const;
+    bool has_link(int64_t source_road, int64_t target_road) const;
+
+    std::vector<int64_t> prev_roads(int64_t road_id) const;
+    std::vector<int64_t> next_roads(int64_t road_id) const;
+    std::vector<int64_t> roads() const;
     const Polyline *road(int64_t road_id) const;
 
     // config
