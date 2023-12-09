@@ -636,8 +636,19 @@ def test_network_query():
     network = Network.load(path)
     assert network.is_wgs84()
     assert len(network.roads()) == 1016
+    assert isinstance(network.roads(), list)
     assert network.next_roads(1293) == [1297, 1298]
+    assert isinstance(network.next_roads(1293), list)
     assert network.prev_roads(1297) == [1293]
+
+    assert network.has_road(1293)
+    assert not network.has_road(-1)
+    assert network.has_link(1293, 1297)
+    assert not network.has_link(1293, 1299)
+
+    assert network.remove_link(1293, 1298)
+    assert not network.remove_link(1293, 1298)
+    assert network.next_roads(1293) == [1297]
 
     polyline = network.road(1293)
     assert polyline.is_wgs84()
