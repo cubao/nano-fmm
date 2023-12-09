@@ -20,8 +20,6 @@
 #include "ankerl/unordered_dense.h"
 #endif
 
-#define NANO_FMM_USE_SMALL_VECTOR 0
-
 namespace nano_fmm
 {
 // https://github.com/isl-org/Open3D/blob/179886dfd57797b2b0d379062387c60313a58b2b/cpp/open3d/utility/Helper.h#L71
