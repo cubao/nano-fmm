@@ -53,11 +53,17 @@ bool Network::add_link(int64_t source_road, int64_t target_road,
 
 bool Network::remove_road(int64_t road_id)
 {
-    if (roads_.erase(road_id)) {
-        rtree_.reset();
-        return true;
+    if (!roads_.erase(road_id)) {
+        return false;
     }
-    return false;
+    for (auto prev : prevs_[road_id]) {
+        nexts_[prev].erase(road_id);
+    }
+    for (auto next : nexts_[road_id]) {
+        prevs_[next].erase(road_id);
+    }
+    rtree_.reset();
+    return true;
 }
 bool Network::remove_link(int64_t source_road, int64_t target_road)
 {
@@ -76,7 +82,14 @@ bool Network::has_road(int64_t road_id) const
 {
     return roads_.find(road_id) != roads_.end();
 }
-bool Network::has_link(int64_t source_road, int64_t target_road) const {}
+bool Network::has_link(int64_t source_road, int64_t target_road) const
+{
+    auto itr = nexts_.find(source_road);
+    if (itr == nexts_.end()) {
+        return false;
+    }
+    return itr->second.find(target_road) != itr->second.end();
+}
 
 std::vector<int64_t> Network::prev_roads(int64_t road_id) const
 {
