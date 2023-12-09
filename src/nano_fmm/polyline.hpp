@@ -183,26 +183,6 @@ struct Polyline
         return *ranges_;
     }
 
-    const Polyline remove_backwards() const
-    {
-        std::vector<int> selected;
-        selected.reserve(N_);
-        selected.push_back(0);
-        auto &segs = segments();
-        for (int i = 1; i < N_ - 1; ++i) {
-            if (segs[i].dir().dot(segs[selected.back()].dir()) > 0) {
-                selected.push_back(i);
-            }
-        }
-        // just like utils.hpp/select_by_index
-        RowVectors coords(selected.size(), 3);
-        int j = -1;
-        for (auto idx : selected) {
-            coords.row(++j) = polyline_.row(idx);
-        }
-        return is_wgs84_ ? Polyline(coords, k_) : Polyline(coords);
-    }
-
   private:
     RowVectors polyline_;
     int N_;

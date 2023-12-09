@@ -12,7 +12,10 @@
 #include <vector>
 #include <rapidjson/document.h>
 
+#ifndef NANO_FMM_DISABLE_UNORDERED_DENSE
 #define NANO_FMM_DISABLE_UNORDERED_DENSE 0
+#endif
+
 #if NANO_FMM_DISABLE_UNORDERED_DENSE
 #include <unordered_map>
 #include <unordered_set>
