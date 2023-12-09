@@ -16,124 +16,89 @@
 namespace nano_fmm
 {
 bool Network::add_road(const Eigen::Ref<const RowVectors> &geom,
-                       const std::string &road_id)
+                       int64_t road_id)
 {
-    if (id_index_.contains(road_id)) {
+    if (roads_.find(road_id) != roads_.end()) {
         spdlog::error("duplicate road, id={}, should remove_road first",
                       road_id);
         return false;
     }
-    auto id = id_index_.id(road_id);
     if (is_wgs84_) {
         roads_.emplace(
-            id, Polyline(geom, utils::cheap_ruler_k_lookup_table(geom(0, 1))));
+            road_id,
+            Polyline(geom, utils::cheap_ruler_k_lookup_table(geom(0, 1))));
     } else {
-        roads_.emplace(id, Polyline(geom));
+        roads_.emplace(road_id, Polyline(geom));
     }
     rtree_.reset();
     return true;
 }
-bool Network::add_link(const std::string &source_road,
-                       const std::string &target_road, bool check_road)
+bool Network::add_link(int64_t source_road, int64_t target_road,
+                       bool check_road)
 {
     if (check_road) {
-        if (!id_index_.contains(source_road)) {
+        if (roads_.find(source_road) == roads_.end()) {
             spdlog::error("source_road={} not in network", source_road);
             return false;
         }
-        if (!id_index_.contains(target_road)) {
+        if (roads_.find(target_road) == roads_.end()) {
             spdlog::error("target_road={} not in network", target_road);
             return false;
         }
     }
-    auto sid = id_index_.id(source_road);
-    auto tid = id_index_.id(target_road);
-    nexts_[sid].insert(tid);
-    prevs_[tid].insert(sid);
+    nexts_[source_road].insert(target_road);
+    prevs_[target_road].insert(source_road);
     return true;
 }
 
-bool Network::remove_road(const std::string &road_id)
+bool Network::remove_road(int64_t road_id)
 {
-    auto rid = id_index_.get_id(road_id);
-    if (!rid) {
-        return false;
-    }
-    if (roads_.erase(*rid)) {
+    if (roads_.erase(road_id)) {
         rtree_.reset();
         return true;
     }
     return false;
 }
-bool Network::remove_link(const std::string &source_road,
-                          const std::string &target_road)
+bool Network::remove_link(int64_t source_road, int64_t target_road)
 {
-    auto sid = id_index_.get_id(source_road);
-    auto tid = id_index_.get_id(target_road);
-    if (!sid || !tid) {
-        return false;
-    }
-    auto itr = nexts_.find(*sid);
+    auto itr = nexts_.find(source_road);
     if (itr == nexts_.end()) {
         return false;
     }
-    if (itr->second.erase(*tid)) {
-        prevs_[*tid].erase(*sid);
+    if (itr->second.erase(target_road)) {
+        prevs_[target_road].erase(source_road);
         return true;
     }
     return false;
 }
-std::vector<std::string> Network::prev_roads(const std::string &road_id) const
+unordered_set<int64_t> Network::prev_roads(int64_t road_id) const
 {
-    auto rid = id_index_.get_id(road_id);
-    if (!rid) {
-        return {};
-    }
-    auto itr = prevs_.find(*rid);
+    auto itr = prevs_.find(road_id);
     if (itr == prevs_.end()) {
         return {};
     }
-    std::vector<std::string> roads;
-    roads.reserve(itr->second.size());
-    for (auto p : itr->second) {
-        roads.push_back(id_index_.id(p));
-    }
-    return roads;
+    return itr->second;
 }
-std::vector<std::string> Network::next_roads(const std::string &road_id) const
+unordered_set<int64_t> Network::next_roads(int64_t road_id) const
 {
-    auto rid = id_index_.get_id(road_id);
-    if (!rid) {
-        return {};
-    }
-    auto itr = nexts_.find(*rid);
+    auto itr = nexts_.find(road_id);
     if (itr == nexts_.end()) {
         return {};
     }
-    std::vector<std::string> roads;
-    roads.reserve(itr->second.size());
-    for (auto p : itr->second) {
-        roads.push_back(id_index_.id(p));
-    }
-    return roads;
+    return itr->second;
 }
-std::vector<std::string> Network::roads() const
+unordered_set<int64_t> Network::roads() const
 {
-    std::vector<std::string> roads;
-    roads.reserve(roads_.size());
+    auto ret = unordered_set<int64_t>{};
     for (auto &pair : roads_) {
-        roads.push_back(id_index_.id(pair.first));
+        ret.insert(pair.first);
     }
-    return roads;
+    return ret;
 }
 
-const Polyline *Network::road(const std::string &road_id) const
+const Polyline *Network::road(int64_t road_id) const
 {
-    auto rid = id_index_.get_id(road_id);
-    if (!rid) {
-        return nullptr;
-    }
-    auto itr = roads_.find(*rid);
+    auto itr = roads_.find(road_id);
     if (itr == roads_.end()) {
         return nullptr;
     }
@@ -184,7 +149,7 @@ Network::query(const Eigen::Vector3d &position, double radius,
             continue;
         }
         nearests.emplace_back(P, poly.segment(s).dir(), d, //
-                              id_index_.id(pair.first), poly.range(s, t));
+                              pair.first, poly.range(s, t));
     }
 
     if (k && *k < nearests.size()) {
